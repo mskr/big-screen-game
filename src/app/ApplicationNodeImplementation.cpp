@@ -14,8 +14,9 @@
 
 namespace viscom {
 
-    ApplicationNodeImplementation::ApplicationNodeImplementation(ApplicationNode* appNode) :
-        appNode_{ appNode }
+	ApplicationNodeImplementation::ApplicationNodeImplementation(ApplicationNode* appNode) :
+		appNode_{ appNode },
+		grid_(80, 40)
     {
     }
 
@@ -28,59 +29,8 @@ namespace viscom {
 
     void ApplicationNodeImplementation::InitOpenGL()
     {
-        backgroundProgram_ = appNode_->GetGPUProgramManager().GetResource("backgroundGrid", std::initializer_list<std::string>{ "backgroundGrid.vert", "backgroundGrid.frag" });
-        backgroundMVPLoc_ = backgroundProgram_->getUniformLocation("MVP");
-
-        triangleProgram_ = appNode_->GetGPUProgramManager().GetResource("foregroundTriangle", std::initializer_list<std::string>{ "foregroundTriangle.vert", "foregroundTriangle.frag" });
-        triangleMVPLoc_ = triangleProgram_->getUniformLocation("MVP");
-
-        teapotProgram_ = appNode_->GetGPUProgramManager().GetResource("foregroundMesh", std::initializer_list<std::string>{ "foregroundMesh.vert", "foregroundMesh.frag" });
-        teapotVPLoc_ = teapotProgram_->getUniformLocation("viewProjectionMatrix");
-
-        std::vector<GridVertex> gridVertices;
-
-        auto delta = 0.125f;
-        for (auto x = -1.0f; x < 1.0f; x += delta) {
-            auto green = (x + 1.0f) / 2.0f;
-
-            for (float y = -1.0; y < 1.0; y += delta) {
-                auto red = (y + 1.0f) / 2.0f;
-
-                auto dx = 0.004f;
-                auto dy = 0.004f;
-
-                gridVertices.emplace_back(glm::vec3(x + dx, y + dy, -1.0f), glm::vec4(red, green, 0.0f, 1.0f));//right top
-                gridVertices.emplace_back(glm::vec3(x - dx + delta, y + dy, -1.0f), glm::vec4(red, green, 0.0f, 1.0f));//left top
-                gridVertices.emplace_back(glm::vec3(x - dx + delta, y - dy + delta, -1.0f), glm::vec4(red, green, 0.0f, 1.0f));//left bottom
-
-                gridVertices.emplace_back(glm::vec3(x - dx + delta, y - dy + delta, -1.0f), glm::vec4(red, green, 0.0f, 1.0f));//left bottom
-                gridVertices.emplace_back(glm::vec3(x + dx, y - dy + delta, -1.0f), glm::vec4(red, green, 0.0f, 1.0f));//right bottom
-                gridVertices.emplace_back(glm::vec3(x + dx, y + dy, -1.0f), glm::vec4(red, green, 0.0f, 1.0f));//right top
-            }
-        }
-
-        numBackgroundVertices_ = static_cast<unsigned int>(gridVertices.size());
-
-        gridVertices.emplace_back(glm::vec3(-0.5f, -0.5f, 0.0f), glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
-        gridVertices.emplace_back(glm::vec3(0.0f, 0.5f, 0.0f), glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
-        gridVertices.emplace_back(glm::vec3(0.5f, -0.5f, 0.0f), glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
-
-        glGenBuffers(1, &vboBackgroundGrid_);
-        glBindBuffer(GL_ARRAY_BUFFER, vboBackgroundGrid_);
-        glBufferData(GL_ARRAY_BUFFER, gridVertices.size() * sizeof(GridVertex), gridVertices.data(), GL_STATIC_DRAW);
-
-        glGenVertexArrays(1, &vaoBackgroundGrid_);
-        glBindVertexArray(vaoBackgroundGrid_);
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GridVertex), reinterpret_cast<GLvoid*>(offsetof(GridVertex, position_)));
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(GridVertex), reinterpret_cast<GLvoid*>(offsetof(GridVertex, color_)));
-        glBindVertexArray(0);
-
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-        teapotMesh_ = appNode_->GetMeshManager().GetResource("/models/teapot/teapot.obj");
-        teapotRenderable_ = MeshRenderable::create<SimpleMeshVertex>(teapotMesh_.get(), teapotProgram_.get());
+		grid_.loadShader(appNode_);
+		grid_.uploadVertexData();
     }
 
     void ApplicationNodeImplementation::PreSync()
@@ -109,34 +59,7 @@ namespace viscom {
     void ApplicationNodeImplementation::DrawFrame(FrameBuffer& fbo)
     {
         fbo.DrawToFBO([this]() {
-            glBindVertexArray(vaoBackgroundGrid_);
-            glBindBuffer(GL_ARRAY_BUFFER, vboBackgroundGrid_);
-
-            auto MVP = GetEngine()->getCurrentModelViewProjectionMatrix();
-            {
-                glUseProgram(backgroundProgram_->getProgramId());
-                glUniformMatrix4fv(backgroundMVPLoc_, 1, GL_FALSE, glm::value_ptr(MVP));
-                glDrawArrays(GL_TRIANGLES, 0, numBackgroundVertices_);
-            }
-
-            {
-                glDisable(GL_CULL_FACE);
-                auto triangleMVP = MVP * triangleModelMatrix_;
-                glUseProgram(triangleProgram_->getProgramId());
-                glUniformMatrix4fv(triangleMVPLoc_, 1, GL_FALSE, glm::value_ptr(triangleMVP));
-                glDrawArrays(GL_TRIANGLES, numBackgroundVertices_, 3);
-                glEnable(GL_CULL_FACE);
-            }
-
-            {
-                glUseProgram(teapotProgram_->getProgramId());
-                glUniformMatrix4fv(teapotVPLoc_, 1, GL_FALSE, glm::value_ptr(MVP));
-                teapotRenderable_->Draw(teapotModelMatrix_);
-            }
-
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
-            glBindVertexArray(0);
-            glUseProgram(0);
+			grid_.render(GetEngine()->getCurrentModelViewProjectionMatrix());
         });
     }
 
@@ -155,10 +78,7 @@ namespace viscom {
 
     void ApplicationNodeImplementation::CleanUp()
     {
-        if (vaoBackgroundGrid_ != 0) glDeleteVertexArrays(0, &vaoBackgroundGrid_);
-        vaoBackgroundGrid_ = 0;
-        if (vboBackgroundGrid_ != 0) glDeleteBuffers(0, &vboBackgroundGrid_);
-        vboBackgroundGrid_ = 0;
+		grid_.cleanup();
     }
 
     // ReSharper disable CppParameterNeverUsed
@@ -180,6 +100,12 @@ namespace viscom {
     {
 #ifdef VISCOM_CLIENTGUI
         ImGui_ImplGlfwGL3_MouseButtonCallback(button, action, 0);
+		if (button == GLFW_MOUSE_BUTTON_LEFT) {
+			if (action == GLFW_PRESS)
+				grid_.onTouch(-1);
+			else if (action == GLFW_RELEASE)
+				grid_.onRelease(-1);
+		}
 #endif
     }
 
@@ -187,6 +113,7 @@ namespace viscom {
     {
 #ifdef VISCOM_CLIENTGUI
         ImGui_ImplGlfwGL3_MousePositionCallback(x, y);
+		grid_.onMouseMove(x, y);
 #endif
     }
 

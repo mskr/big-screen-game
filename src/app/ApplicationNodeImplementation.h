@@ -10,6 +10,13 @@
 
 #include <sgct/Engine.h>
 #include "core/ApplicationNode.h"
+#include "app/roomgame/InteractiveGrid.h"
+
+
+
+
+
+
 
 namespace viscom {
 
@@ -95,5 +102,7 @@ namespace viscom {
 
         glm::mat4 triangleModelMatrix_;
         glm::mat4 teapotModelMatrix_;
+
+		InteractiveGrid grid_;
     };
 }
