@@ -14,13 +14,12 @@ class InteractiveGrid {
 	// Data members
 	float height_units_;
 	float cell_size_;
-	float z_distance_;
 	std::vector<std::vector<GridCell>> cells_; //TODO better use array with templated size
 	const size_t ROOM_MIN_SIZE_ = 2;
 	// Render-related members
 	GLuint vao_, vbo_;
 	std::shared_ptr<viscom::GPUProgram> shader_;
-	GLint mvp_uniform_location_, z_distance_uniform_location_;
+	GLint mvp_uniform_location_;
 	glm::mat4 model_matrix_;
 	GLsizei num_vertices_;
 	glm::mat4 last_sgctMVP_;

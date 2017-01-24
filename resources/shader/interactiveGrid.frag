@@ -18,7 +18,7 @@ void main()
 	// Inside Room
 	else if(fBuildState == 1) color = vec4(0,1,0,1); // green
 	// Left Upper Corner
-	else if(fBuildState == 2) color = vec4(1,0,0,1); // red 
+	else if(fBuildState == 2) color = vec4(1,.5,.5,1); // red 
 	// Right Upper Corner
 	else if(fBuildState == 3) color = vec4(.5,0,0,1); // dark-red
 	// Left Lower Corner
@@ -33,5 +33,7 @@ void main()
 	else if(fBuildState == 8) color = vec4(1,1,0,1)*0.6; // dark yellow
 	// Wall Bottom
 	else if(fBuildState == 9) color = vec4(1,1,0,1)*0.4; // very dark yellow
+	// Invalid Build State (room too small)
+	else if(fBuildState == 10) color = vec4(1,0,0,1); // red
 	else color = vec4(1,1,1,1); // white
 }

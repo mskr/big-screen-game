@@ -16,7 +16,7 @@ namespace viscom {
 
 	ApplicationNodeImplementation::ApplicationNodeImplementation(ApplicationNode* appNode) :
 		appNode_{ appNode },
-		grid_(100, 100, 2.0f)
+		grid_(10, 10, 1.2f)
     {
     }
 

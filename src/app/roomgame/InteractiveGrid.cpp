@@ -3,7 +3,6 @@
 InteractiveGrid::InteractiveGrid(int columns, int rows, float height) {
 	height_units_ = height;
 	cell_size_ = height_units_ / float(rows);
-	z_distance_ = 0.0f;
 	for (int x = 0; x < columns; x++) {
 		std::vector<GridCell> column;
 		for (int y = 0; y < rows; y++) {
@@ -21,8 +20,7 @@ InteractiveGrid::InteractiveGrid(int columns, int rows, float height) {
 		}
 	}
 	mvp_uniform_location_ = -1;
-	z_distance_uniform_location_ = -1;
-	model_matrix_ = glm::translate(glm::mat4(1), glm::vec3(-0.5f, 1.0f, 0.0f));
+	model_matrix_ = glm::translate(glm::mat4(1), glm::vec3(-0.5f, 0.3f, 0.0f));
 	num_vertices_ = 0;
 	last_sgctMVP_ = glm::mat4(1);
 	last_room_start_cell_ = 0;
@@ -87,7 +85,7 @@ bool InteractiveGrid::isInsideCell(glm::vec2 positionNDC, GridCell* cell) {
 }
 
 glm::vec2 InteractiveGrid::getNDC(glm::vec2 position) {
-	glm::vec4 pos(position, z_distance_, 1.0f);
+	glm::vec4 pos(position, 0.0f, 1.0f);
 	pos = last_sgctMVP_ * model_matrix_ * pos;
 	return glm::vec2(pos.x, pos.y) / pos.w;
 }
@@ -99,11 +97,7 @@ GridCell* InteractiveGrid::getCellAt(glm::vec2 positionNDC) {
 	size_t jLeftUpper = cells_[0].size() - 1;
 	size_t iRightLower = cells_.size() - 1;
 	size_t jRightLower = 0;
-	size_t last_iLeftUpper = 0;
-	size_t last_jLeftUpper = 0;
-	size_t last_iMiddle = 0;
-	size_t last_jMiddle = 0;
-	while (!(iLeftUpper+1 == iRightLower && jLeftUpper == jRightLower+1)) {
+	while (iRightLower - iLeftUpper > 2 || jLeftUpper - jRightLower > 2) {
 		size_t iMiddle = iLeftUpper + (iRightLower - iLeftUpper) / 2;
 		size_t jMiddle = jRightLower + (jLeftUpper - jRightLower) / 2;
 		glm::vec2 cellNDC = getNDC(cells_[iMiddle][jMiddle].getPosition());
@@ -115,14 +109,12 @@ GridCell* InteractiveGrid::getCellAt(glm::vec2 positionNDC) {
 			jLeftUpper = jMiddle;
 		else
 			jRightLower = jMiddle;
-		if (iLeftUpper == last_iLeftUpper && jLeftUpper == last_jLeftUpper &&
-				iLeftUpper == iMiddle && jLeftUpper == jMiddle &&
-				iMiddle == last_iMiddle && jMiddle == last_jMiddle)
-			return &cells_[iRightLower][jRightLower];
-		last_iLeftUpper = iLeftUpper;
-		last_jLeftUpper = jLeftUpper;
-		last_iMiddle = iMiddle;
-		last_jMiddle = jMiddle;
+	}
+	for (size_t i = iLeftUpper; i <= iRightLower; i++) {
+		for (size_t j = jRightLower; j <= jLeftUpper; j++) {
+			if (isInsideCell(positionNDC, &cells_[i][j]))
+				return &cells_[i][j];
+		}
 	}
 	return &cells_[iLeftUpper][jLeftUpper];
 }
@@ -158,7 +150,6 @@ void InteractiveGrid::loadShader(viscom::ApplicationNode* appNode) {
 	shader_ = appNode->GetGPUProgramManager().GetResource("interactiveGrid",
 		std::initializer_list<std::string>{ "interactiveGrid.vert", "interactiveGrid.frag" });
 	mvp_uniform_location_ = shader_->getUniformLocation("MVP");
-	z_distance_uniform_location_ = shader_->getUniformLocation("Z");
 }
 
 void InteractiveGrid::render(glm::mat4 sgctMVP) {
@@ -166,10 +157,8 @@ void InteractiveGrid::render(glm::mat4 sgctMVP) {
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_);
 	glUseProgram(shader_->getProgramId());
 	glUniformMatrix4fv(mvp_uniform_location_, 1, GL_FALSE, glm::value_ptr(sgctMVP * model_matrix_));
-	glUniform1f(z_distance_uniform_location_, z_distance_);
 	glDrawArrays(GL_POINTS, 0, num_vertices_);
 	last_sgctMVP_ = sgctMVP;
-	//z_distance_ = -(float)(0.5f*glfwGetTime());
 }
 
 void InteractiveGrid::cleanup() {
