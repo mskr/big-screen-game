@@ -21,7 +21,7 @@ InteractiveGrid::InteractiveGrid(int columns, int rows) {
 	}
 	mvp_uniform_location_ = -1;
 	z_distance_uniform_location_ = -1;
-	model_matrix_ = glm::mat4(1);
+	model_matrix_ = glm::translate(glm::mat4(1), glm::vec3(-0.5f, 1.0f, 0.0f));
 	num_vertices_ = 0;
 	last_sgctMVP_ = glm::mat4(1);
 }
@@ -49,33 +49,55 @@ void InteractiveGrid::forEachCell(std::function<void(GridCell*,bool*)> callback)
 	}
 }
 
+bool InteractiveGrid::isInsideGrid(glm::vec2 positionNDC) {
+	GridCell& leftUpperCell = cells_[0][cells_[0].size() - 1];
+	glm::vec2 posLeftUpperNDC = getNDC(leftUpperCell.getPosition());
+	if (positionNDC.x < posLeftUpperNDC.x || positionNDC.y > posLeftUpperNDC.y)
+		return false;
+	GridCell& rightLowerCell = cells_[cells_.size() - 1][0];
+	glm::vec2 posRightLowerNDC = getNDC(rightLowerCell.getPosition() + cell_size_);
+	if (positionNDC.x > posRightLowerNDC.x || positionNDC.y < posRightLowerNDC.y)
+		return false;
+	return true;
+}
+
+bool InteractiveGrid::isInsideCell(glm::vec2 positionNDC, GridCell* cell) {
+	glm::vec2 cellLeftUpperNDC = getNDC(cell->getPosition());
+	glm::vec2 cellRightLowerNDC = getNDC(cell->getPosition() + cell_size_);
+	if (positionNDC.x < cellLeftUpperNDC.x || positionNDC.y > cellLeftUpperNDC.y)
+		return false;
+	else if (positionNDC.x > cellRightLowerNDC.x || positionNDC.y < cellRightLowerNDC.y)
+		return false;
+	return true;
+}
+
+glm::vec2 InteractiveGrid::getNDC(glm::vec2 position) {
+	glm::vec4 pos(position, z_distance_, 1.0f);
+	pos = last_sgctMVP_ * model_matrix_ * pos;
+	return glm::vec2(pos.x, pos.y) / pos.w;
+}
+
 GridCell* InteractiveGrid::getCellAt(glm::vec2 positionNDC) {
-	GridCell* out = 0;
-	// Brute force search for cell
-	//TODO optimize (e.g. didvide and conquer search, because cells are sorted)
-	forEachCell([&](GridCell* cell, bool* found) {
-		// Transform cell position to NDCs
-		glm::vec4 cellPosLeftUpperCorner(
-			cell->getPosition(), z_distance_, 1.0f);
-		glm::vec4 cellPosRightLowerCorner(
-			cell->getXPosition() + cell_size_, cell->getYPosition() - cell_size_, z_distance_, 1.0f);
-		glm::vec4 cellPosLeftUpperCornerProj = last_sgctMVP_ * model_matrix_ * cellPosLeftUpperCorner;
-		glm::vec4 cellPosRightLowerCornerProj = last_sgctMVP_ * model_matrix_ * cellPosRightLowerCorner;
-		glm::vec2 cellPosLeftUpperCornerNDC =
-			glm::vec2(cellPosLeftUpperCornerProj.x, cellPosLeftUpperCornerProj.y)
-			/ cellPosLeftUpperCornerProj.w;
-		glm::vec2 cellPosRightLowerCornerNDC =
-			glm::vec2(cellPosRightLowerCornerProj.x, cellPosRightLowerCornerProj.y)
-			/ cellPosRightLowerCornerProj.w;
-		// Intersect
-		if (positionNDC.x < cellPosLeftUpperCornerNDC.x) return;
-		if (positionNDC.x > cellPosRightLowerCornerNDC.x) return;
-		if (positionNDC.y < cellPosRightLowerCornerNDC.y) return;
-		if (positionNDC.y > cellPosLeftUpperCornerNDC.y) return;
-		out = cell;
-		*found = true;
-	});
-	return out;
+	if (!isInsideGrid(positionNDC))
+		return 0;
+	size_t iLeftUpper = 0;
+	size_t jLeftUpper = cells_[0].size() - 1;
+	size_t iRightLower = cells_.size() - 1;
+	size_t jRightLower = 0;
+	while (!(iLeftUpper+1 == iRightLower && jLeftUpper == jRightLower+1)) {
+		size_t iMiddle = iLeftUpper + (iRightLower - iLeftUpper) / 2;
+		size_t jMiddle = jRightLower + (jLeftUpper - jRightLower) / 2;
+		glm::vec2 cellNDC = getNDC(cells_[iMiddle][jMiddle].getPosition());
+		if (positionNDC.x < cellNDC.x)
+			iRightLower = iMiddle;
+		else
+			iLeftUpper = iMiddle;
+		if (positionNDC.y < cellNDC.y)
+			jLeftUpper = jMiddle;
+		else
+			jRightLower = jMiddle;
+	}
+	return &cells_[iLeftUpper][jLeftUpper];
 }
 
 void InteractiveGrid::uploadVertexData() {
@@ -120,7 +142,7 @@ void InteractiveGrid::render(glm::mat4 sgctMVP) {
 	glUniform1f(z_distance_uniform_location_, z_distance_);
 	glDrawArrays(GL_POINTS, 0, num_vertices_);
 	last_sgctMVP_ = sgctMVP;
-	z_distance_ = -(float)(0.5f*glfwGetTime());
+	//z_distance_ = -(float)(0.5f*glfwGetTime());
 }
 
 void InteractiveGrid::cleanup() {
@@ -160,11 +182,28 @@ void InteractiveGrid::onRelease(int touchID) {
 	}
 }
 
-void InteractiveGrid::onMouseMove(double newx, double newy) {
+void InteractiveGrid::onMouseMove(int touchID, double newx, double newy) {
 	last_mouse_position_ = glm::dvec2(newx, newy);
+	for (GridInteraction* interac : interactions_) {
+		if (interac->getTouchID() == touchID) {
+			interac->onRelease(last_mouse_position_);
+			if (touchID == -1) {
+				glm::vec2 touchPositionNDC =
+					glm::vec2(last_mouse_position_.x, 1.0 - last_mouse_position_.y)
+					* glm::vec2(2.0, 2.0) - glm::vec2(1.0, 1.0);
+				GridCell* maybeCell = getCellAt(touchPositionNDC);
+				if (!maybeCell) return;
+				if (interac->getStartCell() == maybeCell) return;
+				addRoom(interac->getStartCell(), maybeCell);
+				break;
+			}
+		}
+	}
 }
 
 void InteractiveGrid::addRoom(GridCell* startCell, GridCell* endCell) {
+	//TODO Simplify!
+	// 1) use vector indices of cells instead of float positions
 	if (startCell->getXPosition() < endCell->getXPosition()) {
 		if (startCell->getYPosition() < endCell->getYPosition()) {
 			startCell->updateBuildState(vbo_, GridCell::BuildState::LEFT_LOWER_CORNER);

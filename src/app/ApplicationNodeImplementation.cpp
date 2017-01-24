@@ -113,7 +113,7 @@ namespace viscom {
     {
 #ifdef VISCOM_CLIENTGUI
         ImGui_ImplGlfwGL3_MousePositionCallback(x, y);
-		grid_.onMouseMove(x, y);
+		grid_.onMouseMove(-1, x, y);
 #endif
     }
 
