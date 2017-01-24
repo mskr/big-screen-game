@@ -8,11 +8,15 @@ public:
 	enum BuildState {
 		EMPTY = 0,
 		INSIDE_ROOM = 1,
-		WALL = 2,
-		LEFT_UPPER_CORNER = 3,
-		RIGHT_UPPER_CORNER = 4,
-		LEFT_LOWER_CORNER = 5,
-		RIGHT_LOWER_CORNER = 6
+		LEFT_UPPER_CORNER = 2,
+		RIGHT_UPPER_CORNER = 3,
+		LEFT_LOWER_CORNER = 4,
+		RIGHT_LOWER_CORNER = 5,
+		WALL_LEFT = 6,
+		WALL_RIGHT = 7,
+		WALL_TOP = 8,
+		WALL_BOTTOM = 9,
+		INVALID = 10
 	};
 private:
 	struct Vertex {
@@ -40,8 +44,10 @@ private:
 	GridCell* eastNeighbor;
 	GridCell* southNeighbor;
 	GridCell* westNeighbor;
+	size_t col_idx_;
+	size_t row_idx_;
 public:
-	GridCell(float x=0.0f, float y=0.0f);
+	GridCell(float x, float y, size_t col_idx, size_t row_idx);
 	~GridCell() = default;
 	static void setVertexAttribPointer();
 	void updateBuildState(GLuint vbo, BuildState s);
@@ -62,6 +68,8 @@ public:
 	GLintptr getVertexBufferOffset();
 	static size_t getVertexBytes();
 	void* getVertexPointer();
+	size_t getCol();
+	size_t getRow();
 };
 
 #endif

@@ -1,12 +1,13 @@
 #include "InteractiveGrid.h"
 
-InteractiveGrid::InteractiveGrid(int columns, int rows) {
+InteractiveGrid::InteractiveGrid(int columns, int rows, float height) {
+	height_units_ = height;
 	cell_size_ = height_units_ / float(rows);
 	z_distance_ = 0.0f;
 	for (int x = 0; x < columns; x++) {
 		std::vector<GridCell> column;
 		for (int y = 0; y < rows; y++) {
-			GridCell current(-1.0f + x * cell_size_, -1.0f + y * cell_size_);
+			GridCell current(-1.0f + x * cell_size_, -1.0f + y * cell_size_, x, y);
 			column.push_back(current);
 		}
 		cells_.push_back(column);
@@ -24,6 +25,8 @@ InteractiveGrid::InteractiveGrid(int columns, int rows) {
 	model_matrix_ = glm::translate(glm::mat4(1), glm::vec3(-0.5f, 1.0f, 0.0f));
 	num_vertices_ = 0;
 	last_sgctMVP_ = glm::mat4(1);
+	last_room_start_cell_ = 0;
+	last_room_end_cell_ = 0;
 }
 
 InteractiveGrid::~InteractiveGrid() {
@@ -49,13 +52,24 @@ void InteractiveGrid::forEachCell(std::function<void(GridCell*,bool*)> callback)
 	}
 }
 
+void InteractiveGrid::forEachCellInRange(GridCell* leftLower, GridCell* rightUpper, std::function<void(GridCell*)> callback) {
+	if (leftLower->getCol() > rightUpper->getCol() || leftLower->getRow() > rightUpper->getRow())
+		return;
+	for (size_t i = leftLower->getCol(); i <= rightUpper->getCol(); i++) {
+		for (size_t j = leftLower->getRow(); j <= rightUpper->getRow(); j++) {
+			callback(&cells_[i][j]);
+		}
+	}
+}
+
 bool InteractiveGrid::isInsideGrid(glm::vec2 positionNDC) {
 	GridCell& leftUpperCell = cells_[0][cells_[0].size() - 1];
 	glm::vec2 posLeftUpperNDC = getNDC(leftUpperCell.getPosition());
 	if (positionNDC.x < posLeftUpperNDC.x || positionNDC.y > posLeftUpperNDC.y)
 		return false;
 	GridCell& rightLowerCell = cells_[cells_.size() - 1][0];
-	glm::vec2 posRightLowerNDC = getNDC(rightLowerCell.getPosition() + cell_size_);
+	glm::vec2 posRightLowerNDC = getNDC(glm::vec2(
+		rightLowerCell.getXPosition() + cell_size_, rightLowerCell.getYPosition() - cell_size_ ));
 	if (positionNDC.x > posRightLowerNDC.x || positionNDC.y < posRightLowerNDC.y)
 		return false;
 	return true;
@@ -63,7 +77,8 @@ bool InteractiveGrid::isInsideGrid(glm::vec2 positionNDC) {
 
 bool InteractiveGrid::isInsideCell(glm::vec2 positionNDC, GridCell* cell) {
 	glm::vec2 cellLeftUpperNDC = getNDC(cell->getPosition());
-	glm::vec2 cellRightLowerNDC = getNDC(cell->getPosition() + cell_size_);
+	glm::vec2 cellRightLowerNDC = getNDC(glm::vec2(
+		cell->getXPosition() + cell_size_, cell->getYPosition() - cell_size_ ));
 	if (positionNDC.x < cellLeftUpperNDC.x || positionNDC.y > cellLeftUpperNDC.y)
 		return false;
 	else if (positionNDC.x > cellRightLowerNDC.x || positionNDC.y < cellRightLowerNDC.y)
@@ -84,6 +99,10 @@ GridCell* InteractiveGrid::getCellAt(glm::vec2 positionNDC) {
 	size_t jLeftUpper = cells_[0].size() - 1;
 	size_t iRightLower = cells_.size() - 1;
 	size_t jRightLower = 0;
+	size_t last_iLeftUpper = 0;
+	size_t last_jLeftUpper = 0;
+	size_t last_iMiddle = 0;
+	size_t last_jMiddle = 0;
 	while (!(iLeftUpper+1 == iRightLower && jLeftUpper == jRightLower+1)) {
 		size_t iMiddle = iLeftUpper + (iRightLower - iLeftUpper) / 2;
 		size_t jMiddle = jRightLower + (jLeftUpper - jRightLower) / 2;
@@ -96,6 +115,14 @@ GridCell* InteractiveGrid::getCellAt(glm::vec2 positionNDC) {
 			jLeftUpper = jMiddle;
 		else
 			jRightLower = jMiddle;
+		if (iLeftUpper == last_iLeftUpper && jLeftUpper == last_jLeftUpper &&
+				iLeftUpper == iMiddle && jLeftUpper == jMiddle &&
+				iMiddle == last_iMiddle && jMiddle == last_jMiddle)
+			return &cells_[iRightLower][jRightLower];
+		last_iLeftUpper = iLeftUpper;
+		last_jLeftUpper = jLeftUpper;
+		last_iMiddle = iMiddle;
+		last_jMiddle = jMiddle;
 	}
 	return &cells_[iLeftUpper][jLeftUpper];
 }
@@ -164,14 +191,14 @@ void InteractiveGrid::onTouch(int touchID) {
 void InteractiveGrid::onRelease(int touchID) {
 	for (GridInteraction* interac : interactions_) {
 		if (interac->getTouchID() == touchID) {
-			interac->onRelease(last_mouse_position_);
+			interac->update(last_mouse_position_);
 			if (touchID == -1) {
 				glm::vec2 touchPositionNDC =
 					glm::vec2(last_mouse_position_.x, 1.0 - last_mouse_position_.y)
 					* glm::vec2(2.0, 2.0) - glm::vec2(1.0, 1.0);
 				GridCell* maybeCell = getCellAt(touchPositionNDC);
-				if (!maybeCell) return;
-				addRoom(interac->getStartCell(), maybeCell);
+				if (maybeCell)
+					addRoom(interac->getStartCell(), maybeCell, true);
 				interactions_.remove(interac);
 				break;
 			}
@@ -186,7 +213,7 @@ void InteractiveGrid::onMouseMove(int touchID, double newx, double newy) {
 	last_mouse_position_ = glm::dvec2(newx, newy);
 	for (GridInteraction* interac : interactions_) {
 		if (interac->getTouchID() == touchID) {
-			interac->onRelease(last_mouse_position_);
+			interac->update(last_mouse_position_);
 			if (touchID == -1) {
 				glm::vec2 touchPositionNDC =
 					glm::vec2(last_mouse_position_.x, 1.0 - last_mouse_position_.y)
@@ -194,175 +221,77 @@ void InteractiveGrid::onMouseMove(int touchID, double newx, double newy) {
 				GridCell* maybeCell = getCellAt(touchPositionNDC);
 				if (!maybeCell) return;
 				if (interac->getStartCell() == maybeCell) return;
-				addRoom(interac->getStartCell(), maybeCell);
+				if (interac->getLastCell() == maybeCell) return;
+				interac->update(maybeCell);
+				addRoom(interac->getStartCell(), maybeCell, false);
 				break;
 			}
 		}
 	}
 }
 
-void InteractiveGrid::addRoom(GridCell* startCell, GridCell* endCell) {
-	//TODO Simplify!
-	// 1) use vector indices of cells instead of float positions
-	if (startCell->getXPosition() < endCell->getXPosition()) {
-		if (startCell->getYPosition() < endCell->getYPosition()) {
-			startCell->updateBuildState(vbo_, GridCell::BuildState::LEFT_LOWER_CORNER);
-			endCell->updateBuildState(vbo_, GridCell::BuildState::RIGHT_UPPER_CORNER);
-			GridCell* wall = startCell->getNorthNeighbor();
-			if (!wall) return;
-			while (wall->getYPosition() < endCell->getYPosition()) {
-				wall->updateBuildState(vbo_, GridCell::BuildState::WALL);
-				GridCell* inner = wall->getEastNeighbor();
-				while (inner->getXPosition() < endCell->getXPosition()) {
-					inner->updateBuildState(vbo_, GridCell::BuildState::INSIDE_ROOM);
-					inner = inner->getEastNeighbor();
-					if (!inner) break;
-				}
-				wall = wall->getNorthNeighbor();
-				if (!wall) break;
-			}
-			if (wall) {
-				wall->updateBuildState(vbo_, GridCell::BuildState::LEFT_UPPER_CORNER);
-				wall = wall->getEastNeighbor();
-				if (!wall) return;
-				while (wall->getXPosition() < endCell->getXPosition()) {
-					wall->updateBuildState(vbo_, GridCell::BuildState::WALL);
-					wall = wall->getEastNeighbor();
-					if (!wall) break;
-				}
-			}
+void InteractiveGrid::addRoom(GridCell* startCell, GridCell* endCell, bool isFinished) {
+	GridCell* leftLowerCorner = 0;
+	GridCell* rightUpperCorner = 0;
+	GridCell* leftUpperCorner = 0;
+	GridCell* rightLowerCorner = 0;
+	// Find corners
+	if (startCell->getCol() < endCell->getCol()) {
+		if (startCell->getRow() < endCell->getRow()) {
+			leftLowerCorner = startCell;
+			rightUpperCorner = endCell;
+			leftUpperCorner = &cells_[startCell->getCol()][endCell->getRow()];
+			rightLowerCorner = &cells_[endCell->getCol()][startCell->getRow()];
 		}
 		else {
-			startCell->updateBuildState(vbo_, GridCell::BuildState::LEFT_UPPER_CORNER);
-			endCell->updateBuildState(vbo_, GridCell::BuildState::RIGHT_LOWER_CORNER);
-			GridCell* wall = startCell->getSouthNeighbor();
-			if (!wall) return;
-			while (wall->getYPosition() > endCell->getYPosition()) {
-				wall->updateBuildState(vbo_, GridCell::BuildState::WALL);
-				GridCell* inner = wall->getEastNeighbor();
-				while (inner->getXPosition() < endCell->getXPosition()) {
-					inner->updateBuildState(vbo_, GridCell::BuildState::INSIDE_ROOM);
-					inner = inner->getEastNeighbor();
-					if (!inner) break;
-				}
-				wall = wall->getSouthNeighbor();
-				if (!wall) break;
-			}
-			if (wall) {
-				wall->updateBuildState(vbo_, GridCell::BuildState::LEFT_LOWER_CORNER);
-				wall = wall->getEastNeighbor();
-				if (!wall) return;
-				while (wall->getXPosition() < endCell->getXPosition()) {
-					wall->updateBuildState(vbo_, GridCell::BuildState::WALL);
-					wall = wall->getEastNeighbor();
-					if (!wall) break;
-				}
-			}
-		}
-		GridCell* wall = startCell->getEastNeighbor();
-		if (!wall) return;
-		while (wall->getXPosition() < endCell->getXPosition()) {
-			wall->updateBuildState(vbo_, GridCell::BuildState::WALL);
-			wall = wall->getEastNeighbor();
-			if (!wall) break;
-		}
-		if (wall && startCell->getYPosition() < endCell->getYPosition()) {
-			wall->updateBuildState(vbo_, GridCell::BuildState::RIGHT_LOWER_CORNER);
-			wall = wall->getNorthNeighbor();
-			while (wall->getYPosition() < endCell->getYPosition()) {
-				wall->updateBuildState(vbo_, GridCell::BuildState::WALL);
-				wall = wall->getNorthNeighbor();
-				if (!wall) break;
-			}
-		}
-		else if (wall) {
-			wall->updateBuildState(vbo_, GridCell::BuildState::RIGHT_UPPER_CORNER);
-			wall = wall->getSouthNeighbor();
-			while (wall->getYPosition() > endCell->getYPosition()) {
-				wall->updateBuildState(vbo_, GridCell::BuildState::WALL);
-				wall = wall->getSouthNeighbor();
-				if (!wall) break;
-			}
+			leftUpperCorner = startCell;
+			rightLowerCorner = endCell;
+			leftLowerCorner = &cells_[startCell->getCol()][endCell->getRow()];
+			rightUpperCorner = &cells_[endCell->getCol()][startCell->getRow()];
 		}
 	}
 	else {
-		if (endCell->getYPosition() < startCell->getYPosition()) {
-			endCell->updateBuildState(vbo_, GridCell::BuildState::LEFT_LOWER_CORNER);
-			startCell->updateBuildState(vbo_, GridCell::BuildState::RIGHT_UPPER_CORNER);
-			GridCell* wall = endCell->getNorthNeighbor();
-			if (!wall) return;
-			while (wall->getYPosition() < startCell->getYPosition()) {
-				wall->updateBuildState(vbo_, GridCell::BuildState::WALL);
-				GridCell* inner = wall->getEastNeighbor();
-				while (inner->getXPosition() < startCell->getXPosition()) {
-					inner->updateBuildState(vbo_, GridCell::BuildState::INSIDE_ROOM);
-					inner = inner->getEastNeighbor();
-					if (!inner) break;
-				}
-				wall = wall->getNorthNeighbor();
-				if (!wall) break;
-			}
-			if (wall) {
-				wall->updateBuildState(vbo_, GridCell::BuildState::LEFT_UPPER_CORNER);
-				wall = wall->getEastNeighbor();
-				if (!wall) return;
-				while (wall->getXPosition() < startCell->getXPosition()) {
-					wall->updateBuildState(vbo_, GridCell::BuildState::WALL);
-					wall = wall->getEastNeighbor();
-					if (!wall) break;
-				}
-			}
+		if (startCell->getRow() < endCell->getRow()) {
+			rightLowerCorner = startCell;
+			leftUpperCorner = endCell;
+			rightUpperCorner = &cells_[startCell->getCol()][endCell->getRow()];
+			leftLowerCorner = &cells_[endCell->getCol()][startCell->getRow()];
 		}
 		else {
-			endCell->updateBuildState(vbo_, GridCell::BuildState::LEFT_UPPER_CORNER);
-			startCell->updateBuildState(vbo_, GridCell::BuildState::RIGHT_LOWER_CORNER);
-			GridCell* wall = endCell->getSouthNeighbor();
-			if (!wall) return;
-			while (wall->getYPosition() > startCell->getYPosition()) {
-				wall->updateBuildState(vbo_, GridCell::BuildState::WALL);
-				GridCell* inner = wall->getEastNeighbor();
-				while (inner->getXPosition() < startCell->getXPosition()) {
-					inner->updateBuildState(vbo_, GridCell::BuildState::INSIDE_ROOM);
-					inner = inner->getEastNeighbor();
-					if (!inner) break;
-				}
-				wall = wall->getSouthNeighbor();
-				if (!wall) break;
-			}
-			if (wall) {
-				wall->updateBuildState(vbo_, GridCell::BuildState::LEFT_LOWER_CORNER);
-				wall = wall->getEastNeighbor();
-				while (wall->getXPosition() < startCell->getXPosition()) {
-					wall->updateBuildState(vbo_, GridCell::BuildState::WALL);
-					wall = wall->getEastNeighbor();
-					if (!wall) break;
-				}
-			}
-		}
-		GridCell* wall = endCell->getEastNeighbor();
-		if (!wall) return;
-		while (wall->getXPosition() < startCell->getXPosition()) {
-			wall->updateBuildState(vbo_, GridCell::BuildState::WALL);
-			wall = wall->getEastNeighbor();
-			if (!wall) break;
-		}
-		if (wall && endCell->getYPosition() < startCell->getYPosition()) {
-			wall->updateBuildState(vbo_, GridCell::BuildState::RIGHT_LOWER_CORNER);
-			wall = wall->getNorthNeighbor();
-			while (wall->getYPosition() < startCell->getYPosition()) {
-				wall->updateBuildState(vbo_, GridCell::BuildState::WALL);
-				wall = wall->getNorthNeighbor();
-				if (!wall) break;
-			}
-		}
-		else if (wall) {
-			wall->updateBuildState(vbo_, GridCell::BuildState::RIGHT_UPPER_CORNER);
-			wall = wall->getSouthNeighbor();
-			while (wall->getYPosition() > startCell->getYPosition()) {
-				wall->updateBuildState(vbo_, GridCell::BuildState::WALL);
-				wall = wall->getSouthNeighbor();
-				if (!wall) break;
-			}
+			rightUpperCorner = startCell;
+			leftLowerCorner = endCell;
+			rightLowerCorner = &cells_[startCell->getCol()][endCell->getRow()];
+			leftUpperCorner = &cells_[endCell->getCol()][startCell->getRow()];
 		}
 	}
+	// Test room min size
+	if (rightUpperCorner->getCol() - leftLowerCorner->getCol() < ROOM_MIN_SIZE_ ||
+			rightUpperCorner->getRow() - leftLowerCorner->getRow() < ROOM_MIN_SIZE_) {
+		forEachCellInRange(leftLowerCorner, rightUpperCorner, [&](GridCell* cell) {
+			cell->updateBuildState(vbo_, GridCell::BuildState::INVALID);
+		});
+		return;
+	}
+	// Set build states
+	leftLowerCorner->updateBuildState(vbo_, GridCell::BuildState::LEFT_LOWER_CORNER);
+	rightUpperCorner->updateBuildState(vbo_, GridCell::BuildState::RIGHT_UPPER_CORNER);
+	leftUpperCorner->updateBuildState(vbo_, GridCell::BuildState::LEFT_UPPER_CORNER);
+	rightLowerCorner->updateBuildState(vbo_, GridCell::BuildState::RIGHT_LOWER_CORNER);
+	forEachCellInRange(leftUpperCorner->getEastNeighbor(), rightUpperCorner->getWestNeighbor(), [&](GridCell* cell) {
+		cell->updateBuildState(vbo_, GridCell::BuildState::WALL_TOP);
+	});
+	forEachCellInRange(leftLowerCorner->getEastNeighbor(), rightLowerCorner->getWestNeighbor(), [&](GridCell* cell) {
+		cell->updateBuildState(vbo_, GridCell::BuildState::WALL_BOTTOM);
+	});
+	forEachCellInRange(leftLowerCorner->getNorthNeighbor(), leftUpperCorner->getSouthNeighbor(), [&](GridCell* cell) {
+		cell->updateBuildState(vbo_, GridCell::BuildState::WALL_LEFT);
+	});
+	forEachCellInRange(rightLowerCorner->getNorthNeighbor(), rightUpperCorner->getSouthNeighbor(), [&](GridCell* cell) {
+		cell->updateBuildState(vbo_, GridCell::BuildState::WALL_RIGHT);
+	});
+	GridCell* insideLeftLower = leftLowerCorner->getEastNeighbor()->getNorthNeighbor();
+	GridCell* insideRightUpper = rightUpperCorner->getWestNeighbor()->getSouthNeighbor();
+	forEachCellInRange(insideLeftLower, insideRightUpper, [&](GridCell* cell) {
+		cell->updateBuildState(vbo_, GridCell::BuildState::INSIDE_ROOM);
+	});
 }

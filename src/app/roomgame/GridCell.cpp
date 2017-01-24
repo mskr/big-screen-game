@@ -1,12 +1,14 @@
 #include "GridCell.h"
 
-GridCell::GridCell(float x, float y) {
+GridCell::GridCell(float x, float y, size_t col_idx, size_t row_idx) {
 	vertex_.x_position = x;
 	vertex_.y_position = y;
 	vertex_.build_state = BuildState::EMPTY;
 	vertex_.health_points = 1.0f;
 	vertex_buffer_offset_ = 0;
 	northNeighbor = 0, eastNeighbor = 0, southNeighbor = 0, westNeighbor = 0;
+	col_idx_ = col_idx;
+	row_idx_ = row_idx;
 }
 
 void GridCell::setVertexBufferOffset(GLintptr o) {
@@ -89,4 +91,12 @@ int GridCell::getBuildState() {
 
 float GridCell::getHealthPoints() {
 	return vertex_.health_points;
+}
+
+size_t GridCell::getCol() {
+	return col_idx_;
+}
+
+size_t GridCell::getRow() {
+	return row_idx_;
 }

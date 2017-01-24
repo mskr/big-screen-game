@@ -12,10 +12,11 @@
 
 class InteractiveGrid {
 	// Data members
-	float height_units_ = 2.0f;
+	float height_units_;
 	float cell_size_;
 	float z_distance_;
 	std::vector<std::vector<GridCell>> cells_; //TODO better use array with templated size
+	const size_t ROOM_MIN_SIZE_ = 2;
 	// Render-related members
 	GLuint vao_, vbo_;
 	std::shared_ptr<viscom::GPUProgram> shader_;
@@ -26,12 +27,15 @@ class InteractiveGrid {
 	// Input-related members
 	glm::dvec2 last_mouse_position_; //TODO maybe replace with TUIO touch position
 	std::list<GridInteraction*> interactions_;
+	GridCell* last_room_start_cell_;
+	GridCell* last_room_end_cell_;
 public:
-	InteractiveGrid(int columns, int rows);
+	InteractiveGrid(int columns, int rows, float height);
 	~InteractiveGrid();
 	// Helper functions
 	void forEachCell(std::function<void(GridCell*)> callback);
 	void forEachCell(std::function<void(GridCell*,bool*)> callback);
+	void forEachCellInRange(GridCell* leftLower, GridCell* rightUpper, std::function<void(GridCell*)> callback);
 	GridCell* getCellAt(glm::vec2 positionNDC);
 	bool isInsideGrid(glm::vec2 positionNDC);
 	bool isInsideCell(glm::vec2 positionNDC, GridCell* cell);
@@ -46,7 +50,7 @@ public:
 	void onRelease(int touchID);
 	void onMouseMove(int touchID, double newx, double newy);
 
-	void addRoom(GridCell* startCell, GridCell* endCell);
+	void addRoom(GridCell* startCell, GridCell* endCell, bool isFinished);
 };
 
 #endif

@@ -17,15 +17,21 @@ void main()
 	if(fBuildState == 0) color = vec4(1,1,1,1); // white
 	// Inside Room
 	else if(fBuildState == 1) color = vec4(0,1,0,1); // green
-	// Wall
-	else if(fBuildState == 2) color = vec4(1,1,0,1); // yellow
 	// Left Upper Corner
-	else if(fBuildState == 3) color = vec4(1,0,0,1); // red 
+	else if(fBuildState == 2) color = vec4(1,0,0,1); // red 
 	// Right Upper Corner
-	else if(fBuildState == 4) color = vec4(.5,0,0,1); // dark-red
+	else if(fBuildState == 3) color = vec4(.5,0,0,1); // dark-red
 	// Left Lower Corner
-	else if(fBuildState == 5) color = vec4(.5,0,.5,1); // dark-magenta
+	else if(fBuildState == 4) color = vec4(.5,0,.5,1); // dark-magenta
 	// Right Lower Corner
-	else if(fBuildState == 6) color = vec4(1,0,1,1); // magenta
+	else if(fBuildState == 5) color = vec4(1,0,1,1); // magenta
+	// Wall Left
+	else if(fBuildState == 6) color = vec4(1,1,0,1); // very bright yellow
+	// Wall Right
+	else if(fBuildState == 7) color = vec4(1,1,0,1)*0.8; // bright yellow
+	// Wall Top
+	else if(fBuildState == 8) color = vec4(1,1,0,1)*0.6; // dark yellow
+	// Wall Bottom
+	else if(fBuildState == 9) color = vec4(1,1,0,1)*0.4; // very dark yellow
 	else color = vec4(1,1,1,1); // white
 }
