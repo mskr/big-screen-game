@@ -4,6 +4,9 @@
 #include <sgct/Engine.h>
 #include "GridCell.h"
 
+class InteractiveGrid;
+class Room;
+
 class GridInteraction {
 	// TUIO ID
 	int touchID_;
@@ -14,8 +17,9 @@ class GridInteraction {
 	double last_timestamp_;
 	GridCell* last_cell_;
 	GridCell* start_cell_;
+	Room* room_;
 public:
-	GridInteraction(int touchID, glm::dvec2 position, GridCell* start_cell);
+	GridInteraction(int touchID, glm::dvec2 position, GridCell* start_cell, Room* room);
 	~GridInteraction() = default;
 	void update(glm::dvec2 position);
 	void update(GridCell* cell);
@@ -23,6 +27,7 @@ public:
 	GridCell* getStartCell();
 	GridCell* getLastCell();
 	int getTouchID();
+	Room* getRoom();
 };
 
 #endif

@@ -23,12 +23,11 @@ InteractiveGrid::InteractiveGrid(int columns, int rows, float height) {
 	model_matrix_ = glm::translate(glm::mat4(1), glm::vec3(-0.5f, 0.3f, 0.0f));
 	num_vertices_ = 0;
 	last_sgctMVP_ = glm::mat4(1);
-	last_room_start_cell_ = 0;
-	last_room_end_cell_ = 0;
 }
 
 InteractiveGrid::~InteractiveGrid() {
 	interactions_.clear();
+	rooms_.clear();
 }
 
 void InteractiveGrid::forEachCell(std::function<void(GridCell*)> callback) {
@@ -119,6 +118,11 @@ GridCell* InteractiveGrid::getCellAt(glm::vec2 positionNDC) {
 	return &cells_[iLeftUpper][jLeftUpper];
 }
 
+GridCell* InteractiveGrid::getCellAt(size_t col, size_t row) {
+	if (col >= cells_.size() || row >= cells_[0].size()) return 0;
+	return &cells_[col][row];
+}
+
 void InteractiveGrid::uploadVertexData() {
 	glGenVertexArrays(1, &vao_);
 	glBindVertexArray(vao_);
@@ -166,28 +170,32 @@ void InteractiveGrid::cleanup() {
 	glDeleteVertexArrays(1, &vao_);
 }
 
+// TODO What happens with concurrent input?
+
 void InteractiveGrid::onTouch(int touchID) {
 	//GLint viewport[4]; // [x,y,width,height]
 	//glGetIntegerv(GL_VIEWPORT, viewport);
+	// Create interaction
 	glm::vec2 touchPositionNDC =
 		glm::vec2(last_mouse_position_.x, 1.0 - last_mouse_position_.y)
 		* glm::vec2(2.0, 2.0) - glm::vec2(1.0, 1.0);
 	GridCell* maybeCell = getCellAt(touchPositionNDC);
 	if (!maybeCell) return;
-	interactions_.push_back(new GridInteraction(touchID, last_mouse_position_, maybeCell));
+	if (maybeCell->getBuildState() != GridCell::BuildState::EMPTY) return;
+	Room* room = new Room(maybeCell, maybeCell, this);
+	interactions_.push_back(
+		new GridInteraction(touchID, last_mouse_position_, maybeCell, room));
 }
 
 void InteractiveGrid::onRelease(int touchID) {
+	// Find and remove interaction
 	for (GridInteraction* interac : interactions_) {
 		if (interac->getTouchID() == touchID) {
 			interac->update(last_mouse_position_);
 			if (touchID == -1) {
-				glm::vec2 touchPositionNDC =
-					glm::vec2(last_mouse_position_.x, 1.0 - last_mouse_position_.y)
-					* glm::vec2(2.0, 2.0) - glm::vec2(1.0, 1.0);
-				GridCell* maybeCell = getCellAt(touchPositionNDC);
-				if (maybeCell)
-					addRoom(interac->getStartCell(), maybeCell, true);
+				Room* room = interac->getRoom();
+				if (room->isValid()) rooms_.push_back(room);
+				else delete room;
 				interactions_.remove(interac);
 				break;
 			}
@@ -208,79 +216,67 @@ void InteractiveGrid::onMouseMove(int touchID, double newx, double newy) {
 					glm::vec2(last_mouse_position_.x, 1.0 - last_mouse_position_.y)
 					* glm::vec2(2.0, 2.0) - glm::vec2(1.0, 1.0);
 				GridCell* maybeCell = getCellAt(touchPositionNDC);
-				if (!maybeCell) return;
-				if (interac->getStartCell() == maybeCell) return;
-				if (interac->getLastCell() == maybeCell) return;
+				if (!maybeCell) {
+					Room* room = interac->getRoom();
+					if (room->isValid()) rooms_.push_back(room);
+					else delete room;
+					interactions_.remove(interac);
+					return; // cursor was outside grid
+				}
+				if (interac->getLastCell() == maybeCell) return; // cursor was still inside last cell
+				bool collision = (maybeCell->getBuildState() != GridCell::BuildState::EMPTY);
+				resizeRoom(interac->getRoom(), interac->getStartCell(), interac->getLastCell(), maybeCell, collision);
 				interac->update(maybeCell);
-				addRoom(interac->getStartCell(), maybeCell, false);
 				break;
 			}
 		}
 	}
 }
 
-void InteractiveGrid::addRoom(GridCell* startCell, GridCell* endCell, bool isFinished) {
-	GridCell* leftLowerCorner = 0;
-	GridCell* rightUpperCorner = 0;
-	GridCell* leftUpperCorner = 0;
-	GridCell* rightLowerCorner = 0;
-	// Find corners
-	if (startCell->getCol() < endCell->getCol()) {
-		if (startCell->getRow() < endCell->getRow()) {
-			leftLowerCorner = startCell;
-			rightUpperCorner = endCell;
-			leftUpperCorner = &cells_[startCell->getCol()][endCell->getRow()];
-			rightLowerCorner = &cells_[endCell->getCol()][startCell->getRow()];
-		}
-		else {
-			leftUpperCorner = startCell;
-			rightLowerCorner = endCell;
-			leftLowerCorner = &cells_[startCell->getCol()][endCell->getRow()];
-			rightUpperCorner = &cells_[endCell->getCol()][startCell->getRow()];
-		}
-	}
-	else {
-		if (startCell->getRow() < endCell->getRow()) {
-			rightLowerCorner = startCell;
-			leftUpperCorner = endCell;
-			rightUpperCorner = &cells_[startCell->getCol()][endCell->getRow()];
-			leftLowerCorner = &cells_[endCell->getCol()][startCell->getRow()];
-		}
-		else {
-			rightUpperCorner = startCell;
-			leftLowerCorner = endCell;
-			rightLowerCorner = &cells_[startCell->getCol()][endCell->getRow()];
-			leftUpperCorner = &cells_[endCell->getCol()][startCell->getRow()];
-		}
-	}
-	// Test room min size
-	if (rightUpperCorner->getCol() - leftLowerCorner->getCol() < ROOM_MIN_SIZE_ ||
-			rightUpperCorner->getRow() - leftLowerCorner->getRow() < ROOM_MIN_SIZE_) {
-		forEachCellInRange(leftLowerCorner, rightUpperCorner, [&](GridCell* cell) {
-			cell->updateBuildState(vbo_, GridCell::BuildState::INVALID);
-		});
+void InteractiveGrid::updateBuildStateAt(size_t col, size_t row, GridCell::BuildState buildState) {
+	GridCell* maybeCell = getCellAt(col, row);
+	if (!maybeCell) return;
+	maybeCell->updateBuildState(vbo_, buildState);
+}
+
+void InteractiveGrid::resizeRoom(Room* room, GridCell* startCell, GridCell* lastCell, GridCell* currentCell, bool collision) {
+	//TODO Collision cases that are not handled yet:
+	// a) spanning a invalid room into another room
+	// b) growing a room so that the corner that is not the current cell hits another room
+	// c) wrapping other rooms by dragging current cell around them
+	if (startCell == lastCell || !room->isValid()) {
+		// Handle degenerated rooms
+		room->clear();
+		room->spanFromTo(startCell, currentCell);
 		return;
 	}
-	// Set build states
-	leftLowerCorner->updateBuildState(vbo_, GridCell::BuildState::LEFT_LOWER_CORNER);
-	rightUpperCorner->updateBuildState(vbo_, GridCell::BuildState::RIGHT_UPPER_CORNER);
-	leftUpperCorner->updateBuildState(vbo_, GridCell::BuildState::LEFT_UPPER_CORNER);
-	rightLowerCorner->updateBuildState(vbo_, GridCell::BuildState::RIGHT_LOWER_CORNER);
-	forEachCellInRange(leftUpperCorner->getEastNeighbor(), rightUpperCorner->getWestNeighbor(), [&](GridCell* cell) {
-		cell->updateBuildState(vbo_, GridCell::BuildState::WALL_TOP);
-	});
-	forEachCellInRange(leftLowerCorner->getEastNeighbor(), rightLowerCorner->getWestNeighbor(), [&](GridCell* cell) {
-		cell->updateBuildState(vbo_, GridCell::BuildState::WALL_BOTTOM);
-	});
-	forEachCellInRange(leftLowerCorner->getNorthNeighbor(), leftUpperCorner->getSouthNeighbor(), [&](GridCell* cell) {
-		cell->updateBuildState(vbo_, GridCell::BuildState::WALL_LEFT);
-	});
-	forEachCellInRange(rightLowerCorner->getNorthNeighbor(), rightUpperCorner->getSouthNeighbor(), [&](GridCell* cell) {
-		cell->updateBuildState(vbo_, GridCell::BuildState::WALL_RIGHT);
-	});
-	GridCell* insideLeftLower = leftLowerCorner->getEastNeighbor()->getNorthNeighbor();
-	GridCell* insideRightUpper = rightUpperCorner->getWestNeighbor()->getSouthNeighbor();
-	forEachCellInRange(insideLeftLower, insideRightUpper, [&](GridCell* cell) {
-		cell->updateBuildState(vbo_, GridCell::BuildState::INSIDE_ROOM);
-	});
+	// Compute size delta and update room (room updates GPU data)
+	size_t colDist = lastCell->getColDistanceTo(currentCell);
+	size_t rowDist = lastCell->getRowDistanceTo(currentCell);
+	// Horizontal
+	if (startCell->isWestOf(lastCell)) {
+		if (lastCell->isWestOf(currentCell) && !collision)
+			room->growToEast(colDist);
+		else if (lastCell->isEastOf(currentCell))
+			room->shrinkToWest(colDist);
+	}
+	else if (startCell->isEastOf(lastCell)) {
+		if (lastCell->isEastOf(currentCell) && !collision)
+			room->growToWest(colDist);
+		else if (lastCell->isWestOf(currentCell))
+			room->shrinkToEast(colDist);
+	}
+	// Vertical
+	if (startCell->isNorthOf(lastCell)) {
+		if (lastCell->isNorthOf(currentCell) && !collision)
+			room->growToSouth(rowDist);
+		else if (lastCell->isSouthOf(currentCell))
+			room->shrinkToNorth(rowDist);
+	}
+	else if (startCell->isSouthOf(lastCell)) {
+		if (lastCell->isSouthOf(currentCell) && !collision)
+			room->growToNorth(rowDist);
+		else if (lastCell->isNorthOf(currentCell))
+			room->shrinkToSouth(rowDist);
+	}
 }

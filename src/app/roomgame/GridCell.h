@@ -70,6 +70,12 @@ public:
 	void* getVertexPointer();
 	size_t getCol();
 	size_t getRow();
+	bool isNorthOf(GridCell* other);
+	bool isEastOf(GridCell* other);
+	bool isSouthOf(GridCell* other);
+	bool isWestOf(GridCell* other);
+	size_t getColDistanceTo(GridCell* other);
+	size_t getRowDistanceTo(GridCell* other);
 };
 
 #endif

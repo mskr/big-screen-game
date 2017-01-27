@@ -100,3 +100,33 @@ size_t GridCell::getCol() {
 size_t GridCell::getRow() {
 	return row_idx_;
 }
+
+bool GridCell::isNorthOf(GridCell* other) {
+	return this->row_idx_ > other->row_idx_;
+}
+
+bool GridCell::isEastOf(GridCell* other) {
+	return this->col_idx_ > other->col_idx_;
+}
+
+bool GridCell::isSouthOf(GridCell* other) {
+	return this->row_idx_ < other->row_idx_;
+}
+
+bool GridCell::isWestOf(GridCell* other) {
+	return this->col_idx_ < other->col_idx_;
+}
+
+size_t GridCell::getColDistanceTo(GridCell* other) {
+	if (other->col_idx_ > this->col_idx_)
+		return other->col_idx_ - this->col_idx_;
+	else
+		return this->col_idx_ - other->col_idx_;
+}
+
+size_t GridCell::getRowDistanceTo(GridCell* other) {
+	if (other->row_idx_ > this->row_idx_)
+		return other->row_idx_ - this->row_idx_;
+	else
+		return this->row_idx_ - other->row_idx_;
+}
