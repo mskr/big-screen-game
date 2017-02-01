@@ -45,6 +45,15 @@ void Room::spanFromTo(GridCell* startCell, GridCell* endCell) {
 			leftUpperCorner = grid_->getCellAt(endCell->getCol(), startCell->getRow());
 		}
 	}
+	// Test collision by brute force
+	bool collision = false;
+	grid_->forEachCellInRange(leftLowerCorner, rightUpperCorner, [&](GridCell* cell, bool* found) {
+		if (cell->getBuildState() != GridCell::BuildState::EMPTY) {
+			collision = true;
+			*found = true;
+		}
+	});
+	if (collision) return;
 	leftLowerCorner_ = leftLowerCorner;
 	rightUpperCorner_ = rightUpperCorner;
 	// Test room min size

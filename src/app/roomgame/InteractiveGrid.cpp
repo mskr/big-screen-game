@@ -59,6 +59,19 @@ void InteractiveGrid::forEachCellInRange(GridCell* leftLower, GridCell* rightUpp
 	}
 }
 
+void InteractiveGrid::forEachCellInRange(GridCell* leftLower, GridCell* rightUpper, std::function<void(GridCell*,bool*)> callback) {
+	if (leftLower->getCol() > rightUpper->getCol() || leftLower->getRow() > rightUpper->getRow())
+		return;
+	bool found = false;
+	for (size_t i = leftLower->getCol(); i <= rightUpper->getCol(); i++) {
+		for (size_t j = leftLower->getRow(); j <= rightUpper->getRow(); j++) {
+			callback(&cells_[i][j], &found);
+			if (found) break;
+		}
+		if (found) break;
+	}
+}
+
 bool InteractiveGrid::isInsideGrid(glm::vec2 positionNDC) {
 	GridCell& leftUpperCell = cells_[0][cells_[0].size() - 1];
 	glm::vec2 posLeftUpperNDC = getNDC(leftUpperCell.getPosition());
@@ -233,8 +246,7 @@ void InteractiveGrid::onMouseMove(int touchID, double newx, double newy) {
 }
 
 void InteractiveGrid::resizeRoom(Room* room, GridCell* startCell, GridCell* lastCell, GridCell* currentCell) {
-	//TODO Collision cases that are not handled yet:
-	// a) spanning a invalid room into another room
+	//TODO Report back collisions and don't update interaction.lastCell
 	if (startCell == lastCell || !room->isValid()) {
 		// Handle degenerated rooms
 		room->clear();

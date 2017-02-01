@@ -56,6 +56,7 @@ public:
 	void forEachCell(std::function<void(GridCell*)> callback);
 	void forEachCell(std::function<void(GridCell*,bool*)> callback);
 	void forEachCellInRange(GridCell* leftLower, GridCell* rightUpper, std::function<void(GridCell*)> callback);
+	void forEachCellInRange(GridCell* leftLower, GridCell* rightUpper, std::function<void(GridCell*,bool*)> callback);
 	GridCell* getCellAt(glm::vec2 positionNDC);
 	GridCell* getCellAt(size_t col, size_t row);
 	bool isInsideGrid(glm::vec2 positionNDC);
