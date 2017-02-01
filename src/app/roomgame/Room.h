@@ -25,6 +25,8 @@ public:
 	bool isValid();
 	void invalidate();
 	void clear();
+	size_t getColSize();
+	size_t getRowSize();
 };
 
 #endif

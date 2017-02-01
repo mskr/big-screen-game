@@ -92,12 +92,14 @@ void Room::clear() {
 }
 
 void Room::growToEast(size_t dist) {
-	if (dist > 1) printf("%d\n", dist);
 	GridCell::BuildState top = GridCell::BuildState::WALL_TOP;
 	GridCell::BuildState bottom = GridCell::BuildState::WALL_BOTTOM;
 	GridCell::BuildState middle = GridCell::BuildState::INSIDE_ROOM;
+	bool isCollisionAhead = false;
 	for (size_t i = 0; i <= dist; i++) {
-		if (i == dist) {
+		isCollisionAhead = !grid_->isColumnEmptyBetween(rightUpperCorner_->getCol() + 1,
+			leftLowerCorner_->getRow(), rightUpperCorner_->getRow());
+		if (i == dist || isCollisionAhead) {
 			top = GridCell::BuildState::RIGHT_UPPER_CORNER;
 			bottom = GridCell::BuildState::RIGHT_LOWER_CORNER;
 			middle = GridCell::BuildState::WALL_RIGHT;
@@ -109,13 +111,13 @@ void Room::growToEast(size_t dist) {
 			grid_->updateBuildStateAt(inner->getCol(), inner->getRow(), middle);
 			inner = inner->getSouthNeighbor();
 		}
+		if (isCollisionAhead) return;
 		if (i < dist)
 			rightUpperCorner_ = rightUpperCorner_->getEastNeighbor();
 	}
 }
 
 void Room::shrinkToWest(size_t dist) {
-	if (dist > 1) printf("%d\n", dist);
 	GridCell::BuildState top = GridCell::BuildState::EMPTY;
 	GridCell::BuildState bottom = GridCell::BuildState::EMPTY;
 	GridCell::BuildState middle = GridCell::BuildState::EMPTY;
@@ -149,12 +151,14 @@ void Room::shrinkToWest(size_t dist) {
 }
 
 void Room::growToWest(size_t dist) {
-	if (dist > 1) printf("%d\n", dist);
 	GridCell::BuildState top = GridCell::BuildState::WALL_TOP;
 	GridCell::BuildState bottom = GridCell::BuildState::WALL_BOTTOM;
 	GridCell::BuildState middle = GridCell::BuildState::INSIDE_ROOM;
+	bool isCollisionAhead = false;
 	for (size_t i = 0; i <= dist; i++) {
-		if (i == dist) {
+		isCollisionAhead = !grid_->isColumnEmptyBetween(leftLowerCorner_->getCol() - 1,
+			leftLowerCorner_->getRow(), rightUpperCorner_->getRow());
+		if (i == dist || isCollisionAhead) {
 			top = GridCell::BuildState::LEFT_UPPER_CORNER;
 			bottom = GridCell::BuildState::LEFT_LOWER_CORNER;
 			middle = GridCell::BuildState::WALL_LEFT;
@@ -166,13 +170,13 @@ void Room::growToWest(size_t dist) {
 			grid_->updateBuildStateAt(inner->getCol(), inner->getRow(), middle);
 			inner = inner->getNorthNeighbor();
 		}
+		if (isCollisionAhead) return;
 		if (i < dist)
 			leftLowerCorner_ = leftLowerCorner_->getWestNeighbor();
 	}
 }
 
 void Room::shrinkToEast(size_t dist) {
-	if (dist > 1) printf("%d\n", dist);
 	GridCell::BuildState top = GridCell::BuildState::EMPTY;
 	GridCell::BuildState bottom = GridCell::BuildState::EMPTY;
 	GridCell::BuildState middle = GridCell::BuildState::EMPTY;
@@ -206,12 +210,14 @@ void Room::shrinkToEast(size_t dist) {
 }
 
 void Room::growToSouth(size_t dist) {
-	if (dist > 1) printf("%d\n", dist);
 	GridCell::BuildState left = GridCell::BuildState::WALL_LEFT;
 	GridCell::BuildState right = GridCell::BuildState::WALL_RIGHT;
 	GridCell::BuildState middle = GridCell::BuildState::INSIDE_ROOM;
+	bool isCollisionAhead = false;
 	for (size_t i = 0; i <= dist; i++) {
-		if (i == dist) {
+		isCollisionAhead = !grid_->isRowEmptyBetween(leftLowerCorner_->getRow() - 1,
+			leftLowerCorner_->getCol(), rightUpperCorner_->getCol());
+		if (i == dist || isCollisionAhead) {
 			left = GridCell::BuildState::LEFT_LOWER_CORNER;
 			right = GridCell::BuildState::RIGHT_LOWER_CORNER;
 			middle = GridCell::BuildState::WALL_BOTTOM;
@@ -223,13 +229,13 @@ void Room::growToSouth(size_t dist) {
 			grid_->updateBuildStateAt(inner->getCol(), inner->getRow(), middle);
 			inner = inner->getEastNeighbor();
 		}
+		if (isCollisionAhead) return;
 		if (i < dist)
 			leftLowerCorner_ = leftLowerCorner_->getSouthNeighbor();
 	}
 }
 
 void Room::shrinkToNorth(size_t dist) {
-	if (dist > 1) printf("%d\n", dist);
 	GridCell::BuildState left = GridCell::BuildState::EMPTY;
 	GridCell::BuildState right = GridCell::BuildState::EMPTY;
 	GridCell::BuildState middle = GridCell::BuildState::EMPTY;
@@ -263,12 +269,14 @@ void Room::shrinkToNorth(size_t dist) {
 }
 
 void Room::growToNorth(size_t dist) {
-	if (dist > 1) printf("%d\n", dist);
 	GridCell::BuildState left = GridCell::BuildState::WALL_LEFT;
 	GridCell::BuildState right = GridCell::BuildState::WALL_RIGHT;
 	GridCell::BuildState middle = GridCell::BuildState::INSIDE_ROOM;
+	bool isCollisionAhead = false;
 	for (size_t i = 0; i <= dist; i++) {
-		if (i == dist) {
+		isCollisionAhead = !grid_->isRowEmptyBetween(rightUpperCorner_->getRow() + 1,
+			leftLowerCorner_->getCol(), rightUpperCorner_->getCol());
+		if (i == dist || isCollisionAhead) {
 			left = GridCell::BuildState::LEFT_UPPER_CORNER;
 			right = GridCell::BuildState::RIGHT_UPPER_CORNER;
 			middle = GridCell::BuildState::WALL_TOP;
@@ -280,13 +288,13 @@ void Room::growToNorth(size_t dist) {
 			grid_->updateBuildStateAt(inner->getCol(), inner->getRow(), middle);
 			inner = inner->getWestNeighbor();
 		}
+		if (isCollisionAhead) return;
 		if (i < dist)
 			rightUpperCorner_ = rightUpperCorner_->getNorthNeighbor();
 	}
 }
 
 void Room::shrinkToSouth(size_t dist) {
-	if (dist > 1) printf("%d\n", dist);
 	GridCell::BuildState left = GridCell::BuildState::EMPTY;
 	GridCell::BuildState right = GridCell::BuildState::EMPTY;
 	GridCell::BuildState middle = GridCell::BuildState::EMPTY;
@@ -323,4 +331,13 @@ bool Room::isValid() {
 	size_t hsize = rightUpperCorner_->getCol() - leftLowerCorner_->getCol();
 	size_t vsize = rightUpperCorner_->getRow() - leftLowerCorner_->getRow();
 	return (hsize >= MIN_SIZE) && (vsize >= MIN_SIZE);
+}
+
+
+size_t Room::getColSize() {
+	return rightUpperCorner_->getCol() - leftLowerCorner_->getCol();
+}
+
+size_t Room::getRowSize() {
+	return rightUpperCorner_->getRow() - leftLowerCorner_->getRow();
 }

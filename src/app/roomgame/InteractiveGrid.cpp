@@ -224,8 +224,7 @@ void InteractiveGrid::onMouseMove(int touchID, double newx, double newy) {
 					return; // cursor was outside grid
 				}
 				if (interac->getLastCell() == maybeCell) return; // cursor was still inside last cell
-				bool collision = (maybeCell->getBuildState() != GridCell::BuildState::EMPTY);
-				resizeRoom(interac->getRoom(), interac->getStartCell(), interac->getLastCell(), maybeCell, collision);
+				resizeRoom(interac->getRoom(), interac->getStartCell(), interac->getLastCell(), maybeCell);
 				interac->update(maybeCell);
 				break;
 			}
@@ -233,17 +232,9 @@ void InteractiveGrid::onMouseMove(int touchID, double newx, double newy) {
 	}
 }
 
-void InteractiveGrid::updateBuildStateAt(size_t col, size_t row, GridCell::BuildState buildState) {
-	GridCell* maybeCell = getCellAt(col, row);
-	if (!maybeCell) return;
-	maybeCell->updateBuildState(vbo_, buildState);
-}
-
-void InteractiveGrid::resizeRoom(Room* room, GridCell* startCell, GridCell* lastCell, GridCell* currentCell, bool collision) {
+void InteractiveGrid::resizeRoom(Room* room, GridCell* startCell, GridCell* lastCell, GridCell* currentCell) {
 	//TODO Collision cases that are not handled yet:
 	// a) spanning a invalid room into another room
-	// b) growing a room so that the corner that is not the current cell hits another room
-	// c) wrapping other rooms by dragging current cell around them
 	if (startCell == lastCell || !room->isValid()) {
 		// Handle degenerated rooms
 		room->clear();
@@ -255,28 +246,88 @@ void InteractiveGrid::resizeRoom(Room* room, GridCell* startCell, GridCell* last
 	size_t rowDist = lastCell->getRowDistanceTo(currentCell);
 	// Horizontal
 	if (startCell->isWestOf(lastCell)) {
-		if (lastCell->isWestOf(currentCell) && !collision)
+		if (lastCell->isWestOf(currentCell))
 			room->growToEast(colDist);
-		else if (lastCell->isEastOf(currentCell))
-			room->shrinkToWest(colDist);
+		else if (lastCell->isEastOf(currentCell)) {
+			if (startCell->isEastOf(currentCell)) {
+				room->shrinkToWest(lastCell->getColDistanceTo(startCell));
+				room->growToWest(startCell->getColDistanceTo(currentCell));
+			} else
+				room->shrinkToWest(colDist);
+		}
 	}
 	else if (startCell->isEastOf(lastCell)) {
-		if (lastCell->isEastOf(currentCell) && !collision)
+		if (lastCell->isEastOf(currentCell))
 			room->growToWest(colDist);
-		else if (lastCell->isWestOf(currentCell))
-			room->shrinkToEast(colDist);
+		else if (lastCell->isWestOf(currentCell)) {
+			if (startCell->isWestOf(currentCell)) {
+				room->shrinkToEast(lastCell->getColDistanceTo(startCell));
+				room->growToEast(startCell->getColDistanceTo(currentCell));
+			} else
+				room->shrinkToEast(colDist);
+		}
 	}
 	// Vertical
 	if (startCell->isNorthOf(lastCell)) {
-		if (lastCell->isNorthOf(currentCell) && !collision)
+		if (lastCell->isNorthOf(currentCell))
 			room->growToSouth(rowDist);
-		else if (lastCell->isSouthOf(currentCell))
-			room->shrinkToNorth(rowDist);
+		else if (lastCell->isSouthOf(currentCell)) {
+			if (startCell->isSouthOf(currentCell)) {
+				room->shrinkToNorth(lastCell->getRowDistanceTo(startCell));
+				room->growToNorth(startCell->getRowDistanceTo(currentCell));
+			} else
+				room->shrinkToNorth(rowDist);
+		}
 	}
 	else if (startCell->isSouthOf(lastCell)) {
-		if (lastCell->isSouthOf(currentCell) && !collision)
+		if (lastCell->isSouthOf(currentCell))
 			room->growToNorth(rowDist);
-		else if (lastCell->isNorthOf(currentCell))
-			room->shrinkToSouth(rowDist);
+		else if (lastCell->isNorthOf(currentCell)) {
+			if (startCell->isNorthOf(currentCell)) {
+				room->shrinkToSouth(lastCell->getRowDistanceTo(startCell));
+				room->growToSouth(startCell->getRowDistanceTo(currentCell));
+			} else
+				room->shrinkToSouth(rowDist);
+		}
 	}
+}
+
+void InteractiveGrid::updateBuildStateAt(size_t col, size_t row, GridCell::BuildState buildState) {
+	GridCell* maybeCell = getCellAt(col, row);
+	if (!maybeCell) return;
+	maybeCell->updateBuildState(vbo_, buildState);
+}
+
+bool InteractiveGrid::isColumnEmptyBetween(size_t col, size_t startRow, size_t endRow) {
+	if (endRow < startRow) {
+		size_t tmp = endRow;
+		endRow = startRow;
+		startRow = tmp;
+	}
+	GridCell* maybeCell = 0;
+	for (size_t i = startRow; i <= endRow; i++) {
+		maybeCell = getCellAt(col, i);
+		if (!maybeCell)
+			return false;
+		if (maybeCell->getBuildState() != GridCell::BuildState::EMPTY)
+			return false;
+	}
+	return true;
+}
+
+bool InteractiveGrid::isRowEmptyBetween(size_t row, size_t startCol, size_t endCol) {
+	if (endCol < startCol) {
+		size_t tmp = endCol;
+		endCol = startCol;
+		startCol = tmp;
+	}
+	GridCell* maybeCell = 0;
+	for (size_t j = startCol; j <= endCol; j++) {
+		maybeCell = getCellAt(j, row);
+		if (!maybeCell)
+			return false;
+		if (maybeCell->getBuildState() != GridCell::BuildState::EMPTY)
+			return false;
+	}
+	return true;
 }

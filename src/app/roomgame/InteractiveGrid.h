@@ -71,9 +71,11 @@ public:
 	void onRelease(int touchID);
 	void onMouseMove(int touchID, double newx, double newy);
 
-	void resizeRoom(Room* room, GridCell* startCell, GridCell* lastCell, GridCell* currentCell, bool collision);
+	void resizeRoom(Room* room, GridCell* startCell, GridCell* lastCell, GridCell* currentCell);
 
 	void updateBuildStateAt(size_t col, size_t row, GridCell::BuildState buildState);
+	bool isColumnEmptyBetween(size_t col, size_t startRow, size_t endRow);
+	bool isRowEmptyBetween(size_t row, size_t startCol, size_t endCol);
 };
 
 #endif
