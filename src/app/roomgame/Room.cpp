@@ -11,7 +11,7 @@ Room::~Room() {
 	clear();
 }
 
-void Room::spanFromTo(GridCell* startCell, GridCell* endCell) {
+bool Room::spanFromTo(GridCell* startCell, GridCell* endCell) {
 	GridCell* leftLowerCorner = 0;
 	GridCell* rightUpperCorner = 0;
 	GridCell* leftUpperCorner = 0;
@@ -53,7 +53,7 @@ void Room::spanFromTo(GridCell* startCell, GridCell* endCell) {
 			*found = true;
 		}
 	});
-	if (collision) return;
+	if (collision) return false;
 	leftLowerCorner_ = leftLowerCorner;
 	rightUpperCorner_ = rightUpperCorner;
 	// Test room min size
@@ -62,7 +62,7 @@ void Room::spanFromTo(GridCell* startCell, GridCell* endCell) {
 		grid_->forEachCellInRange(leftLowerCorner, rightUpperCorner, [&](GridCell* cell) {
 			grid_->updateBuildStateAt(cell->getCol(), cell->getRow(), GridCell::BuildState::INVALID);
 		});
-		return;
+		return true;
 	}
 	// Set build states
 	grid_->updateBuildStateAt(leftLowerCorner->getCol(), leftLowerCorner->getRow(), GridCell::BuildState::LEFT_LOWER_CORNER);
@@ -86,6 +86,7 @@ void Room::spanFromTo(GridCell* startCell, GridCell* endCell) {
 	grid_->forEachCellInRange(insideLeftLower, insideRightUpper, [&](GridCell* cell) {
 		grid_->updateBuildStateAt(cell->getCol(), cell->getRow(), GridCell::BuildState::INSIDE_ROOM);
 	});
+	return true;
 }
 
 void Room::invalidate() {
@@ -100,7 +101,7 @@ void Room::clear() {
 	});
 }
 
-void Room::growToEast(size_t dist) {
+bool Room::growToEast(size_t dist) {
 	GridCell::BuildState top = GridCell::BuildState::WALL_TOP;
 	GridCell::BuildState bottom = GridCell::BuildState::WALL_BOTTOM;
 	GridCell::BuildState middle = GridCell::BuildState::INSIDE_ROOM;
@@ -120,10 +121,11 @@ void Room::growToEast(size_t dist) {
 			grid_->updateBuildStateAt(inner->getCol(), inner->getRow(), middle);
 			inner = inner->getSouthNeighbor();
 		}
-		if (isCollisionAhead) return;
+		if (isCollisionAhead) return false;
 		if (i < dist)
 			rightUpperCorner_ = rightUpperCorner_->getEastNeighbor();
 	}
+	return true;
 }
 
 void Room::shrinkToWest(size_t dist) {
@@ -159,7 +161,7 @@ void Room::shrinkToWest(size_t dist) {
 	}
 }
 
-void Room::growToWest(size_t dist) {
+bool Room::growToWest(size_t dist) {
 	GridCell::BuildState top = GridCell::BuildState::WALL_TOP;
 	GridCell::BuildState bottom = GridCell::BuildState::WALL_BOTTOM;
 	GridCell::BuildState middle = GridCell::BuildState::INSIDE_ROOM;
@@ -179,10 +181,11 @@ void Room::growToWest(size_t dist) {
 			grid_->updateBuildStateAt(inner->getCol(), inner->getRow(), middle);
 			inner = inner->getNorthNeighbor();
 		}
-		if (isCollisionAhead) return;
+		if (isCollisionAhead) return false;
 		if (i < dist)
 			leftLowerCorner_ = leftLowerCorner_->getWestNeighbor();
 	}
+	return true;
 }
 
 void Room::shrinkToEast(size_t dist) {
@@ -218,7 +221,7 @@ void Room::shrinkToEast(size_t dist) {
 	}
 }
 
-void Room::growToSouth(size_t dist) {
+bool Room::growToSouth(size_t dist) {
 	GridCell::BuildState left = GridCell::BuildState::WALL_LEFT;
 	GridCell::BuildState right = GridCell::BuildState::WALL_RIGHT;
 	GridCell::BuildState middle = GridCell::BuildState::INSIDE_ROOM;
@@ -238,10 +241,11 @@ void Room::growToSouth(size_t dist) {
 			grid_->updateBuildStateAt(inner->getCol(), inner->getRow(), middle);
 			inner = inner->getEastNeighbor();
 		}
-		if (isCollisionAhead) return;
+		if (isCollisionAhead) return false;
 		if (i < dist)
 			leftLowerCorner_ = leftLowerCorner_->getSouthNeighbor();
 	}
+	return true;
 }
 
 void Room::shrinkToNorth(size_t dist) {
@@ -277,7 +281,7 @@ void Room::shrinkToNorth(size_t dist) {
 	}
 }
 
-void Room::growToNorth(size_t dist) {
+bool Room::growToNorth(size_t dist) {
 	GridCell::BuildState left = GridCell::BuildState::WALL_LEFT;
 	GridCell::BuildState right = GridCell::BuildState::WALL_RIGHT;
 	GridCell::BuildState middle = GridCell::BuildState::INSIDE_ROOM;
@@ -297,10 +301,11 @@ void Room::growToNorth(size_t dist) {
 			grid_->updateBuildStateAt(inner->getCol(), inner->getRow(), middle);
 			inner = inner->getWestNeighbor();
 		}
-		if (isCollisionAhead) return;
+		if (isCollisionAhead) return false;
 		if (i < dist)
 			rightUpperCorner_ = rightUpperCorner_->getNorthNeighbor();
 	}
+	return true;
 }
 
 void Room::shrinkToSouth(size_t dist) {
@@ -349,4 +354,8 @@ size_t Room::getColSize() {
 
 size_t Room::getRowSize() {
 	return rightUpperCorner_->getRow() - leftLowerCorner_->getRow();
+}
+
+InteractiveGrid* Room::getGrid() {
+	return grid_;
 }

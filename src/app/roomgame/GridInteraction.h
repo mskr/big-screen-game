@@ -7,6 +7,8 @@
 class InteractiveGrid;
 class Room;
 
+#include "Room.h"
+
 class GridInteraction {
 	// TUIO ID
 	int touchID_;
@@ -18,16 +20,19 @@ class GridInteraction {
 	GridCell* last_cell_;
 	GridCell* start_cell_;
 	Room* room_;
+	Room::CollisionType last_collision_;
 public:
 	GridInteraction(int touchID, glm::dvec2 position, GridCell* start_cell, Room* room);
 	~GridInteraction() = default;
 	void update(glm::dvec2 position);
-	void update(GridCell* cell);
+	void setLastCell(GridCell* cell);
+	void setLastCollision(Room::CollisionType coll);
 	bool testTemporalAndSpatialProximity(GridInteraction* other);
 	GridCell* getStartCell();
 	GridCell* getLastCell();
 	int getTouchID();
 	Room* getRoom();
+	Room::CollisionType getLastCollision();
 };
 
 #endif

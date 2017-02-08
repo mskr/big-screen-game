@@ -72,7 +72,7 @@ public:
 	void onRelease(int touchID);
 	void onMouseMove(int touchID, double newx, double newy);
 
-	void resizeRoom(Room* room, GridCell* startCell, GridCell* lastCell, GridCell* currentCell);
+	Room::CollisionType resizeRoomUntilCollision(Room* room, GridCell* startCell, GridCell* lastCell, GridCell* currentCell);
 
 	void updateBuildStateAt(size_t col, size_t row, GridCell::BuildState buildState);
 	bool isColumnEmptyBetween(size_t col, size_t startRow, size_t endRow);
