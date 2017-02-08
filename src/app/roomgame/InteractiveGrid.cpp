@@ -339,6 +339,9 @@ void InteractiveGrid::updateBuildStateAt(size_t col, size_t row, GridCell::Build
 	GridCell* maybeCell = getCellAt(col, row);
 	if (!maybeCell) return;
 	maybeCell->updateBuildState(vbo_, buildState);
+
+	//TODO
+	RoomSegmentMeshPool::getMeshOfType(buildState)->addInstance(maybeCell->getPosition(), buildState);
 }
 
 bool InteractiveGrid::isColumnEmptyBetween(size_t col, size_t startRow, size_t endRow) {
