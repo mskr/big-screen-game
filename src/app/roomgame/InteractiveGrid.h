@@ -9,28 +9,8 @@
 #include "Room.h"
 #include "GridInteraction.h"
 
-/*struct RoomEdge {
-	int room_id = -1;
-	bool is_start = true;
-	size_t pos = 0;
-	RoomEdge* next = 0;
-	RoomEdge* prev = 0;
-	~RoomEdge() {
-		delete next;
-	}
-};
-
-class RoomCollisionList {
-	RoomEdge* first_elem_;
-public:
-	RoomCollisionList() : first_elem_(0) {}
-	~RoomCollisionList() {
-		delete first_elem_;
-	}
-	void sort(RoomEdge* elem) {
-
-	}
-};*/
+class RoomSegmentMeshPool;
+#include "RoomSegmentMeshPool.h"
 
 //template < int ARRAY_LEN >
 class InteractiveGrid {
@@ -46,6 +26,7 @@ class InteractiveGrid {
 	glm::mat4 model_matrix_;
 	GLsizei num_vertices_;
 	glm::mat4 last_sgctMVP_;
+	RoomSegmentMeshPool* meshpool_;
 	// Input-related members
 	glm::dvec2 last_mouse_position_; //TODO maybe replace with TUIO touch position
 	std::list<GridInteraction*> interactions_;
@@ -62,6 +43,12 @@ public:
 	bool isInsideGrid(glm::vec2 positionNDC);
 	bool isInsideCell(glm::vec2 positionNDC, GridCell* cell);
 	glm::vec2 getNDC(glm::vec2 position);
+	bool isColumnEmptyBetween(size_t col, size_t startRow, size_t endRow);
+	bool isRowEmptyBetween(size_t row, size_t startCol, size_t endCol);
+	float getCellSize();
+	size_t getNumColumns();
+	size_t getNumRows();
+	size_t getNumCells();
 	// Render functions
 	void uploadVertexData();
 	void loadShader(viscom::ApplicationNode* appNode);
@@ -73,10 +60,8 @@ public:
 	void onMouseMove(int touchID, double newx, double newy);
 
 	Room::CollisionType resizeRoomUntilCollision(Room* room, GridCell* startCell, GridCell* lastCell, GridCell* currentCell);
-
 	void updateBuildStateAt(size_t col, size_t row, GridCell::BuildState buildState);
-	bool isColumnEmptyBetween(size_t col, size_t startRow, size_t endRow);
-	bool isRowEmptyBetween(size_t row, size_t startCol, size_t endCol);
+	void setRoomSegmentMeshPool(RoomSegmentMeshPool* meshpool);
 };
 
 #endif

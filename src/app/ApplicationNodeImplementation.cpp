@@ -16,7 +16,8 @@ namespace viscom {
 
 	ApplicationNodeImplementation::ApplicationNodeImplementation(ApplicationNode* appNode) :
 		appNode_{ appNode },
-		grid_(40, 40, 1.2f)
+		grid_(40, 40, 1.2f),
+		meshpool_(&grid_)
     {
     }
 
@@ -29,6 +30,8 @@ namespace viscom {
 
     void ApplicationNodeImplementation::InitOpenGL()
     {
+		meshpool_.setShader(appNode_->GetGPUProgramManager().GetResource("foregroundMesh", std::initializer_list<std::string>{ "foregroundMesh.vert", "foregroundMesh.frag" }));
+		meshpool_.addCornerMesh(appNode_->GetMeshManager().GetResource("/models/teapot/teapot.obj"));
 		grid_.loadShader(appNode_);
 		grid_.uploadVertexData();
     }
@@ -43,8 +46,6 @@ namespace viscom {
 
     void ApplicationNodeImplementation::UpdateFrame(double currentTime, double)
     {
-        triangleModelMatrix_ = glm::rotate(glm::translate(glm::mat4(1.0f), glm::vec3(1.0f, 0.0f, 0.0f)), static_cast<float>(currentTime), glm::vec3(0.0f, 1.0f, 0.0f));
-        teapotModelMatrix_ = glm::scale(glm::rotate(glm::translate(glm::mat4(0.01f), glm::vec3(-3.0f, 0.0f, -5.0f)), static_cast<float>(currentTime), glm::vec3(0.0f, 1.0f, 0.0f)), glm::vec3(0.01f));
     }
 
     void ApplicationNodeImplementation::ClearBuffer(FrameBuffer& fbo)
@@ -60,6 +61,7 @@ namespace viscom {
     {
         fbo.DrawToFBO([this]() {
 			grid_.render(GetEngine()->getCurrentModelViewProjectionMatrix());
+			meshpool_.render(GetEngine()->getCurrentModelViewProjectionMatrix());
         });
     }
 

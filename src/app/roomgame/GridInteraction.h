@@ -9,10 +9,6 @@ class Room;
 
 #include "Room.h"
 
-class RoomSegmentMeshPool {
-
-};
-
 class GridInteraction {
 	// TUIO ID
 	int touchID_;

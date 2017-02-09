@@ -48,7 +48,6 @@ namespace viscom {
 
         void DrawNode(const glm::mat4& modelMatrix, const SceneMeshNode* node, bool overrideBump = false) const;
 
-    private:
         /** Holds the mesh to render. */
         const Mesh* mesh_;
         /** Holds the vertex buffer. */

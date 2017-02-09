@@ -11,6 +11,7 @@
 #include <sgct/Engine.h>
 #include "core/ApplicationNode.h"
 #include "app/roomgame/InteractiveGrid.h"
+#include "app/roomgame/RoomSegmentMeshPool.h"
 
 
 
@@ -73,36 +74,7 @@ namespace viscom {
         /** Holds the application node. */
         ApplicationNode* appNode_;
 
-        /** Holds the shader program for drawing the background. */
-        std::shared_ptr<GPUProgram> backgroundProgram_;
-        /** Holds the location of the MVP matrix. */
-        GLint backgroundMVPLoc_ = -1;
-
-        /** Holds the shader program for drawing the foreground triangle. */
-        std::shared_ptr<GPUProgram> triangleProgram_;
-        /** Holds the location of the MVP matrix. */
-        GLint triangleMVPLoc_ = -1;
-
-        /** Holds the shader program for drawing the foreground teapot. */
-        std::shared_ptr<GPUProgram> teapotProgram_;
-        /** Holds the location of the VP matrix. */
-        GLint teapotVPLoc_ = -1;
-
-        /** Holds the number of vertices of the background grid. */
-        unsigned int numBackgroundVertices_ = 0;
-        /** Holds the vertex buffer for the background grid. */
-        GLuint vboBackgroundGrid_ = 0;
-        /** Holds the vertex array object for the background grid. */
-        GLuint vaoBackgroundGrid_ = 0;
-
-        /** Holds the teapot mesh. */
-        std::shared_ptr<Mesh> teapotMesh_;
-        /** Holds the teapot mesh renderable. */
-        std::unique_ptr<MeshRenderable> teapotRenderable_;
-
-        glm::mat4 triangleModelMatrix_;
-        glm::mat4 teapotModelMatrix_;
-
 		InteractiveGrid grid_;
+		RoomSegmentMeshPool meshpool_;
     };
 }

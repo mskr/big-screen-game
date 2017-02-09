@@ -20,9 +20,10 @@ InteractiveGrid::InteractiveGrid(int columns, int rows, float height) {
 		}
 	}
 	mvp_uniform_location_ = -1;
-	model_matrix_ = glm::translate(glm::mat4(1), glm::vec3(-0.5f, 0.3f, 0.0f));
+	model_matrix_ = glm::mat4(1);// glm::translate(glm::mat4(1), glm::vec3(-0.5f, 0.3f, 0.0f));
 	num_vertices_ = 0;
 	last_sgctMVP_ = glm::mat4(1);
+	meshpool_ = 0;
 }
 
 InteractiveGrid::~InteractiveGrid() {
@@ -340,8 +341,12 @@ void InteractiveGrid::updateBuildStateAt(size_t col, size_t row, GridCell::Build
 	if (!maybeCell) return;
 	maybeCell->updateBuildState(vbo_, buildState);
 
-	//TODO
-	RoomSegmentMeshPool::getMeshOfType(buildState)->addInstance(maybeCell->getPosition(), buildState);
+	meshpool_->getMeshOfType(buildState)->addInstance(
+		model_matrix_ * glm::vec4(maybeCell->getPosition(), 0.0f, 1.0f), glm::vec3(cell_size_), buildState);
+}
+
+void InteractiveGrid::setRoomSegmentMeshPool(RoomSegmentMeshPool* meshpool) {
+	meshpool_ = meshpool;
 }
 
 bool InteractiveGrid::isColumnEmptyBetween(size_t col, size_t startRow, size_t endRow) {
@@ -376,4 +381,20 @@ bool InteractiveGrid::isRowEmptyBetween(size_t row, size_t startCol, size_t endC
 			return false;
 	}
 	return true;
+}
+
+float InteractiveGrid::getCellSize() {
+	return cell_size_;
+}
+
+size_t InteractiveGrid::getNumColumns() {
+	return cells_.size();
+}
+
+size_t InteractiveGrid::getNumRows() {
+	return cells_[0].size();
+}
+
+size_t InteractiveGrid::getNumCells() {
+	return cells_.size() * cells_[0].size();
 }
