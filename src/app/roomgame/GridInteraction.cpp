@@ -11,6 +11,12 @@ GridInteraction::GridInteraction(int touchID, glm::dvec2 position, GridCell* sta
 	last_collision_ = Room::CollisionType::NONE;
 }
 
+GridInteraction::~GridInteraction() {
+	// Do not free room pointer here
+	// because valid rooms should still live when interaction is deleted
+	// (grid manages room pointers)
+}
+
 void GridInteraction::update(glm::dvec2 position) {
 	last_timestamp_ = glfwGetTime();
 	last_position_ = position;

@@ -2,6 +2,7 @@
 #define GRID_CELL_H
 
 #include <sgct/Engine.h>
+#include "RoomSegmentMesh.h"
 
 class GridCell {
 public:
@@ -46,6 +47,7 @@ private:
 	GridCell* westNeighbor;
 	size_t col_idx_;
 	size_t row_idx_;
+	RoomSegmentMesh::InstanceBufferRange mesh_instance_;
 public:
 	GridCell(float x, float y, size_t col_idx, size_t row_idx);
 	~GridCell() = default;
@@ -76,6 +78,8 @@ public:
 	bool isWestOf(GridCell* other);
 	size_t getColDistanceTo(GridCell* other);
 	size_t getRowDistanceTo(GridCell* other);
+	RoomSegmentMesh::InstanceBufferRange getMeshInstance();
+	void setMeshInstance(RoomSegmentMesh::InstanceBufferRange mesh_instance);
 };
 
 #endif

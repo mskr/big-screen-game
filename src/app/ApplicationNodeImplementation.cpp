@@ -30,8 +30,10 @@ namespace viscom {
 
     void ApplicationNodeImplementation::InitOpenGL()
     {
-		meshpool_.setShader(appNode_->GetGPUProgramManager().GetResource("foregroundMesh", std::initializer_list<std::string>{ "foregroundMesh.vert", "foregroundMesh.frag" }));
+		meshpool_.setShader(appNode_->GetGPUProgramManager().GetResource("foregroundMesh", 
+			std::initializer_list<std::string>{ "foregroundMesh.vert", "foregroundMesh.frag" }));
 		meshpool_.addCornerMesh(appNode_->GetMeshManager().GetResource("/models/teapot/teapot.obj"));
+		// GOAL: meshpool_.addMesh(GridCell::BuildState::LEFT_LOWER_CORNER, meshSharedPointer);
 		grid_.loadShader(appNode_);
 		grid_.uploadVertexData();
     }
@@ -61,7 +63,7 @@ namespace viscom {
     {
         fbo.DrawToFBO([this]() {
 			grid_.render(GetEngine()->getCurrentModelViewProjectionMatrix());
-			meshpool_.render(GetEngine()->getCurrentModelViewProjectionMatrix());
+			meshpool_.renderAllMeshes(GetEngine()->getCurrentModelViewProjectionMatrix());
         });
     }
 

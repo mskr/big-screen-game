@@ -26,7 +26,6 @@ class InteractiveGrid {
 	glm::mat4 model_matrix_;
 	GLsizei num_vertices_;
 	glm::mat4 last_sgctMVP_;
-	RoomSegmentMeshPool* meshpool_;
 	// Input-related members
 	glm::dvec2 last_mouse_position_; //TODO maybe replace with TUIO touch position
 	std::list<GridInteraction*> interactions_;
@@ -60,8 +59,12 @@ public:
 	void onMouseMove(int touchID, double newx, double newy);
 
 	Room::CollisionType resizeRoomUntilCollision(Room* room, GridCell* startCell, GridCell* lastCell, GridCell* currentCell);
-	void updateBuildStateAt(size_t col, size_t row, GridCell::BuildState buildState);
+	void buildAt(size_t col, size_t row, GridCell::BuildState buildState);
+
 	void setRoomSegmentMeshPool(RoomSegmentMeshPool* meshpool);
+	RoomSegmentMeshPool* getRoomSegmentMeshPool();
+private:
+	RoomSegmentMeshPool* meshpool_;
 };
 
 #endif

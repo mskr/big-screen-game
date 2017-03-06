@@ -1,41 +1,129 @@
 #include "RoomSegmentMesh.h"
 
-RoomSegmentMesh::RoomSegmentMesh(viscom::Mesh* mesh, viscom::GPUProgram* program, size_t pool_allocation_bytes) :
-	viscom::MeshRenderable(mesh, Vertex::CreateVertexBuffer(mesh), program),
-	pool_allocation_bytes_(pool_allocation_bytes)
+RoomSegmentMesh::InstanceBuffer::InstanceBuffer(size_t pool_allocation_bytes) :
+	pool_allocation_bytes_(pool_allocation_bytes),
+	num_instances_(0),
+	num_reallocations_(1)
 {
-	num_instances_ = 0;
-	this->NotifyRecompiledShader<Vertex>(program);
-	glBindVertexArray(this->vao_);
-	glGenBuffers(1, &instance_buffer_);
-	glBindBuffer(GL_ARRAY_BUFFER, instance_buffer_);
+	glGenBuffers(1, &id_);
+	glBindBuffer(GL_ARRAY_BUFFER, id_);
 	glBufferData(GL_ARRAY_BUFFER, pool_allocation_bytes_, (GLvoid*)0, GL_STATIC_DRAW);
-	InstanceAttribs::setAttribPointer();
-	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	num_reallocations_ = 1;
 }
 
-void RoomSegmentMesh::addInstance(glm::vec4 position, glm::vec3 scale, GridCell::BuildState type) {
-	if ((num_instances_+1) * sizeof(InstanceAttribs) > pool_allocation_bytes_ * num_reallocations_) {
-		// Realloc
-		glBindBuffer(GL_COPY_READ_BUFFER, instance_buffer_);
+RoomSegmentMesh::RoomSegmentMesh(viscom::Mesh* mesh, viscom::GPUProgram* program, size_t pool_allocation_bytes) :
+	viscom::MeshRenderable(mesh, Vertex::CreateVertexBuffer(mesh), program), // Fill vertex buffer
+	room_ordered_buffer_(pool_allocation_bytes),
+	unordered_buffer_(pool_allocation_bytes),
+	next_free_offset_(0), last_free_offset_(0)
+{
+	// Create VAO and connect vertex buffer
+	NotifyRecompiledShader<Vertex>(program);
+	// Connect instance buffers
+	glBindVertexArray(vao_);
+	glBindBuffer(GL_ARRAY_BUFFER, room_ordered_buffer_.id_);
+	Instance::setAttribPointer();
+	glBindBuffer(GL_ARRAY_BUFFER, unordered_buffer_.id_);
+	Instance::setAttribPointer();
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+RoomSegmentMesh::~RoomSegmentMesh() {
+	glDeleteBuffers(1, &room_ordered_buffer_.id_);
+	glDeleteBuffers(1, &unordered_buffer_.id_);
+	while (next_free_offset_) {
+		NextFreeOffsetQueueElem* tmp = next_free_offset_->el_;
+		delete next_free_offset_;
+		next_free_offset_ = tmp;
+	}
+}
+
+RoomSegmentMesh::InstanceBufferRange RoomSegmentMesh::addInstanceUnordered(glm::vec3 position, glm::vec3 scale, float zRot) {
+	int next_free_offset;
+	if (!next_free_offset_) next_free_offset = unordered_buffer_.num_instances_;
+	else {
+		next_free_offset = next_free_offset_->offset_;
+		NextFreeOffsetQueueElem* tmp = next_free_offset_->el_;
+		delete next_free_offset_;
+		next_free_offset_ = tmp;
+	}
+	if ((next_free_offset + 1) * sizeof(Instance) > unordered_buffer_.pool_allocation_bytes_ * unordered_buffer_.num_reallocations_) {
+	/*if ((unordered_buffer_.num_instances_+1) * sizeof(Instance) > unordered_buffer_.pool_allocation_bytes_ * unordered_buffer_.num_reallocations_) {*/
+		// Realloc and copy
+		glBindBuffer(GL_COPY_READ_BUFFER, unordered_buffer_.id_);
 		GLuint tmpBuffer;
 		glGenBuffers(1, &tmpBuffer);
 		glBindBuffer(GL_COPY_WRITE_BUFFER, tmpBuffer);
-		num_reallocations_++;
-		glBufferData(GL_COPY_WRITE_BUFFER, pool_allocation_bytes_ * num_reallocations_, 0, GL_STATIC_DRAW);
-		glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, num_instances_ * sizeof(InstanceAttribs));
-		glDeleteBuffers(1, &instance_buffer_);
-		instance_buffer_ = tmpBuffer;
+		unordered_buffer_.num_reallocations_++;
+		glBufferData(GL_COPY_WRITE_BUFFER, unordered_buffer_.pool_allocation_bytes_ * unordered_buffer_.num_reallocations_, 0, GL_STATIC_COPY);
+		glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, unordered_buffer_.num_instances_ * sizeof(Instance));
+		// THIS IS WHAT MAKES REALLOCATION APPROACH ***UGLY***:
+		glDeleteBuffers(1, &unordered_buffer_.id_); // Delete old instance buffer
+		glDeleteVertexArrays(1, &vao_); // Delete old VAO
+		NotifyRecompiledShader<Vertex>(drawProgram_); // Create new VAO and connect old vertex buffer
+		// Connect new instance buffer
+		unordered_buffer_.id_ = tmpBuffer;
+		glBindVertexArray(vao_);
+		glBindBuffer(GL_ARRAY_BUFFER, unordered_buffer_.id_);
+		Instance::setAttribPointer();
 	}
-	glBindBuffer(GL_ARRAY_BUFFER, instance_buffer_);
-	InstanceAttribs data;
-	data.translation = glm::vec3(position);
+	glBindBuffer(GL_ARRAY_BUFFER, unordered_buffer_.id_);
+	Instance data;
+	data.translation = position;
 	data.scale = scale;
-	data.zRotation = 0.0f; //TODO decide rotation based on BuildState
-	glBufferSubData(GL_ARRAY_BUFFER, num_instances_ * sizeof(InstanceAttribs), sizeof(InstanceAttribs), &data);
-	num_instances_++;
+	data.zRotation = zRot;
+	glBufferSubData(GL_ARRAY_BUFFER, next_free_offset * sizeof(Instance), sizeof(Instance), &data);
+	/*glBufferSubData(GL_ARRAY_BUFFER, unordered_buffer_.num_instances_ * sizeof(Instance), sizeof(Instance), &data);*/
+	InstanceBufferRange r;
+	r.buffer_ = &unordered_buffer_;
+	r.mesh_ = this;
+	r.num_instances_ = 1;
+	r.offset_instances_ = next_free_offset;
+	/*r.offset_instances_ = unordered_buffer_.num_instances_;*/
+	if (next_free_offset == unordered_buffer_.num_instances_)
+		unordered_buffer_.num_instances_++;
+	return r;
+}
+
+void RoomSegmentMesh::removeInstanceUnordered(int offset_instances) {
+	if (offset_instances == unordered_buffer_.num_instances_ - 1) {
+		unordered_buffer_.num_instances_--;
+		return;
+	}
+	if (!next_free_offset_) {
+		next_free_offset_ = new NextFreeOffsetQueueElem(offset_instances);
+		last_free_offset_ = next_free_offset_;
+	}
+	else {
+		last_free_offset_->el_ = new NextFreeOffsetQueueElem(offset_instances);
+		last_free_offset_ = last_free_offset_->el_;
+	}
+	Instance zeros;
+	zeros.translation = glm::vec3(0);
+	zeros.scale = glm::vec3(0);
+	zeros.zRotation = 0.0f;
+	glBindBuffer(GL_ARRAY_BUFFER, unordered_buffer_.id_);
+	glBufferSubData(GL_ARRAY_BUFFER, offset_instances * sizeof(Instance), sizeof(Instance), &zeros);
+}
+
+
+
+
+
+void RoomSegmentMesh::render(std::vector<GLint>* uniformLocations) {
+	if (unordered_buffer_.num_instances_ == 0) return; //TODO Seperately draw unordered and ordered buffers
+	const viscom::SceneMeshNode* root = mesh_->GetRootNode();
+	glBindVertexArray(vao_);
+	renderNode(uniformLocations, root);
+}
+
+void RoomSegmentMesh::renderNode(std::vector<GLint>* uniformLocations, const viscom::SceneMeshNode* node, bool overrideBump) {
+	auto localMatrix = node->GetLocalTransform();
+	for (unsigned int i = 0; i < node->GetNumMeshes(); ++i)
+		renderSubMesh(uniformLocations, localMatrix, node->GetMesh(i), overrideBump);
+	for (unsigned int i = 0; i < node->GetNumNodes(); ++i)
+		renderNode(uniformLocations, node->GetChild(i), overrideBump);
 }
 
 void RoomSegmentMesh::renderSubMesh(std::vector<GLint>* uniformLocations, const glm::mat4& modelMatrix, const viscom::SubMesh* subMesh, bool overrideBump) {
@@ -54,22 +142,7 @@ void RoomSegmentMesh::renderSubMesh(std::vector<GLint>* uniformLocations, const 
 		glUniform1i(uniformLocations_[3], 1);
 		if (!overrideBump) glUniform1f(uniformLocations_[4], subMesh->GetMaterial()->bumpMultiplier);
 	}
+	//TODO Seperately draw unordered and ordered buffers
 	glDrawElementsInstanced(GL_TRIANGLES, subMesh->GetNumberOfIndices(), GL_UNSIGNED_INT,
-		(static_cast<char*> (nullptr)) + (subMesh->GetIndexOffset() * sizeof(unsigned int)), num_instances_);
-}
-
-void RoomSegmentMesh::renderNode(std::vector<GLint>* uniformLocations, const viscom::SceneMeshNode* node, bool overrideBump) {
-	auto localMatrix = node->GetLocalTransform();
-	for (unsigned int i = 0; i < node->GetNumMeshes(); ++i)
-		renderSubMesh(uniformLocations, localMatrix, node->GetMesh(i), overrideBump);
-	for (unsigned int i = 0; i < node->GetNumNodes(); ++i)
-		renderNode(uniformLocations, node->GetChild(i), overrideBump);
-}
-
-void RoomSegmentMesh::render(std::vector<GLint>* uniformLocations) {
-	if (num_instances_ == 0) return;
-	const viscom::SceneMeshNode* root = mesh_->GetRootNode();
-	glBindVertexArray(vao_);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo_);
-	renderNode(uniformLocations, root);
+		(static_cast<char*> (nullptr)) + (subMesh->GetIndexOffset() * sizeof(unsigned int)), unordered_buffer_.num_instances_);
 }

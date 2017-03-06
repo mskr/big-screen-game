@@ -208,7 +208,11 @@ void InteractiveGrid::onRelease(int touchID) {
 			interac->update(last_mouse_position_);
 			if (touchID == -1) {
 				Room* room = interac->getRoom();
-				if (room->isValid()) rooms_.push_back(room);
+				if (room->isValid()) {
+					// Finish room
+					room->finish();
+					rooms_.push_back(room);
+				}
 				else delete room;
 				interactions_.remove(interac);
 				break;
@@ -265,18 +269,19 @@ void InteractiveGrid::onMouseMove(int touchID, double newx, double newy) {
 }
 
 Room::CollisionType InteractiveGrid::resizeRoomUntilCollision(Room* room, GridCell* startCell, GridCell* lastCell, GridCell* currentCell) {
+	// Handle DEGENERATED rooms by update each cell (typically low number of cells)
 	if (startCell == lastCell || !room->isValid()) {
-		// Handle degenerated rooms
 		room->clear();
 		return room->spanFromTo(startCell, currentCell) ? Room::CollisionType::NONE : Room::CollisionType::BOTH;
 		//TODO Invalid rooms that collide are not rendered
 	}
+	// Handle OK rooms by update only changed cells (room cell number can be very high)
 	bool isNotCollided_H = true;
 	bool isNotCollided_V = true;
-	// Compute size delta and update room (room updates GPU data)
+	// Compute size delta
 	size_t colDist = lastCell->getColDistanceTo(currentCell);
 	size_t rowDist = lastCell->getRowDistanceTo(currentCell);
-	// Horizontal
+	// Horizontal grow or shrink
 	if (startCell->isWestOf(lastCell)) {
 		if (lastCell->isWestOf(currentCell))
 			isNotCollided_H = room->growToEast(colDist);
@@ -299,7 +304,7 @@ Room::CollisionType InteractiveGrid::resizeRoomUntilCollision(Room* room, GridCe
 				room->shrinkToEast(colDist);
 		}
 	}
-	// Vertical
+	// Vertical grow or shrink
 	if (startCell->isNorthOf(lastCell)) {
 		if (lastCell->isNorthOf(currentCell))
 			isNotCollided_V = room->growToSouth(rowDist);
@@ -322,6 +327,7 @@ Room::CollisionType InteractiveGrid::resizeRoomUntilCollision(Room* room, GridCe
 				room->shrinkToSouth(rowDist);
 		}
 	}
+	// Has room collided?
 	if (isNotCollided_H && isNotCollided_V) {
 		return Room::CollisionType::NONE;
 	}
@@ -336,17 +342,54 @@ Room::CollisionType InteractiveGrid::resizeRoomUntilCollision(Room* room, GridCe
 	}
 }
 
-void InteractiveGrid::updateBuildStateAt(size_t col, size_t row, GridCell::BuildState buildState) {
+void InteractiveGrid::buildAt(size_t col, size_t row, GridCell::BuildState buildState) {
 	GridCell* maybeCell = getCellAt(col, row);
 	if (!maybeCell) return;
+	if (maybeCell->getBuildState() == buildState) return;
+	if (meshpool_) {
+		RoomSegmentMesh::InstanceBufferRange bufferRange;
+		if (maybeCell->getBuildState() == GridCell::BuildState::EMPTY) {
+			// Add instance, if cell was empty
+			RoomSegmentMesh::Instance instance;
+			instance.scale = glm::vec3(cell_size_)*0.01f; //TODO Find the right scale!
+			instance.translation = glm::vec3(model_matrix_ * glm::vec4(maybeCell->getPosition(), 0.0f, 1.0f));
+			instance.zRotation = 0.0f;
+			bufferRange = meshpool_->addInstanceUnordered(buildState, instance);
+			maybeCell->setMeshInstance(bufferRange);
+		}
+		else if (buildState == GridCell::BuildState::EMPTY) {
+			// Remove instance, if cell is going to be empty
+			bufferRange = maybeCell->getMeshInstance();
+			bufferRange.mesh_->removeInstanceUnordered(bufferRange.offset_instances_);
+		}
+		else {
+			// Alter instance, if build states change between others than empty
+			bufferRange = maybeCell->getMeshInstance();
+			bufferRange.mesh_->removeInstanceUnordered(bufferRange.offset_instances_);
+			RoomSegmentMesh::Instance instance;
+			instance.scale = glm::vec3(cell_size_)*0.01f; //TODO Find the right scale!
+			instance.translation = glm::vec3(model_matrix_ * glm::vec4(maybeCell->getPosition(), 0.0f, 1.0f));
+			instance.zRotation = 0.0f;
+			bufferRange = meshpool_->addInstanceUnordered(buildState, instance);
+			maybeCell->setMeshInstance(bufferRange);
+		}
+	}
+
 	maybeCell->updateBuildState(vbo_, buildState);
 
+	/*
 	meshpool_->getMeshOfType(buildState)->addInstance(
-		model_matrix_ * glm::vec4(maybeCell->getPosition(), 0.0f, 1.0f), glm::vec3(cell_size_), buildState);
+		model_matrix_ * glm::vec4(maybeCell->getPosition(), 0.0f, 1.0f), glm::vec3(cell_size_)*0.01f, buildState);
+		
+		*/
 }
 
 void InteractiveGrid::setRoomSegmentMeshPool(RoomSegmentMeshPool* meshpool) {
 	meshpool_ = meshpool;
+}
+
+RoomSegmentMeshPool* InteractiveGrid::getRoomSegmentMeshPool() {
+	return meshpool_;
 }
 
 bool InteractiveGrid::isColumnEmptyBetween(size_t col, size_t startRow, size_t endRow) {

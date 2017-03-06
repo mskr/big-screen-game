@@ -130,3 +130,11 @@ size_t GridCell::getRowDistanceTo(GridCell* other) {
 	else
 		return this->row_idx_ - other->row_idx_;
 }
+
+RoomSegmentMesh::InstanceBufferRange GridCell::getMeshInstance() {
+	return mesh_instance_;
+}
+
+void GridCell::setMeshInstance(RoomSegmentMesh::InstanceBufferRange mesh_instance) {
+	mesh_instance_ = mesh_instance;
+}

@@ -14,5 +14,5 @@ void main()
 
     float NdotL = clamp(dot(lightDir, normalize(vNormal)), 0.0f, 1.0f);
     vec3 texColor = texture(diffuseTexture, vTexCoords).rgb;
-    color = vec4(texColor * NdotL, 1.0f);
+    color = vec4(1,1,1,1);//vec4(texColor * NdotL, 1.0f);
 }

@@ -23,7 +23,7 @@ void main()
 	modelMatrix[0][0] = scale.x;
 	modelMatrix[1][1] = scale.y;
 	modelMatrix[2][2] = scale.z;
-    vec4 posV4 = subMeshLocalMatrix * modelMatrix * vec4(position, 1);
+    vec4 posV4 = modelMatrix * subMeshLocalMatrix * vec4(position, 1);
     vPosition = vec3(posV4);
     vNormal = vec3(normalize(modelMatrix * vec4(normal,1)));
     vTexCoords = texCoords;

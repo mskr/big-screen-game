@@ -23,7 +23,7 @@ class GridInteraction {
 	Room::CollisionType last_collision_;
 public:
 	GridInteraction(int touchID, glm::dvec2 position, GridCell* start_cell, Room* room);
-	~GridInteraction() = default;
+	~GridInteraction();
 	void update(glm::dvec2 position);
 	void setLastCell(GridCell* cell);
 	void setLastCollision(Room::CollisionType coll);
