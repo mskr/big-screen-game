@@ -42,21 +42,48 @@ void RoomSegmentMeshPool::addFloorMesh(std::shared_ptr<viscom::Mesh> mesh) {
 }
 
 RoomSegmentMesh* RoomSegmentMeshPool::getMeshOfType(GridCell::BuildState type) {
-	return corners_[0]; //TODO pick a mesh based on type
+	srand((unsigned int)time(0));
+	if (type == GridCell::BuildState::LEFT_LOWER_CORNER || type == GridCell::BuildState::RIGHT_LOWER_CORNER ||
+		type == GridCell::BuildState::LEFT_UPPER_CORNER || type == GridCell::BuildState::RIGHT_UPPER_CORNER) {
+		return corners_[rand() % corners_.size()];
+	}
+	else if (type == GridCell::BuildState::INSIDE_ROOM) {
+		return floors_[rand() % floors_.size()];
+	}
+	else if (type == GridCell::BuildState::WALL_RIGHT || type == GridCell::BuildState::WALL_LEFT ||
+		type == GridCell::BuildState::WALL_TOP || type == GridCell::BuildState::WALL_BOTTOM) {
+		return walls_[rand() % walls_.size()];
+	}
+	else {
+		// If the pool has no mesh for the requested build state...
+		return corners_[0];
+	}
 }
 
 RoomSegmentMesh::InstanceBufferRange RoomSegmentMeshPool::addInstanceUnordered(GridCell::BuildState type, RoomSegmentMesh::Instance instance) {
 	RoomSegmentMesh* mesh = getMeshOfType(type);
+	// Choose rotation for corners and walls
+	if (type == GridCell::BuildState::LEFT_UPPER_CORNER || type == GridCell::BuildState::WALL_LEFT)
+		instance.zRotation = glm::half_pi<float>();
+	else if (type == GridCell::BuildState::LEFT_LOWER_CORNER || type == GridCell::BuildState::WALL_BOTTOM)
+		instance.zRotation = 0.0f;
+	else if (type == GridCell::BuildState::RIGHT_UPPER_CORNER || type == GridCell::BuildState::WALL_TOP)
+		instance.zRotation = glm::pi<float>();
+	else if (type == GridCell::BuildState::RIGHT_LOWER_CORNER || type == GridCell::BuildState::WALL_RIGHT)
+		instance.zRotation = glm::three_over_two_pi<float>();
 	return mesh->addInstanceUnordered(instance.translation, instance.scale, instance.zRotation);
 }
 
 
 
 void RoomSegmentMeshPool::renderAllMeshes(glm::mat4 sgctMVP) {
-	if (shader_ == 0)
-		return;
+	if (shader_ == 0) return;
 	glUseProgram(shader_->getProgramId());
 	glUniformMatrix4fv(uniform_locations_[0], 1, GL_FALSE, glm::value_ptr(sgctMVP));
 	for (RoomSegmentMesh* segment : corners_)
-		segment->render(&uniform_locations_);
+		segment->renderAllInstances(&uniform_locations_);
+	for (RoomSegmentMesh* segment : walls_)
+		segment->renderAllInstances(&uniform_locations_);
+	for (RoomSegmentMesh* segment : floors_)
+		segment->renderAllInstances(&uniform_locations_);
 }

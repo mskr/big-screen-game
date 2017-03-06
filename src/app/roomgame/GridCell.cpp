@@ -132,7 +132,10 @@ size_t GridCell::getRowDistanceTo(GridCell* other) {
 }
 
 RoomSegmentMesh::InstanceBufferRange GridCell::getMeshInstance() {
-	return mesh_instance_;
+	if (vertex_.build_state != BuildState::EMPTY)
+		return mesh_instance_;
+	else
+		return RoomSegmentMesh::InstanceBufferRange();
 }
 
 void GridCell::setMeshInstance(RoomSegmentMesh::InstanceBufferRange mesh_instance) {

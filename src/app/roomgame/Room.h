@@ -10,6 +10,7 @@ class Room {
 	GridCell* rightUpperCorner_;
 	InteractiveGrid* grid_;
 	bool isFinished_;
+	std::vector<RoomSegmentMesh::InstanceBufferRange> mesh_instances_;
 public:
 	static const size_t MIN_SIZE = 2;
 	Room(GridCell* leftLowerCorner, GridCell* rightUpperCorner, InteractiveGrid* grid);

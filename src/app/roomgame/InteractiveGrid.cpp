@@ -171,11 +171,13 @@ void InteractiveGrid::loadShader(viscom::ApplicationNode* appNode) {
 }
 
 void InteractiveGrid::render(glm::mat4 sgctMVP) {
+	glDisable(GL_DEPTH_TEST);
 	glBindVertexArray(vao_);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_);
 	glUseProgram(shader_->getProgramId());
 	glUniformMatrix4fv(mvp_uniform_location_, 1, GL_FALSE, glm::value_ptr(sgctMVP * model_matrix_));
 	glDrawArrays(GL_POINTS, 0, num_vertices_);
+	glEnable(GL_DEPTH_TEST);
 	last_sgctMVP_ = sgctMVP;
 }
 
@@ -351,9 +353,8 @@ void InteractiveGrid::buildAt(size_t col, size_t row, GridCell::BuildState build
 		if (maybeCell->getBuildState() == GridCell::BuildState::EMPTY) {
 			// Add instance, if cell was empty
 			RoomSegmentMesh::Instance instance;
-			instance.scale = glm::vec3(cell_size_)*0.01f; //TODO Find the right scale!
-			instance.translation = glm::vec3(model_matrix_ * glm::vec4(maybeCell->getPosition(), 0.0f, 1.0f));
-			instance.zRotation = 0.0f;
+			instance.scale = glm::vec3(model_matrix_ * glm::vec4(cell_size_)) / 2.0f; //TODO Find the right scale!
+			instance.translation = glm::vec3(model_matrix_ * glm::vec4(maybeCell->getPosition() + glm::vec2(cell_size_/2.0f, -cell_size_/2.0f), 0.0f, 1.0f));
 			bufferRange = meshpool_->addInstanceUnordered(buildState, instance);
 			maybeCell->setMeshInstance(bufferRange);
 		}
@@ -367,21 +368,13 @@ void InteractiveGrid::buildAt(size_t col, size_t row, GridCell::BuildState build
 			bufferRange = maybeCell->getMeshInstance();
 			bufferRange.mesh_->removeInstanceUnordered(bufferRange.offset_instances_);
 			RoomSegmentMesh::Instance instance;
-			instance.scale = glm::vec3(cell_size_)*0.01f; //TODO Find the right scale!
-			instance.translation = glm::vec3(model_matrix_ * glm::vec4(maybeCell->getPosition(), 0.0f, 1.0f));
-			instance.zRotation = 0.0f;
+			instance.scale = glm::vec3(model_matrix_ * glm::vec4(cell_size_)) / 2.0f; //TODO Find the right scale!
+			instance.translation = glm::vec3(model_matrix_ * glm::vec4(maybeCell->getPosition() + glm::vec2(cell_size_/2.0f, -cell_size_/2.0f), 0.0f, 1.0f));
 			bufferRange = meshpool_->addInstanceUnordered(buildState, instance);
 			maybeCell->setMeshInstance(bufferRange);
 		}
 	}
-
 	maybeCell->updateBuildState(vbo_, buildState);
-
-	/*
-	meshpool_->getMeshOfType(buildState)->addInstance(
-		model_matrix_ * glm::vec4(maybeCell->getPosition(), 0.0f, 1.0f), glm::vec3(cell_size_)*0.01f, buildState);
-		
-		*/
 }
 
 void InteractiveGrid::setRoomSegmentMeshPool(RoomSegmentMeshPool* meshpool) {

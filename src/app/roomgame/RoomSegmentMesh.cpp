@@ -107,11 +107,14 @@ void RoomSegmentMesh::removeInstanceUnordered(int offset_instances) {
 	glBufferSubData(GL_ARRAY_BUFFER, offset_instances * sizeof(Instance), sizeof(Instance), &zeros);
 }
 
+RoomSegmentMesh::InstanceBufferRange RoomSegmentMesh::moveInstancesToRoomOrderedBuffer(std::initializer_list<int> offsets) {
+	//TODO copy and remove instances at given offsets
+	return InstanceBufferRange();
+}
 
 
 
-
-void RoomSegmentMesh::render(std::vector<GLint>* uniformLocations) {
+void RoomSegmentMesh::renderAllInstances(std::vector<GLint>* uniformLocations) {
 	if (unordered_buffer_.num_instances_ == 0) return; //TODO Seperately draw unordered and ordered buffers
 	const viscom::SceneMeshNode* root = mesh_->GetRootNode();
 	glBindVertexArray(vao_);

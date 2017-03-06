@@ -19,9 +19,9 @@ public:
 		InstanceBuffer(size_t pool_allocation_bytes);
 	};
 	struct Instance {
-		glm::vec3 translation;
-		glm::vec3 scale;
-		float zRotation;
+		glm::vec3 translation = glm::vec3(0);
+		glm::vec3 scale = glm::vec3(0);
+		float zRotation = 0.0f;
 		static const void setAttribPointer() {
 			GLint transLoc = 3;
 			GLint scaleLoc = 4;
@@ -60,14 +60,15 @@ private:
 public:
 	RoomSegmentMesh(viscom::Mesh* mesh, viscom::GPUProgram* program, size_t pool_allocation_bytes);
 	~RoomSegmentMesh();
-	//void addInstanceOrdered(Instance instance);
-	//void addInstanceUnordered(Instance instance);
 	InstanceBufferRange addInstanceUnordered(glm::vec3 position, glm::vec3 scale, float zRot);
 	void removeInstanceUnordered(int offset_instances);
-
-	void render(std::vector<GLint>* uniformLocations);
-	void renderNode(std::vector<GLint>* uniformLocations, const viscom::SceneMeshNode* node, bool overrideBump=false);
-	void renderSubMesh(std::vector<GLint>* uniformLocations, const glm::mat4& modelMatrix, const viscom::SubMesh* subMesh, bool overrideBump=false);
+	InstanceBufferRange moveInstancesToRoomOrderedBuffer(std::initializer_list<int> offsets);
+	void renderAllInstances(std::vector<GLint>* uniformLocations);
+private:
+	void renderNode(std::vector<GLint>* uniformLocations,
+		const viscom::SceneMeshNode* node, bool overrideBump=false);
+	void renderSubMesh(std::vector<GLint>* uniformLocations,
+		const glm::mat4& modelMatrix, const viscom::SubMesh* subMesh, bool overrideBump=false);
 };
 
 #endif

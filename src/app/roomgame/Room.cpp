@@ -45,6 +45,16 @@ InteractiveGrid* Room::getGrid() {
 void Room::finish() {
 	isFinished_ = true;
 	//TODO Move mesh instances from unordered to room-ordered buffers (for each mesh that is part of the room)
+	// 1) Get instance buffer range for each cell of this room
+	// 2) Copy instance to ordered buffer
+	// 3) Remove instance from unordered buffer
+	// 4) Update cell's mesh instance buffer range
+	// 5) Get the whole ordered buffer range and push into mesh_instances_ vector
+	// 6) Prevent growing/shrinking/spanning of finished rooms
+	// 7) Clearing a finished room should update build state for each cell but remove only 1 buffer range in the ordered buffer! How to do this?
+	grid_->forEachCellInRange(leftLowerCorner_, rightUpperCorner_, [&](GridCell* cell) {
+		RoomSegmentMesh::InstanceBufferRange bufferRange = cell->getMeshInstance();
+	});
 }
 
 bool Room::growToEast(size_t dist) {

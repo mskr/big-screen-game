@@ -1,4 +1,5 @@
 #version 330 core
+#define M_PI 3.1415926535897932384626433832795
 
 layout(location = 0) in vec3 position;
 layout(location = 1) in vec3 normal;
@@ -16,6 +17,19 @@ out vec3 vPosition;
 out vec3 vNormal;
 out vec2 vTexCoords;
 
+mat4 rotationMatrix(vec3 axis, float angle)
+{
+    axis = normalize(axis);
+    float s = sin(angle);
+    float c = cos(angle);
+    float oc = 1.0 - c;
+    
+    return mat4(oc * axis.x * axis.x + c,           oc * axis.x * axis.y - axis.z * s,  oc * axis.z * axis.x + axis.y * s,  0.0,
+                oc * axis.x * axis.y + axis.z * s,  oc * axis.y * axis.y + c,           oc * axis.y * axis.z - axis.x * s,  0.0,
+                oc * axis.z * axis.x - axis.y * s,  oc * axis.y * axis.z + axis.x * s,  oc * axis.z * axis.z + c,           0.0,
+                0.0,                                0.0,                                0.0,                                1.0);
+}
+
 void main()
 {
 	mat4 modelMatrix;
@@ -23,6 +37,11 @@ void main()
 	modelMatrix[0][0] = scale.x;
 	modelMatrix[1][1] = scale.y;
 	modelMatrix[2][2] = scale.z;
+	modelMatrix *= rotationMatrix(vec3(0,0,1), zRotation);
+
+	// Flip everything 90 deg around X (could also change models)
+	modelMatrix *= rotationMatrix(vec3(1,0,0), -M_PI/2.0);
+
     vec4 posV4 = modelMatrix * subMeshLocalMatrix * vec4(position, 1);
     vPosition = vec3(posV4);
     vNormal = vec3(normalize(modelMatrix * vec4(normal,1)));

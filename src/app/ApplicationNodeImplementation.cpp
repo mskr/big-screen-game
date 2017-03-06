@@ -16,7 +16,7 @@ namespace viscom {
 
 	ApplicationNodeImplementation::ApplicationNodeImplementation(ApplicationNode* appNode) :
 		appNode_{ appNode },
-		grid_(40, 40, 1.2f),
+		grid_(10, 10, 1.2f),
 		meshpool_(&grid_)
     {
     }
@@ -32,8 +32,10 @@ namespace viscom {
     {
 		meshpool_.setShader(appNode_->GetGPUProgramManager().GetResource("foregroundMesh", 
 			std::initializer_list<std::string>{ "foregroundMesh.vert", "foregroundMesh.frag" }));
-		meshpool_.addCornerMesh(appNode_->GetMeshManager().GetResource("/models/teapot/teapot.obj"));
-		// GOAL: meshpool_.addMesh(GridCell::BuildState::LEFT_LOWER_CORNER, meshSharedPointer);
+		meshpool_.addCornerMesh(appNode_->GetMeshManager().GetResource("/models/roomgame_models/corner.obj"));
+		meshpool_.addFloorMesh(appNode_->GetMeshManager().GetResource("/models/roomgame_models/floor.obj"));
+		meshpool_.addWallMesh(appNode_->GetMeshManager().GetResource("/models/roomgame_models/wall.obj"));
+
 		grid_.loadShader(appNode_);
 		grid_.uploadVertexData();
     }
@@ -62,8 +64,8 @@ namespace viscom {
     void ApplicationNodeImplementation::DrawFrame(FrameBuffer& fbo)
     {
         fbo.DrawToFBO([this]() {
-			grid_.render(GetEngine()->getCurrentModelViewProjectionMatrix());
 			meshpool_.renderAllMeshes(GetEngine()->getCurrentModelViewProjectionMatrix());
+			grid_.render(GetEngine()->getCurrentModelViewProjectionMatrix());
         });
     }
 
