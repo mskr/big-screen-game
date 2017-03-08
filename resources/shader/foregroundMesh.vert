@@ -1,10 +1,12 @@
 #version 330 core
 #define M_PI 3.1415926535897932384626433832795
 
+// Vertex attribs
 layout(location = 0) in vec3 position;
 layout(location = 1) in vec3 normal;
 layout(location = 2) in vec2 texCoords;
 
+// Instance attribs
 layout(location = 3) in vec3 translation;
 layout(location = 4) in vec3 scale;
 layout(location = 5) in float zRotation;
@@ -37,14 +39,14 @@ void main()
 	modelMatrix[0][0] = scale.x;
 	modelMatrix[1][1] = scale.y;
 	modelMatrix[2][2] = scale.z;
-	modelMatrix *= rotationMatrix(vec3(0,0,1), zRotation);
-
+	mat4 rotation = rotationMatrix(vec3(0,0,1), zRotation);
 	// Flip everything 90 deg around X (could also change models)
-	modelMatrix *= rotationMatrix(vec3(1,0,0), -M_PI/2.0);
+	rotation *= rotationMatrix(vec3(1,0,0), -M_PI/2.0);
+	modelMatrix *= rotation;
 
     vec4 posV4 = modelMatrix * subMeshLocalMatrix * vec4(position, 1);
     vPosition = vec3(posV4);
-    vNormal = vec3(normalize(modelMatrix * vec4(normal,1)));
+    vNormal = normalize(mat3(rotation) * normal); //TODO why does normal matrix not work?
     vTexCoords = texCoords;
 
     gl_Position = viewProjectionMatrix * posV4;

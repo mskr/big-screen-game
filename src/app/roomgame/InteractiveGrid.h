@@ -25,7 +25,7 @@ class InteractiveGrid {
 	GLint mvp_uniform_location_;
 	glm::mat4 model_matrix_;
 	GLsizei num_vertices_;
-	glm::mat4 last_sgctMVP_;
+	glm::mat4 last_view_projection_;
 	// Input-related members
 	glm::dvec2 last_mouse_position_; //TODO maybe replace with TUIO touch position
 	std::list<GridInteraction*> interactions_;
@@ -48,9 +48,10 @@ public:
 	size_t getNumColumns();
 	size_t getNumRows();
 	size_t getNumCells();
+	void translate(float dx, float dy, float dz);
 	// Render functions
 	void uploadVertexData();
-	void loadShader(viscom::ApplicationNode* appNode);
+	void loadShader(viscom::GPUProgramManager mgr);
 	void render(glm::mat4 sgctMVP);
 	void cleanup();
 	// Input functions

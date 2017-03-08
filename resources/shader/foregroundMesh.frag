@@ -10,9 +10,9 @@ out vec4 color;
 
 void main()
 {
-    vec3 lightDir = normalize(vPosition - vec3(0.0f, 0.0f, -10.0f));
+    vec3 lightDir = normalize(vPosition - vec3(-10.0f, -10.0f, -10.0f));
 
     float NdotL = clamp(dot(lightDir, normalize(vNormal)), 0.0f, 1.0f);
     vec3 texColor = texture(diffuseTexture, vTexCoords).rgb;
-    color = vec4(1,1,1,1)*NdotL;//vec4(texColor * NdotL, 1.0f);
+    color = vec4(vNormal.x,vNormal.y,vNormal.z,1);//vec4(1,1,1,1)*NdotL;//vec4(texColor * NdotL, 1.0f);
 }

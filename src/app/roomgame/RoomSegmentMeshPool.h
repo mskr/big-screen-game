@@ -27,7 +27,8 @@ public:
 	void addFloorMesh(std::shared_ptr<viscom::Mesh> mesh);
 	RoomSegmentMesh* getMeshOfType(GridCell::BuildState type);
 	RoomSegmentMesh::InstanceBufferRange addInstanceUnordered(GridCell::BuildState type, RoomSegmentMesh::Instance instance);
-	void renderAllMeshes(glm::mat4 sgctMVP);
+	void renderAllMeshes(glm::mat4 view_projection);
+	void cleanup();
 };
 
 #endif

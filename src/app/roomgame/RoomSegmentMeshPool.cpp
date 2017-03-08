@@ -12,6 +12,9 @@ RoomSegmentMeshPool::RoomSegmentMeshPool(InteractiveGrid* grid) :
 }
 
 RoomSegmentMeshPool::~RoomSegmentMeshPool() {
+}
+
+void RoomSegmentMeshPool::cleanup() {
 	for (RoomSegmentMesh* p : corners_) delete p;
 	for (RoomSegmentMesh* p : walls_) delete p;
 	for (RoomSegmentMesh* p : floors_) delete p;
@@ -76,10 +79,11 @@ RoomSegmentMesh::InstanceBufferRange RoomSegmentMeshPool::addInstanceUnordered(G
 
 
 
-void RoomSegmentMeshPool::renderAllMeshes(glm::mat4 sgctMVP) {
+void RoomSegmentMeshPool::renderAllMeshes(glm::mat4 view_projection) {
 	if (shader_ == 0) return;
 	glUseProgram(shader_->getProgramId());
-	glUniformMatrix4fv(uniform_locations_[0], 1, GL_FALSE, glm::value_ptr(sgctMVP));
+	glUniformMatrix4fv(uniform_locations_[0], 1, GL_FALSE, glm::value_ptr(view_projection));
+	//TODO Set other uniforms (normal matrix, submesh local matrix)
 	for (RoomSegmentMesh* segment : corners_)
 		segment->renderAllInstances(&uniform_locations_);
 	for (RoomSegmentMesh* segment : walls_)

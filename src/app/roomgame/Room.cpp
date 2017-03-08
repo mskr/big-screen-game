@@ -9,7 +9,7 @@ Room::Room(GridCell* leftLowerCorner, GridCell* rightUpperCorner, InteractiveGri
 }
 
 Room::~Room() {
-	clear();
+	
 }
 
 void Room::clear() {

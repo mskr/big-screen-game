@@ -17,7 +17,9 @@ namespace viscom {
 	ApplicationNodeImplementation::ApplicationNodeImplementation(ApplicationNode* appNode) :
 		appNode_{ appNode },
 		grid_(10, 10, 1.2f),
-		meshpool_(&grid_)
+		meshpool_(&grid_),
+		interaction_mode_(GRID),
+		camera_{}
     {
     }
 
@@ -36,7 +38,7 @@ namespace viscom {
 		meshpool_.addFloorMesh(appNode_->GetMeshManager().GetResource("/models/roomgame_models/floor.obj"));
 		meshpool_.addWallMesh(appNode_->GetMeshManager().GetResource("/models/roomgame_models/wall.obj"));
 
-		grid_.loadShader(appNode_);
+		grid_.loadShader(appNode_->GetGPUProgramManager());
 		grid_.uploadVertexData();
     }
 
@@ -64,8 +66,8 @@ namespace viscom {
     void ApplicationNodeImplementation::DrawFrame(FrameBuffer& fbo)
     {
         fbo.DrawToFBO([this]() {
-			meshpool_.renderAllMeshes(GetEngine()->getCurrentModelViewProjectionMatrix());
-			grid_.render(GetEngine()->getCurrentModelViewProjectionMatrix());
+			meshpool_.renderAllMeshes(GetEngine()->getCurrentModelViewProjectionMatrix() * camera_.getViewProjection());
+			grid_.render(GetEngine()->getCurrentModelViewProjectionMatrix() * camera_.getViewProjection());
         });
     }
 
@@ -85,11 +87,16 @@ namespace viscom {
     void ApplicationNodeImplementation::CleanUp()
     {
 		grid_.cleanup();
+		meshpool_.cleanup();
     }
 
     // ReSharper disable CppParameterNeverUsed
     void ApplicationNodeImplementation::KeyboardCallback(int key, int scancode, int action, int mods)
     {
+		if (key == GLFW_KEY_C) {
+			if (action == GLFW_PRESS) interaction_mode_ = InteractionMode::CAMERA;
+			else if (action == GLFW_RELEASE) interaction_mode_ = InteractionMode::GRID;
+		}
 #ifdef VISCOM_CLIENTGUI
         ImGui_ImplGlfwGL3_KeyCallback(key, scancode, action, mods);
 #endif
@@ -104,27 +111,33 @@ namespace viscom {
 
     void ApplicationNodeImplementation::MouseButtonCallback(int button, int action)
     {
+		if (button == GLFW_MOUSE_BUTTON_LEFT) {
+			if (interaction_mode_ == InteractionMode::GRID) {
+				if (action == GLFW_PRESS) grid_.onTouch(-1);
+				else if (action == GLFW_RELEASE) grid_.onRelease(-1);
+			}
+			else if (interaction_mode_ == InteractionMode::CAMERA) {
+				if (action == GLFW_PRESS) camera_.onTouch();
+				else if (action == GLFW_RELEASE) camera_.onRelease();
+			}
+		}
 #ifdef VISCOM_CLIENTGUI
         ImGui_ImplGlfwGL3_MouseButtonCallback(button, action, 0);
-		if (button == GLFW_MOUSE_BUTTON_LEFT) {
-			if (action == GLFW_PRESS)
-				grid_.onTouch(-1);
-			else if (action == GLFW_RELEASE)
-				grid_.onRelease(-1);
-		}
 #endif
     }
 
     void ApplicationNodeImplementation::MousePosCallback(double x, double y)
     {
+		if (interaction_mode_ == InteractionMode::GRID) grid_.onMouseMove(-1, x, y);
+		else if (interaction_mode_ == InteractionMode::CAMERA) camera_.onMouseMove((float)x, (float)y);
 #ifdef VISCOM_CLIENTGUI
         ImGui_ImplGlfwGL3_MousePositionCallback(x, y);
-		grid_.onMouseMove(-1, x, y);
 #endif
     }
 
     void ApplicationNodeImplementation::MouseScrollCallback(double xoffset, double yoffset)
     {
+		if (interaction_mode_ == InteractionMode::CAMERA) camera_.onScroll((float)yoffset);
 #ifdef VISCOM_CLIENTGUI
         ImGui_ImplGlfwGL3_ScrollCallback(xoffset, yoffset);
 #endif

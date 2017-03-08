@@ -12,6 +12,7 @@
 #include "core/ApplicationNode.h"
 #include "app/roomgame/InteractiveGrid.h"
 #include "app/roomgame/RoomSegmentMeshPool.h"
+#include "app/roomgame/DragAndZoomCamera.h"
 
 
 
@@ -76,5 +77,7 @@ namespace viscom {
 
 		InteractiveGrid grid_;
 		RoomSegmentMeshPool meshpool_;
+		DragAndZoomCamera camera_;
+		enum InteractionMode { GRID, CAMERA } interaction_mode_;
     };
 }

@@ -20,15 +20,19 @@ InteractiveGrid::InteractiveGrid(int columns, int rows, float height) {
 		}
 	}
 	mvp_uniform_location_ = -1;
-	model_matrix_ = glm::mat4(1);// glm::translate(glm::mat4(1), glm::vec3(-0.5f, 0.3f, 0.0f));
+	model_matrix_ = glm::mat4(1);
 	num_vertices_ = 0;
-	last_sgctMVP_ = glm::mat4(1);
+	last_view_projection_ = glm::mat4(1);
 	meshpool_ = 0;
 }
 
 InteractiveGrid::~InteractiveGrid() {
-	interactions_.clear();
-	rooms_.clear();
+	for(GridInteraction* ia : interactions_) delete ia;
+	for(Room* r : rooms_) delete r;
+}
+
+void InteractiveGrid::translate(float dx, float dy, float dz) {
+	model_matrix_ *= glm::translate(glm::mat4(1), glm::vec3(dx, dy, dz));
 }
 
 void InteractiveGrid::forEachCell(std::function<void(GridCell*)> callback) {
@@ -99,7 +103,7 @@ bool InteractiveGrid::isInsideCell(glm::vec2 positionNDC, GridCell* cell) {
 
 glm::vec2 InteractiveGrid::getNDC(glm::vec2 position) {
 	glm::vec4 pos(position, 0.0f, 1.0f);
-	pos = last_sgctMVP_ * model_matrix_ * pos;
+	pos = last_view_projection_ * model_matrix_ * pos;
 	return glm::vec2(pos.x, pos.y) / pos.w;
 }
 
@@ -162,23 +166,23 @@ void InteractiveGrid::uploadVertexData() {
 	num_vertices_ = (GLsizei)ncells;
 }
 
-void InteractiveGrid::loadShader(viscom::ApplicationNode* appNode) {
+void InteractiveGrid::loadShader(viscom::GPUProgramManager mgr) {
 	glEnable(GL_POINT_SPRITE);
 	glEnable(GL_PROGRAM_POINT_SIZE);
-	shader_ = appNode->GetGPUProgramManager().GetResource("interactiveGrid",
+	shader_ = mgr.GetResource("interactiveGrid",
 		std::initializer_list<std::string>{ "interactiveGrid.vert", "interactiveGrid.frag" });
 	mvp_uniform_location_ = shader_->getUniformLocation("MVP");
 }
 
-void InteractiveGrid::render(glm::mat4 sgctMVP) {
+void InteractiveGrid::render(glm::mat4 view_projection) {
 	glDisable(GL_DEPTH_TEST);
 	glBindVertexArray(vao_);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_);
 	glUseProgram(shader_->getProgramId());
-	glUniformMatrix4fv(mvp_uniform_location_, 1, GL_FALSE, glm::value_ptr(sgctMVP * model_matrix_));
+	glUniformMatrix4fv(mvp_uniform_location_, 1, GL_FALSE, glm::value_ptr(view_projection * model_matrix_));
 	glDrawArrays(GL_POINTS, 0, num_vertices_);
 	glEnable(GL_DEPTH_TEST);
-	last_sgctMVP_ = sgctMVP;
+	last_view_projection_ = view_projection;
 }
 
 void InteractiveGrid::cleanup() {
@@ -186,7 +190,7 @@ void InteractiveGrid::cleanup() {
 	glDeleteVertexArrays(1, &vao_);
 }
 
-// TODO What happens with concurrent input?
+// TODO TEST What happens with concurrent input? Multitouch!?
 
 void InteractiveGrid::onTouch(int touchID) {
 	//GLint viewport[4]; // [x,y,width,height]
@@ -215,7 +219,10 @@ void InteractiveGrid::onRelease(int touchID) {
 					room->finish();
 					rooms_.push_back(room);
 				}
-				else delete room;
+				else {
+					room->clear();
+					delete room;
+				}
 				interactions_.remove(interac);
 				break;
 			}
@@ -227,6 +234,7 @@ void InteractiveGrid::onRelease(int touchID) {
 }
 
 void InteractiveGrid::onMouseMove(int touchID, double newx, double newy) {
+	// Find interaction and continue room building
 	last_mouse_position_ = glm::dvec2(newx, newy);
 	for (GridInteraction* interac : interactions_) {
 		if (interac->getTouchID() == touchID) {
@@ -234,13 +242,9 @@ void InteractiveGrid::onMouseMove(int touchID, double newx, double newy) {
 			if (touchID == -1) {
 				glm::vec2 touchPositionNDC =
 					glm::vec2(last_mouse_position_.x, 1.0 - last_mouse_position_.y)
-					* glm::vec2(2.0, 2.0) - glm::vec2(1.0, 1.0);
-				GridCell* maybeCell = getCellAt(touchPositionNDC);
+					* glm::vec2(2.0, 2.0) - glm::vec2(1.0, 1.0); // transform window system coords
+				GridCell* maybeCell = getCellAt(touchPositionNDC); // search current cell
 				if (!maybeCell) {
-					Room* room = interac->getRoom();
-					if (room->isValid()) rooms_.push_back(room);
-					else delete room;
-					interactions_.remove(interac);
 					return; // cursor was outside grid
 				}
 				if (interac->getLastCell() == maybeCell) return; // cursor was still inside last cell
@@ -353,8 +357,9 @@ void InteractiveGrid::buildAt(size_t col, size_t row, GridCell::BuildState build
 		if (maybeCell->getBuildState() == GridCell::BuildState::EMPTY) {
 			// Add instance, if cell was empty
 			RoomSegmentMesh::Instance instance;
-			instance.scale = glm::vec3(model_matrix_ * glm::vec4(cell_size_)) / 2.0f; //TODO Find the right scale!
-			instance.translation = glm::vec3(model_matrix_ * glm::vec4(maybeCell->getPosition() + glm::vec2(cell_size_/2.0f, -cell_size_/2.0f), 0.0f, 1.0f));
+			instance.scale = glm::vec3(model_matrix_ * glm::vec4(cell_size_)) / 2.0f;
+			instance.translation = glm::vec3(model_matrix_ * 
+				glm::vec4(maybeCell->getPosition() + glm::vec2(cell_size_/2.0f, -cell_size_/2.0f), 0.0f, 1.0f));
 			bufferRange = meshpool_->addInstanceUnordered(buildState, instance);
 			maybeCell->setMeshInstance(bufferRange);
 		}
@@ -368,8 +373,9 @@ void InteractiveGrid::buildAt(size_t col, size_t row, GridCell::BuildState build
 			bufferRange = maybeCell->getMeshInstance();
 			bufferRange.mesh_->removeInstanceUnordered(bufferRange.offset_instances_);
 			RoomSegmentMesh::Instance instance;
-			instance.scale = glm::vec3(model_matrix_ * glm::vec4(cell_size_)) / 2.0f; //TODO Find the right scale!
-			instance.translation = glm::vec3(model_matrix_ * glm::vec4(maybeCell->getPosition() + glm::vec2(cell_size_/2.0f, -cell_size_/2.0f), 0.0f, 1.0f));
+			instance.scale = glm::vec3(model_matrix_ * glm::vec4(cell_size_)) / 2.0f;
+			instance.translation = glm::vec3(model_matrix_ * 
+				glm::vec4(maybeCell->getPosition() + glm::vec2(cell_size_/2.0f, -cell_size_/2.0f), 0.0f, 1.0f));
 			bufferRange = meshpool_->addInstanceUnordered(buildState, instance);
 			maybeCell->setMeshInstance(bufferRange);
 		}
