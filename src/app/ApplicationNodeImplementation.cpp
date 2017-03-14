@@ -32,11 +32,22 @@ namespace viscom {
 
     void ApplicationNodeImplementation::InitOpenGL()
     {
-		meshpool_.setShader(appNode_->GetGPUProgramManager().GetResource("foregroundMesh", 
-			std::initializer_list<std::string>{ "foregroundMesh.vert", "foregroundMesh.frag" }));
-		meshpool_.addCornerMesh(appNode_->GetMeshManager().GetResource("/models/roomgame_models/corner.obj"));
-		meshpool_.addFloorMesh(appNode_->GetMeshManager().GetResource("/models/roomgame_models/floor.obj"));
-		meshpool_.addWallMesh(appNode_->GetMeshManager().GetResource("/models/roomgame_models/wall.obj"));
+		auto floorMesh = appNode_->GetMeshManager().GetResource("/models/roomgame_models/floor.obj");
+		auto cornerMesh = appNode_->GetMeshManager().GetResource("/models/roomgame_models/corner.obj");
+		auto wallMesh = appNode_->GetMeshManager().GetResource("/models/roomgame_models/wall.obj");
+		auto meshShader = appNode_->GetGPUProgramManager().GetResource("foregroundMesh",
+			std::initializer_list<std::string>{ "foregroundMesh.vert", "foregroundMesh.frag" });
+		meshpool_.setShader(meshShader);
+		meshpool_.addMesh({ GridCell::BuildState::INSIDE_ROOM }, floorMesh);
+		meshpool_.addMesh({ GridCell::BuildState::LEFT_LOWER_CORNER,
+							GridCell::BuildState::LEFT_UPPER_CORNER,
+							GridCell::BuildState::RIGHT_LOWER_CORNER,
+							GridCell::BuildState::RIGHT_UPPER_CORNER,
+							GridCell::BuildState::INVALID }, cornerMesh);
+		meshpool_.addMesh({ GridCell::BuildState::WALL_BOTTOM,
+							GridCell::BuildState::WALL_TOP,
+							GridCell::BuildState::WALL_RIGHT,
+							GridCell::BuildState::WALL_LEFT }, wallMesh);
 
 		grid_.loadShader(appNode_->GetGPUProgramManager());
 		grid_.uploadVertexData();

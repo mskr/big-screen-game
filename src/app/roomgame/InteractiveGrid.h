@@ -12,7 +12,7 @@
 class RoomSegmentMeshPool;
 #include "RoomSegmentMeshPool.h"
 
-//template < int ARRAY_LEN >
+//template <int NUM_COLUMNS, int NUM_ROWS>
 class InteractiveGrid {
 	// Data members
 	float height_units_;

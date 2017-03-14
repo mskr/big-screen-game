@@ -2,13 +2,13 @@
 
 layout(location = 0) in vec2 position;
 layout(location = 1) in int buildState;
-layout(location = 2) in float healthPoints;
+layout(location = 2) in int healthPoints;
 
 uniform mat4 MVP;
 
 flat out vec2 fPosition;
 flat out int fBuildState;
-flat out float fHealthPoints;
+flat out int fHealthPoints;
 
 void main()
 {

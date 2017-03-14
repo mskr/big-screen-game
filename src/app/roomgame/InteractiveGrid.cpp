@@ -1,5 +1,6 @@
 #include "InteractiveGrid.h"
 
+
 InteractiveGrid::InteractiveGrid(int columns, int rows, float height) {
 	height_units_ = height;
 	cell_size_ = height_units_ / float(rows);
@@ -26,14 +27,17 @@ InteractiveGrid::InteractiveGrid(int columns, int rows, float height) {
 	meshpool_ = 0;
 }
 
+
 InteractiveGrid::~InteractiveGrid() {
 	for(GridInteraction* ia : interactions_) delete ia;
 	for(Room* r : rooms_) delete r;
 }
 
+
 void InteractiveGrid::translate(float dx, float dy, float dz) {
 	model_matrix_ *= glm::translate(glm::mat4(1), glm::vec3(dx, dy, dz));
 }
+
 
 void InteractiveGrid::forEachCell(std::function<void(GridCell*)> callback) {
 	for (std::vector<GridCell> &row : cells_) {
@@ -42,6 +46,7 @@ void InteractiveGrid::forEachCell(std::function<void(GridCell*)> callback) {
 		}
 	}
 }
+
 
 void InteractiveGrid::forEachCell(std::function<void(GridCell*,bool*)> callback) {
 	bool found = false;
@@ -54,6 +59,7 @@ void InteractiveGrid::forEachCell(std::function<void(GridCell*,bool*)> callback)
 	}
 }
 
+
 void InteractiveGrid::forEachCellInRange(GridCell* leftLower, GridCell* rightUpper, std::function<void(GridCell*)> callback) {
 	if (leftLower->getCol() > rightUpper->getCol() || leftLower->getRow() > rightUpper->getRow())
 		return;
@@ -63,6 +69,7 @@ void InteractiveGrid::forEachCellInRange(GridCell* leftLower, GridCell* rightUpp
 		}
 	}
 }
+
 
 void InteractiveGrid::forEachCellInRange(GridCell* leftLower, GridCell* rightUpper, std::function<void(GridCell*,bool*)> callback) {
 	if (leftLower->getCol() > rightUpper->getCol() || leftLower->getRow() > rightUpper->getRow())
@@ -77,6 +84,7 @@ void InteractiveGrid::forEachCellInRange(GridCell* leftLower, GridCell* rightUpp
 	}
 }
 
+
 bool InteractiveGrid::isInsideGrid(glm::vec2 positionNDC) {
 	GridCell& leftUpperCell = cells_[0][cells_[0].size() - 1];
 	glm::vec2 posLeftUpperNDC = getNDC(leftUpperCell.getPosition());
@@ -90,6 +98,7 @@ bool InteractiveGrid::isInsideGrid(glm::vec2 positionNDC) {
 	return true;
 }
 
+
 bool InteractiveGrid::isInsideCell(glm::vec2 positionNDC, GridCell* cell) {
 	glm::vec2 cellLeftUpperNDC = getNDC(cell->getPosition());
 	glm::vec2 cellRightLowerNDC = getNDC(glm::vec2(
@@ -101,11 +110,13 @@ bool InteractiveGrid::isInsideCell(glm::vec2 positionNDC, GridCell* cell) {
 	return true;
 }
 
+
 glm::vec2 InteractiveGrid::getNDC(glm::vec2 position) {
 	glm::vec4 pos(position, 0.0f, 1.0f);
 	pos = last_view_projection_ * model_matrix_ * pos;
 	return glm::vec2(pos.x, pos.y) / pos.w;
 }
+
 
 GridCell* InteractiveGrid::getCellAt(glm::vec2 positionNDC) {
 	if (!isInsideGrid(positionNDC))
@@ -136,10 +147,12 @@ GridCell* InteractiveGrid::getCellAt(glm::vec2 positionNDC) {
 	return &cells_[iLeftUpper][jLeftUpper];
 }
 
+
 GridCell* InteractiveGrid::getCellAt(size_t col, size_t row) {
 	if (col >= cells_.size() || row >= cells_[0].size()) return 0;
 	return &cells_[col][row];
 }
+
 
 void InteractiveGrid::uploadVertexData() {
 	glGenVertexArrays(1, &vao_);
@@ -166,6 +179,7 @@ void InteractiveGrid::uploadVertexData() {
 	num_vertices_ = (GLsizei)ncells;
 }
 
+
 void InteractiveGrid::loadShader(viscom::GPUProgramManager mgr) {
 	glEnable(GL_POINT_SPRITE);
 	glEnable(GL_PROGRAM_POINT_SIZE);
@@ -173,6 +187,7 @@ void InteractiveGrid::loadShader(viscom::GPUProgramManager mgr) {
 		std::initializer_list<std::string>{ "interactiveGrid.vert", "interactiveGrid.frag" });
 	mvp_uniform_location_ = shader_->getUniformLocation("MVP");
 }
+
 
 void InteractiveGrid::render(glm::mat4 view_projection) {
 	glDisable(GL_DEPTH_TEST);
@@ -185,12 +200,14 @@ void InteractiveGrid::render(glm::mat4 view_projection) {
 	last_view_projection_ = view_projection;
 }
 
+
 void InteractiveGrid::cleanup() {
 	glDeleteBuffers(1, &vbo_);
 	glDeleteVertexArrays(1, &vao_);
 }
 
 // TODO TEST What happens with concurrent input? Multitouch!?
+
 
 void InteractiveGrid::onTouch(int touchID) {
 	//GLint viewport[4]; // [x,y,width,height]
@@ -206,6 +223,7 @@ void InteractiveGrid::onTouch(int touchID) {
 	interactions_.push_back(
 		new GridInteraction(touchID, last_mouse_position_, maybeCell, room));
 }
+
 
 void InteractiveGrid::onRelease(int touchID) {
 	// Find and remove interaction
@@ -232,6 +250,7 @@ void InteractiveGrid::onRelease(int touchID) {
 		}
 	}
 }
+
 
 void InteractiveGrid::onMouseMove(int touchID, double newx, double newy) {
 	// Find interaction and continue room building
@@ -273,6 +292,7 @@ void InteractiveGrid::onMouseMove(int touchID, double newx, double newy) {
 		}
 	}
 }
+
 
 Room::CollisionType InteractiveGrid::resizeRoomUntilCollision(Room* room, GridCell* startCell, GridCell* lastCell, GridCell* currentCell) {
 	// Handle DEGENERATED rooms by update each cell (typically low number of cells)
@@ -348,6 +368,7 @@ Room::CollisionType InteractiveGrid::resizeRoomUntilCollision(Room* room, GridCe
 	}
 }
 
+
 void InteractiveGrid::buildAt(size_t col, size_t row, GridCell::BuildState buildState) {
 	GridCell* maybeCell = getCellAt(col, row);
 	if (!maybeCell) return;
@@ -383,13 +404,16 @@ void InteractiveGrid::buildAt(size_t col, size_t row, GridCell::BuildState build
 	maybeCell->updateBuildState(vbo_, buildState);
 }
 
+
 void InteractiveGrid::setRoomSegmentMeshPool(RoomSegmentMeshPool* meshpool) {
 	meshpool_ = meshpool;
 }
 
+
 RoomSegmentMeshPool* InteractiveGrid::getRoomSegmentMeshPool() {
 	return meshpool_;
 }
+
 
 bool InteractiveGrid::isColumnEmptyBetween(size_t col, size_t startRow, size_t endRow) {
 	if (endRow < startRow) {
@@ -408,6 +432,7 @@ bool InteractiveGrid::isColumnEmptyBetween(size_t col, size_t startRow, size_t e
 	return true;
 }
 
+
 bool InteractiveGrid::isRowEmptyBetween(size_t row, size_t startCol, size_t endCol) {
 	if (endCol < startCol) {
 		size_t tmp = endCol;
@@ -425,17 +450,21 @@ bool InteractiveGrid::isRowEmptyBetween(size_t row, size_t startCol, size_t endC
 	return true;
 }
 
+
 float InteractiveGrid::getCellSize() {
 	return cell_size_;
 }
+
 
 size_t InteractiveGrid::getNumColumns() {
 	return cells_.size();
 }
 
+
 size_t InteractiveGrid::getNumRows() {
 	return cells_[0].size();
 }
+
 
 size_t InteractiveGrid::getNumCells() {
 	return cells_.size() * cells_[0].size();

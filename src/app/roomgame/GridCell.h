@@ -17,14 +17,17 @@ public:
 		WALL_RIGHT = 7,
 		WALL_TOP = 8,
 		WALL_BOTTOM = 9,
-		INVALID = 10
+		INVALID = 10,
+		OUTER_INFLUENCE = 11
 	};
+	static const int MAX_HEALTH = 100;
+	static const int MIN_HEALTH = 0;
 private:
 	struct Vertex {
 		GLfloat x_position;
 		GLfloat y_position;
 		GLint build_state;
-		GLfloat health_points;
+		GLint health_points;
 		static const void setAttribPointer() {
 			glVertexAttribPointer(0, 2, GL_FLOAT, false,
 				sizeof(Vertex),
@@ -32,7 +35,7 @@ private:
 			glVertexAttribIPointer(1, 1, GL_INT,
 				sizeof(Vertex),
 				(GLvoid*)(2 * sizeof(float)));
-			glVertexAttribPointer(2, 1, GL_FLOAT, false,
+			glVertexAttribIPointer(2, 1, GL_INT,
 				sizeof(Vertex),
 				(GLvoid*)(2 * sizeof(float) + sizeof(BuildState)));
 			glEnableVertexAttribArray(0);
@@ -65,7 +68,7 @@ public:
 	float getXPosition();
 	float getYPosition();
 	int getBuildState();
-	float getHealthPoints();
+	int getHealthPoints();
 	void setVertexBufferOffset(GLintptr o);
 	GLintptr getVertexBufferOffset();
 	static size_t getVertexBytes();

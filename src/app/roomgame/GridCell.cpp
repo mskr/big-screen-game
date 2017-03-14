@@ -4,7 +4,7 @@ GridCell::GridCell(float x, float y, size_t col_idx, size_t row_idx) {
 	vertex_.x_position = x;
 	vertex_.y_position = y;
 	vertex_.build_state = BuildState::EMPTY;
-	vertex_.health_points = 1.0f;
+	vertex_.health_points = MAX_HEALTH;
 	vertex_buffer_offset_ = 0;
 	northNeighbor = 0, eastNeighbor = 0, southNeighbor = 0, westNeighbor = 0;
 	col_idx_ = col_idx;
@@ -89,7 +89,7 @@ int GridCell::getBuildState() {
 	return (int)vertex_.build_state;
 }
 
-float GridCell::getHealthPoints() {
+int GridCell::getHealthPoints() {
 	return vertex_.health_points;
 }
 

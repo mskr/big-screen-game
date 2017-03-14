@@ -2,7 +2,7 @@
 
 flat in vec2 fPosition;
 flat in int fBuildState;
-flat in float fHealthPoints;
+flat in int fHealthPoints;
 
 out vec4 color;
 
