@@ -35,5 +35,7 @@ void main()
 	else if(fBuildState == 9) color = vec4(1,1,0,1)*0.4; // very dark yellow
 	// Invalid Build State (room too small)
 	else if(fBuildState == 10) color = vec4(1,0,0,1); // red
-	else color = vec4(1,1,1,1); // white
+	// Outer Influence
+	else if(fBuildState == 11) color = vec4(0,0,.5,1); // dark blue
+	else color = vec4(.5,.5,.5,1); // gray
 }

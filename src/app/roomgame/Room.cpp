@@ -38,10 +38,6 @@ size_t Room::getRowSize() {
 	return rightUpperCorner_->getRow() - leftLowerCorner_->getRow();
 }
 
-InteractiveGrid* Room::getGrid() {
-	return grid_;
-}
-
 void Room::finish() {
 	isFinished_ = true;
 	//TODO Move mesh instances from unordered to room-ordered buffers (for each mesh that is part of the room)

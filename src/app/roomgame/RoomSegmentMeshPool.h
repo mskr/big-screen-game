@@ -9,18 +9,17 @@
 #include "RoomSegmentMesh.h"
 
 class RoomSegmentMeshPool {
-	InteractiveGrid* grid_;
 	// Map build state to multiple mesh variations
 	std::unordered_map<GridCell::BuildState, std::vector<RoomSegmentMesh*>> meshes_;
 	// Store build states contiguously for faster rendering
-	std::vector<GridCell::BuildState> build_states_;
+	std::set<GridCell::BuildState> build_states_;
 	// Hold pointers to all meshes to control cleanup
 	std::set<std::shared_ptr<viscom::Mesh>> owned_resources_;
 	// The shader used by all meshes
 	std::shared_ptr<viscom::GPUProgram> shader_;
 	std::vector<GLint> uniform_locations_;
 public:
-	RoomSegmentMeshPool(InteractiveGrid* grid);
+	RoomSegmentMeshPool(const size_t MAX_INSTANCES);
 	~RoomSegmentMeshPool();
 	void setShader(std::shared_ptr<viscom::GPUProgram> shader);
 	void addMesh(std::vector<GridCell::BuildState> types, std::shared_ptr<viscom::Mesh> mesh);

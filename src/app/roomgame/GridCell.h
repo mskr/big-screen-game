@@ -69,6 +69,7 @@ public:
 	float getYPosition();
 	int getBuildState();
 	int getHealthPoints();
+	void setHealthPoints(int hp);
 	void setVertexBufferOffset(GLintptr o);
 	GLintptr getVertexBufferOffset();
 	static size_t getVertexBytes();

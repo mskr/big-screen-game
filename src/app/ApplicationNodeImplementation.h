@@ -10,9 +10,10 @@
 
 #include <sgct/Engine.h>
 #include "core/ApplicationNode.h"
-#include "app/roomgame/InteractiveGrid.h"
+#include "app/roomgame/AutomatonGrid.h"
 #include "app/roomgame/RoomSegmentMeshPool.h"
 #include "app/roomgame/DragAndZoomCamera.h"
+#include "app/roomgame/GPUCellularAutomaton.h"
 
 
 
@@ -75,9 +76,10 @@ namespace viscom {
         /** Holds the application node. */
         ApplicationNode* appNode_;
 
-		InteractiveGrid grid_;
+		AutomatonGrid grid_;
 		RoomSegmentMeshPool meshpool_;
 		DragAndZoomCamera camera_;
-		enum InteractionMode { GRID, CAMERA } interaction_mode_;
+		enum InteractionMode { GRID, CAMERA, GRID_PLACE_OUTER_INFLUENCE } interaction_mode_;
+		GPUCellularAutomaton cellular_automaton_;
     };
 }

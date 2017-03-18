@@ -1,14 +1,12 @@
 #include "RoomSegmentMeshPool.h"
 
-RoomSegmentMeshPool::RoomSegmentMeshPool(InteractiveGrid* grid) :
-	POOL_ALLOC_BYTES_CORNERS((grid->getNumCells() / 128 + 1) * sizeof(RoomSegmentMesh::Instance)),
-	POOL_ALLOC_BYTES_WALLS((grid->getNumCells() / 32 + 1) * sizeof(RoomSegmentMesh::Instance)),
-	POOL_ALLOC_BYTES_FLOORS((grid->getNumCells() / 16 + 1) * sizeof(RoomSegmentMesh::Instance)),
-	POOL_ALLOC_BYTES_OUTER_INFLUENCE((grid->getNumCells() / 16 + 1) * sizeof(RoomSegmentMesh::Instance)),
-	POOL_ALLOC_BYTES_DEFAULT(grid->getNumCells() * sizeof(RoomSegmentMesh::Instance))
+RoomSegmentMeshPool::RoomSegmentMeshPool(const size_t MAX_INSTANCES) :
+	POOL_ALLOC_BYTES_CORNERS((MAX_INSTANCES / 128 + 1) * sizeof(RoomSegmentMesh::Instance)),
+	POOL_ALLOC_BYTES_WALLS((MAX_INSTANCES / 32 + 1) * sizeof(RoomSegmentMesh::Instance)),
+	POOL_ALLOC_BYTES_FLOORS((MAX_INSTANCES / 16 + 1) * sizeof(RoomSegmentMesh::Instance)),
+	POOL_ALLOC_BYTES_OUTER_INFLUENCE((MAX_INSTANCES / 16 + 1) * sizeof(RoomSegmentMesh::Instance)),
+	POOL_ALLOC_BYTES_DEFAULT(MAX_INSTANCES * sizeof(RoomSegmentMesh::Instance))
 {
-	grid_ = grid;
-	grid_->setRoomSegmentMeshPool(this);
 	shader_ = 0;
 }
 
@@ -16,9 +14,20 @@ RoomSegmentMeshPool::~RoomSegmentMeshPool() {
 }
 
 void RoomSegmentMeshPool::cleanup() {
-	for (auto p : meshes_)
-		for (RoomSegmentMesh* mesh : p.second)
-			delete mesh;
+	// Delete all pointers to RoomSegmentMeshes, but no pointer twice
+	for (GridCell::BuildState i : build_states_) {
+		for (RoomSegmentMesh* m : meshes_[i]) {
+			if (m) {
+				delete m;
+				// Null all pointers to m after deletion of m
+				for (GridCell::BuildState j : build_states_) {
+					for (unsigned int k = 0; k < meshes_[j].size(); k++) {
+						if (m == meshes_[j][k]) meshes_[j][k] = 0;
+					}
+				}
+			}
+		}
+	}
 	owned_resources_.clear();
 }
 
@@ -47,7 +56,7 @@ void RoomSegmentMeshPool::addMesh(std::vector<GridCell::BuildState> types, std::
 	RoomSegmentMesh* segmentMesh = new RoomSegmentMesh(mesh.get(), shader_.get(), pool_allocation_bytes);
 	for (GridCell::BuildState type : types) {
 		meshes_[type].push_back(segmentMesh);
-		build_states_.push_back(type);
+		build_states_.insert(type);
 	}
 	owned_resources_.insert(mesh);
 }
@@ -64,6 +73,7 @@ RoomSegmentMesh* RoomSegmentMeshPool::getMeshOfType(GridCell::BuildState type) {
 	}
 	catch (std::out_of_range) {
 		// If the pool does not have the requested type
+		printf("Pool has no mesh for type %d\n", (int)type);
 		return 0;
 	}
 	srand((unsigned int)time(0));

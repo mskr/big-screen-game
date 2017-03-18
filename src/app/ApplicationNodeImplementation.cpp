@@ -12,14 +12,18 @@
 #include "core/gfx/mesh/MeshRenderable.h"
 #include "core/imgui/imgui_impl_glfw_gl3.h"
 
+#define GRID_COLUMNS 16
+#define GRID_ROWS 16
+
 namespace viscom {
 
 	ApplicationNodeImplementation::ApplicationNodeImplementation(ApplicationNode* appNode) :
 		appNode_{ appNode },
-		grid_(10, 10, 1.2f),
-		meshpool_(&grid_),
-		interaction_mode_(GRID),
-		camera_{}
+		meshpool_(GRID_COLUMNS * GRID_ROWS),
+		grid_(GRID_COLUMNS, GRID_ROWS, 1.2f, &meshpool_),
+		interaction_mode_(GRID_PLACE_OUTER_INFLUENCE),
+		camera_{},
+		cellular_automaton_(&grid_)
     {
     }
 
@@ -35,6 +39,7 @@ namespace viscom {
 		auto floorMesh = appNode_->GetMeshManager().GetResource("/models/roomgame_models/floor.obj");
 		auto cornerMesh = appNode_->GetMeshManager().GetResource("/models/roomgame_models/corner.obj");
 		auto wallMesh = appNode_->GetMeshManager().GetResource("/models/roomgame_models/wall.obj");
+		auto outerInfluenceMesh = appNode_->GetMeshManager().GetResource("/models/roomgame_models/cube.obj");
 		auto meshShader = appNode_->GetGPUProgramManager().GetResource("foregroundMesh",
 			std::initializer_list<std::string>{ "foregroundMesh.vert", "foregroundMesh.frag" });
 		meshpool_.setShader(meshShader);
@@ -48,6 +53,7 @@ namespace viscom {
 							GridCell::BuildState::WALL_TOP,
 							GridCell::BuildState::WALL_RIGHT,
 							GridCell::BuildState::WALL_LEFT }, wallMesh);
+		meshpool_.addMesh({ GridCell::BuildState::OUTER_INFLUENCE }, outerInfluenceMesh);
 
 		grid_.loadShader(appNode_->GetGPUProgramManager());
 		grid_.uploadVertexData();
@@ -61,8 +67,9 @@ namespace viscom {
     {
     }
 
-    void ApplicationNodeImplementation::UpdateFrame(double currentTime, double)
+    void ApplicationNodeImplementation::UpdateFrame(double currentTime, double elapsedTime)
     {
+		cellular_automaton_.transition(currentTime);
     }
 
     void ApplicationNodeImplementation::ClearBuffer(FrameBuffer& fbo)
@@ -99,14 +106,26 @@ namespace viscom {
     {
 		grid_.cleanup();
 		meshpool_.cleanup();
+		cellular_automaton_.cleanup();
     }
 
     // ReSharper disable CppParameterNeverUsed
     void ApplicationNodeImplementation::KeyboardCallback(int key, int scancode, int action, int mods)
     {
+		// Keys switch input modes
+		static int mode_before_switch_to_camera = 0;
 		if (key == GLFW_KEY_C) {
-			if (action == GLFW_PRESS) interaction_mode_ = InteractionMode::CAMERA;
-			else if (action == GLFW_RELEASE) interaction_mode_ = InteractionMode::GRID;
+			if (action == GLFW_PRESS) {
+				mode_before_switch_to_camera = interaction_mode_;
+				interaction_mode_ = InteractionMode::CAMERA;
+			}
+			else if (action == GLFW_RELEASE) {
+				interaction_mode_ = (InteractionMode)mode_before_switch_to_camera;
+			}
+		}
+		else if (key == GLFW_KEY_S && action == GLFW_PRESS) {
+			interaction_mode_ = InteractionMode::GRID;
+			cellular_automaton_.init(appNode_->GetGPUProgramManager());
 		}
 #ifdef VISCOM_CLIENTGUI
         ImGui_ImplGlfwGL3_KeyCallback(key, scancode, action, mods);
@@ -127,6 +146,9 @@ namespace viscom {
 				if (action == GLFW_PRESS) grid_.onTouch(-1);
 				else if (action == GLFW_RELEASE) grid_.onRelease(-1);
 			}
+			else if (interaction_mode_ == InteractionMode::GRID_PLACE_OUTER_INFLUENCE) {
+				if (action == GLFW_PRESS) grid_.buildAtLastMousePosition(GridCell::BuildState::OUTER_INFLUENCE);
+			}
 			else if (interaction_mode_ == InteractionMode::CAMERA) {
 				if (action == GLFW_PRESS) camera_.onTouch();
 				else if (action == GLFW_RELEASE) camera_.onRelease();
@@ -139,8 +161,12 @@ namespace viscom {
 
     void ApplicationNodeImplementation::MousePosCallback(double x, double y)
     {
-		if (interaction_mode_ == InteractionMode::GRID) grid_.onMouseMove(-1, x, y);
-		else if (interaction_mode_ == InteractionMode::CAMERA) camera_.onMouseMove((float)x, (float)y);
+		if (interaction_mode_ == InteractionMode::GRID)
+			grid_.onMouseMove(-1, x, y);
+		else if (interaction_mode_ == InteractionMode::GRID_PLACE_OUTER_INFLUENCE)
+			grid_.onMouseMove(-2, x, y);
+		else if (interaction_mode_ == InteractionMode::CAMERA)
+			camera_.onMouseMove((float)x, (float)y);
 #ifdef VISCOM_CLIENTGUI
         ImGui_ImplGlfwGL3_MousePositionCallback(x, y);
 #endif

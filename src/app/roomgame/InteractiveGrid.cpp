@@ -1,7 +1,7 @@
 #include "InteractiveGrid.h"
 
 
-InteractiveGrid::InteractiveGrid(int columns, int rows, float height) {
+InteractiveGrid::InteractiveGrid(size_t columns, size_t rows, float height) {
 	height_units_ = height;
 	cell_size_ = height_units_ / float(rows);
 	for (int x = 0; x < columns; x++) {
@@ -24,13 +24,11 @@ InteractiveGrid::InteractiveGrid(int columns, int rows, float height) {
 	model_matrix_ = glm::mat4(1);
 	num_vertices_ = 0;
 	last_view_projection_ = glm::mat4(1);
-	meshpool_ = 0;
 }
 
 
 InteractiveGrid::~InteractiveGrid() {
 	for(GridInteraction* ia : interactions_) delete ia;
-	for(Room* r : rooms_) delete r;
 }
 
 
@@ -210,162 +208,17 @@ void InteractiveGrid::cleanup() {
 
 
 void InteractiveGrid::onTouch(int touchID) {
-	//GLint viewport[4]; // [x,y,width,height]
-	//glGetIntegerv(GL_VIEWPORT, viewport);
-	// Create interaction
-	glm::vec2 touchPositionNDC =
-		glm::vec2(last_mouse_position_.x, 1.0 - last_mouse_position_.y)
-		* glm::vec2(2.0, 2.0) - glm::vec2(1.0, 1.0);
-	GridCell* maybeCell = getCellAt(touchPositionNDC);
-	if (!maybeCell) return;
-	if (maybeCell->getBuildState() != GridCell::BuildState::EMPTY) return;
-	Room* room = new Room(maybeCell, maybeCell, this);
-	interactions_.push_back(
-		new GridInteraction(touchID, last_mouse_position_, maybeCell, room));
+
 }
 
 
 void InteractiveGrid::onRelease(int touchID) {
-	// Find and remove interaction
-	for (GridInteraction* interac : interactions_) {
-		if (interac->getTouchID() == touchID) {
-			interac->update(last_mouse_position_);
-			if (touchID == -1) {
-				Room* room = interac->getRoom();
-				if (room->isValid()) {
-					// Finish room
-					room->finish();
-					rooms_.push_back(room);
-				}
-				else {
-					room->clear();
-					delete room;
-				}
-				interactions_.remove(interac);
-				break;
-			}
-			else {
-				//TODO wait for possible end of discontinuaty
-			}
-		}
-	}
+
 }
 
 
 void InteractiveGrid::onMouseMove(int touchID, double newx, double newy) {
-	// Find interaction and continue room building
 	last_mouse_position_ = glm::dvec2(newx, newy);
-	for (GridInteraction* interac : interactions_) {
-		if (interac->getTouchID() == touchID) {
-			interac->update(last_mouse_position_);
-			if (touchID == -1) {
-				glm::vec2 touchPositionNDC =
-					glm::vec2(last_mouse_position_.x, 1.0 - last_mouse_position_.y)
-					* glm::vec2(2.0, 2.0) - glm::vec2(1.0, 1.0); // transform window system coords
-				GridCell* maybeCell = getCellAt(touchPositionNDC); // search current cell
-				if (!maybeCell) {
-					return; // cursor was outside grid
-				}
-				if (interac->getLastCell() == maybeCell) return; // cursor was still inside last cell
-				Room::CollisionType collision = resizeRoomUntilCollision(interac->getRoom(), interac->getStartCell(), interac->getLastCell(), maybeCell);
-				if (collision == Room::CollisionType::NONE) {
-					interac->setLastCell(maybeCell);
-				}
-				else if (interac->getLastCollision() == Room::CollisionType::NONE) {
-					interac->setLastCell(maybeCell);
-				}
-				else if (collision == Room::CollisionType::HORIZONTAL) {
-					if (interac->getLastCollision() == Room::CollisionType::VERTICAL)
-						interac->setLastCell(maybeCell);
-					else
-						interac->setLastCell(getCellAt(interac->getLastCell()->getCol(), maybeCell->getRow()));
-				}
-				else if (collision == Room::CollisionType::VERTICAL) {
-					if (interac->getLastCollision() == Room::CollisionType::HORIZONTAL)
-						interac->setLastCell(maybeCell);
-					else
-						interac->setLastCell(getCellAt(maybeCell->getCol(), interac->getLastCell()->getRow()));
-				}
-				interac->setLastCollision(collision);
-				break;
-			}
-		}
-	}
-}
-
-
-Room::CollisionType InteractiveGrid::resizeRoomUntilCollision(Room* room, GridCell* startCell, GridCell* lastCell, GridCell* currentCell) {
-	// Handle DEGENERATED rooms by update each cell (typically low number of cells)
-	if (startCell == lastCell || !room->isValid()) {
-		room->clear();
-		return room->spanFromTo(startCell, currentCell) ? Room::CollisionType::NONE : Room::CollisionType::BOTH;
-		//TODO Invalid rooms that collide are not rendered
-	}
-	// Handle OK rooms by update only changed cells (room cell number can be very high)
-	bool isNotCollided_H = true;
-	bool isNotCollided_V = true;
-	// Compute size delta
-	size_t colDist = lastCell->getColDistanceTo(currentCell);
-	size_t rowDist = lastCell->getRowDistanceTo(currentCell);
-	// Horizontal grow or shrink
-	if (startCell->isWestOf(lastCell)) {
-		if (lastCell->isWestOf(currentCell))
-			isNotCollided_H = room->growToEast(colDist);
-		else if (lastCell->isEastOf(currentCell)) {
-			if (startCell->isEastOf(currentCell)) {
-				room->shrinkToWest(lastCell->getColDistanceTo(startCell));
-				isNotCollided_H = room->growToWest(startCell->getColDistanceTo(currentCell));
-			} else
-				room->shrinkToWest(colDist);
-		}
-	}
-	else if (startCell->isEastOf(lastCell)) {
-		if (lastCell->isEastOf(currentCell))
-			isNotCollided_H = room->growToWest(colDist);
-		else if (lastCell->isWestOf(currentCell)) {
-			if (startCell->isWestOf(currentCell)) {
-				room->shrinkToEast(lastCell->getColDistanceTo(startCell));
-				isNotCollided_H = room->growToEast(startCell->getColDistanceTo(currentCell));
-			} else
-				room->shrinkToEast(colDist);
-		}
-	}
-	// Vertical grow or shrink
-	if (startCell->isNorthOf(lastCell)) {
-		if (lastCell->isNorthOf(currentCell))
-			isNotCollided_V = room->growToSouth(rowDist);
-		else if (lastCell->isSouthOf(currentCell)) {
-			if (startCell->isSouthOf(currentCell)) {
-				room->shrinkToNorth(lastCell->getRowDistanceTo(startCell));
-				isNotCollided_V = room->growToNorth(startCell->getRowDistanceTo(currentCell));
-			} else
-				room->shrinkToNorth(rowDist);
-		}
-	}
-	else if (startCell->isSouthOf(lastCell)) {
-		if (lastCell->isSouthOf(currentCell))
-			isNotCollided_V = room->growToNorth(rowDist);
-		else if (lastCell->isNorthOf(currentCell)) {
-			if (startCell->isNorthOf(currentCell)) {
-				room->shrinkToSouth(lastCell->getRowDistanceTo(startCell));
-				isNotCollided_V = room->growToSouth(startCell->getRowDistanceTo(currentCell));
-			} else
-				room->shrinkToSouth(rowDist);
-		}
-	}
-	// Has room collided?
-	if (isNotCollided_H && isNotCollided_V) {
-		return Room::CollisionType::NONE;
-	}
-	else if (isNotCollided_H) {
-		return Room::CollisionType::VERTICAL;
-	}
-	else if (isNotCollided_V) {
-		return Room::CollisionType::HORIZONTAL;
-	}
-	else {
-		return Room::CollisionType::BOTH;
-	}
 }
 
 
@@ -373,45 +226,19 @@ void InteractiveGrid::buildAt(size_t col, size_t row, GridCell::BuildState build
 	GridCell* maybeCell = getCellAt(col, row);
 	if (!maybeCell) return;
 	if (maybeCell->getBuildState() == buildState) return;
-	if (meshpool_) {
-		RoomSegmentMesh::InstanceBufferRange bufferRange;
-		if (maybeCell->getBuildState() == GridCell::BuildState::EMPTY) {
-			// Add instance, if cell was empty
-			RoomSegmentMesh::Instance instance;
-			instance.scale = glm::vec3(model_matrix_ * glm::vec4(cell_size_)) / 2.0f;
-			instance.translation = glm::vec3(model_matrix_ * 
-				glm::vec4(maybeCell->getPosition() + glm::vec2(cell_size_/2.0f, -cell_size_/2.0f), 0.0f, 1.0f));
-			bufferRange = meshpool_->addInstanceUnordered(buildState, instance);
-			maybeCell->setMeshInstance(bufferRange);
-		}
-		else if (buildState == GridCell::BuildState::EMPTY) {
-			// Remove instance, if cell is going to be empty
-			bufferRange = maybeCell->getMeshInstance();
-			bufferRange.mesh_->removeInstanceUnordered(bufferRange.offset_instances_);
-		}
-		else {
-			// Alter instance, if build states change between others than empty
-			bufferRange = maybeCell->getMeshInstance();
-			bufferRange.mesh_->removeInstanceUnordered(bufferRange.offset_instances_);
-			RoomSegmentMesh::Instance instance;
-			instance.scale = glm::vec3(model_matrix_ * glm::vec4(cell_size_)) / 2.0f;
-			instance.translation = glm::vec3(model_matrix_ * 
-				glm::vec4(maybeCell->getPosition() + glm::vec2(cell_size_/2.0f, -cell_size_/2.0f), 0.0f, 1.0f));
-			bufferRange = meshpool_->addInstanceUnordered(buildState, instance);
-			maybeCell->setMeshInstance(bufferRange);
-		}
-	}
 	maybeCell->updateBuildState(vbo_, buildState);
 }
 
 
-void InteractiveGrid::setRoomSegmentMeshPool(RoomSegmentMeshPool* meshpool) {
-	meshpool_ = meshpool;
-}
-
-
-RoomSegmentMeshPool* InteractiveGrid::getRoomSegmentMeshPool() {
-	return meshpool_;
+void InteractiveGrid::buildAtLastMousePosition(GridCell::BuildState buildState) {
+	glm::vec2 touchPositionNDC =
+		glm::vec2(last_mouse_position_.x, 1.0 - last_mouse_position_.y)
+		* glm::vec2(2.0, 2.0) - glm::vec2(1.0, 1.0);
+	GridCell* maybeCell = getCellAt(touchPositionNDC);
+	if (!maybeCell) return;
+	if (maybeCell->getBuildState() != GridCell::BuildState::EMPTY) return;
+	if (maybeCell->getBuildState() == buildState) return;
+	buildAt(maybeCell->getCol(), maybeCell->getRow(), buildState);
 }
 
 

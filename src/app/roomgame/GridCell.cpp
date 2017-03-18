@@ -93,6 +93,12 @@ int GridCell::getHealthPoints() {
 	return vertex_.health_points;
 }
 
+void GridCell::setHealthPoints(int hp) {
+	if (hp < MIN_HEALTH) hp = MIN_HEALTH;
+	else if (hp > MAX_HEALTH) hp = MAX_HEALTH;
+	vertex_.health_points = hp;
+}
+
 size_t GridCell::getCol() {
 	return col_idx_;
 }

@@ -6,19 +6,14 @@
 #include <sgct/Engine.h>
 #include "core/gfx/GPUProgram.h"
 #include "core/ApplicationNode.h"
-#include "Room.h"
 #include "GridInteraction.h"
 
-class RoomSegmentMeshPool;
-#include "RoomSegmentMeshPool.h"
-
-//template <int NUM_COLUMNS, int NUM_ROWS>
 class InteractiveGrid {
+protected:
 	// Data members
 	float height_units_;
 	float cell_size_;
-	std::vector<std::vector<GridCell>> cells_; //TODO better use array with templated size
-	std::vector<Room*> rooms_;
+	std::vector<std::vector<GridCell>> cells_;
 	// Render-related members
 	GLuint vao_, vbo_;
 	std::shared_ptr<viscom::GPUProgram> shader_;
@@ -27,10 +22,10 @@ class InteractiveGrid {
 	GLsizei num_vertices_;
 	glm::mat4 last_view_projection_;
 	// Input-related members
-	glm::dvec2 last_mouse_position_; //TODO maybe replace with TUIO touch position
+	glm::dvec2 last_mouse_position_;
 	std::list<GridInteraction*> interactions_;
 public:
-	InteractiveGrid(int columns, int rows, float height);
+	InteractiveGrid(size_t columns, size_t rows, float height);
 	~InteractiveGrid();
 	// Helper functions
 	void forEachCell(std::function<void(GridCell*)> callback);
@@ -38,34 +33,30 @@ public:
 	void forEachCellInRange(GridCell* leftLower, GridCell* rightUpper, std::function<void(GridCell*)> callback);
 	void forEachCellInRange(GridCell* leftLower, GridCell* rightUpper, std::function<void(GridCell*,bool*)> callback);
 	GridCell* getCellAt(glm::vec2 positionNDC);
-	GridCell* getCellAt(size_t col, size_t row);
 	bool isInsideGrid(glm::vec2 positionNDC);
 	bool isInsideCell(glm::vec2 positionNDC, GridCell* cell);
 	glm::vec2 getNDC(glm::vec2 position);
 	bool isColumnEmptyBetween(size_t col, size_t startRow, size_t endRow);
 	bool isRowEmptyBetween(size_t row, size_t startCol, size_t endCol);
+	// Getters
 	float getCellSize();
 	size_t getNumColumns();
 	size_t getNumRows();
 	size_t getNumCells();
-	void translate(float dx, float dy, float dz);
+	GridCell* getCellAt(size_t col, size_t row);
 	// Render functions
 	void uploadVertexData();
 	void loadShader(viscom::GPUProgramManager mgr);
 	void render(glm::mat4 sgctMVP);
 	void cleanup();
+	void translate(float dx, float dy, float dz);
 	// Input functions
-	void onTouch(int touchID);
-	void onRelease(int touchID);
-	void onMouseMove(int touchID, double newx, double newy);
-
-	Room::CollisionType resizeRoomUntilCollision(Room* room, GridCell* startCell, GridCell* lastCell, GridCell* currentCell);
-	void buildAt(size_t col, size_t row, GridCell::BuildState buildState);
-
-	void setRoomSegmentMeshPool(RoomSegmentMeshPool* meshpool);
-	RoomSegmentMeshPool* getRoomSegmentMeshPool();
-private:
-	RoomSegmentMeshPool* meshpool_;
+	virtual void onTouch(int touchID);
+	virtual void onRelease(int touchID);
+	virtual void onMouseMove(int touchID, double newx, double newy);
+	// Functions for grid modification
+	virtual void buildAt(size_t col, size_t row, GridCell::BuildState buildState);
+	void buildAtLastMousePosition(GridCell::BuildState buildState);
 };
 
 #endif

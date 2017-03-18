@@ -21,7 +21,6 @@ public:
 	void finish();
 	size_t getColSize();
 	size_t getRowSize();
-	InteractiveGrid* getGrid();
 
 	bool growToEast(size_t dist);
 	bool growToWest(size_t dist);
