@@ -10,6 +10,7 @@ layout(location = 2) in vec2 texCoords;
 layout(location = 3) in vec3 translation;
 layout(location = 4) in vec3 scale;
 layout(location = 5) in float zRotation;
+layout(location = 6) in int health;
 
 uniform mat4 subMeshLocalMatrix;
 uniform mat3 normalMatrix;
@@ -18,6 +19,7 @@ uniform mat4 viewProjectionMatrix;
 out vec3 vPosition;
 out vec3 vNormal;
 out vec2 vTexCoords;
+flat out int vHealth;
 
 mat4 rotationMatrix(vec3 axis, float angle)
 {
@@ -46,8 +48,9 @@ void main()
 
     vec4 posV4 = modelMatrix * subMeshLocalMatrix * vec4(position, 1);
     vPosition = vec3(posV4);
-    vNormal = normalize(mat3(rotation) * normal); //TODO why does normal matrix not work?
+    vNormal = normalize(mat3(rotation) * normal);
     vTexCoords = texCoords;
+    vHealth = health;
 
     gl_Position = viewProjectionMatrix * posV4;
 }

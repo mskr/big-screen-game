@@ -22,8 +22,8 @@ class GPUCellularAutomaton {
 	void copyFromGridToTexture(int pair_index);
 	void copyFromTextureToGrid(int pair_index);
 public:
-	GPUCellularAutomaton(AutomatonGrid* grid);
-	void updateCell(size_t x, size_t y, GridCell::BuildState state);
+	GPUCellularAutomaton(AutomatonGrid* grid, double transition_time);
+	void updateCell(size_t x, size_t y, GLint state, GLint hp);
 	void init(viscom::GPUProgramManager mgr);
 	void transition(double time);
 	void cleanup();

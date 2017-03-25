@@ -11,34 +11,44 @@ GridCell::GridCell(float x, float y, size_t col_idx, size_t row_idx) {
 	row_idx_ = row_idx;
 }
 
-void GridCell::setVertexBufferOffset(GLintptr o) {
-	vertex_buffer_offset_ = o;
-}
-
-GLintptr GridCell::getVertexBufferOffset() {
-	return vertex_buffer_offset_;
-}
-
-size_t GridCell::getVertexBytes() {
-	return sizeof(Vertex);
-}
-
-void* GridCell::getVertexPointer() {
-	return &vertex_;
-}
-
-void GridCell::setVertexAttribPointer() {
-	Vertex::setAttribPointer();
-}
-
 void GridCell::updateBuildState(GLuint vbo, BuildState s) {
 	vertex_.build_state = s;
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferSubData(GL_ARRAY_BUFFER,
-		vertex_buffer_offset_ + sizeof(vertex_.x_position) + sizeof(vertex_.y_position),
+		vertex_buffer_offset_ + 2 * sizeof(GLfloat),
 		sizeof(vertex_.build_state),
 		(GLvoid*)&vertex_.build_state);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+void GridCell::updateHealthPoints(GLuint vbo, int hp) {
+	if (hp < MIN_HEALTH) hp = MIN_HEALTH;
+	else if (hp > MAX_HEALTH) hp = MAX_HEALTH;
+	vertex_.health_points = hp;
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferSubData(GL_ARRAY_BUFFER,
+		vertex_buffer_offset_ + 2 * sizeof(GLfloat) + sizeof(GLint),
+		sizeof(vertex_.health_points),
+		(GLvoid*)&vertex_.health_points);
+	if (vertex_.build_state != EMPTY) {
+		RoomSegmentMesh::Instance::updateHealth(
+			mesh_instance_.buffer_->id_,
+			mesh_instance_.offset_instances_,
+			vertex_.health_points);
+	}
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+void GridCell::setMeshInstance(RoomSegmentMesh::InstanceBufferRange mesh_instance) {
+	mesh_instance_ = mesh_instance;
+}
+
+void GridCell::setVertexBufferOffset(GLintptr o) {
+	vertex_buffer_offset_ = o;
+}
+
+void GridCell::setVertexAttribPointer() {
+	Vertex::setAttribPointer();
 }
 
 void GridCell::setNorthNeighbor(GridCell* N) {
@@ -93,18 +103,24 @@ int GridCell::getHealthPoints() {
 	return vertex_.health_points;
 }
 
-void GridCell::setHealthPoints(int hp) {
-	if (hp < MIN_HEALTH) hp = MIN_HEALTH;
-	else if (hp > MAX_HEALTH) hp = MAX_HEALTH;
-	vertex_.health_points = hp;
-}
-
 size_t GridCell::getCol() {
 	return col_idx_;
 }
 
 size_t GridCell::getRow() {
 	return row_idx_;
+}
+
+GLintptr GridCell::getVertexBufferOffset() {
+	return vertex_buffer_offset_;
+}
+
+size_t GridCell::getVertexBytes() {
+	return sizeof(Vertex);
+}
+
+void* GridCell::getVertexPointer() {
+	return &vertex_;
 }
 
 bool GridCell::isNorthOf(GridCell* other) {
@@ -142,8 +158,4 @@ RoomSegmentMesh::InstanceBufferRange GridCell::getMeshInstance() {
 		return mesh_instance_;
 	else
 		return RoomSegmentMesh::InstanceBufferRange();
-}
-
-void GridCell::setMeshInstance(RoomSegmentMesh::InstanceBufferRange mesh_instance) {
-	mesh_instance_ = mesh_instance;
 }

@@ -29,18 +29,21 @@ private:
 		GLint build_state;
 		GLint health_points;
 		static const void setAttribPointer() {
-			glVertexAttribPointer(0, 2, GL_FLOAT, false,
+			const GLint posAttrLoc = 0;
+			const GLint buildStateAttrLoc = 1;
+			const GLint healthAttrLoc = 2;
+			glVertexAttribPointer(posAttrLoc, 2, GL_FLOAT, false,
 				sizeof(Vertex),
 				(GLvoid*)0);
-			glVertexAttribIPointer(1, 1, GL_INT,
+			glVertexAttribIPointer(buildStateAttrLoc, 1, GL_INT,
 				sizeof(Vertex),
 				(GLvoid*)(2 * sizeof(float)));
-			glVertexAttribIPointer(2, 1, GL_INT,
+			glVertexAttribIPointer(healthAttrLoc, 1, GL_INT,
 				sizeof(Vertex),
 				(GLvoid*)(2 * sizeof(float) + sizeof(BuildState)));
-			glEnableVertexAttribArray(0);
-			glEnableVertexAttribArray(1);
-			glEnableVertexAttribArray(2);
+			glEnableVertexAttribArray(posAttrLoc);
+			glEnableVertexAttribArray(buildStateAttrLoc);
+			glEnableVertexAttribArray(healthAttrLoc);
 		}
 	} vertex_;
 	GLintptr vertex_buffer_offset_;
@@ -54,8 +57,11 @@ private:
 public:
 	GridCell(float x, float y, size_t col_idx, size_t row_idx);
 	~GridCell() = default;
-	static void setVertexAttribPointer();
 	void updateBuildState(GLuint vbo, BuildState s);
+	void updateHealthPoints(GLuint vbo, int hp);
+	void setMeshInstance(RoomSegmentMesh::InstanceBufferRange mesh_instance);
+	static void setVertexAttribPointer();
+	void setVertexBufferOffset(GLintptr o);
 	void setNorthNeighbor(GridCell* N);
 	void setEastNeighbor(GridCell* E);
 	void setSouthNeighbor(GridCell* S);
@@ -69,8 +75,6 @@ public:
 	float getYPosition();
 	int getBuildState();
 	int getHealthPoints();
-	void setHealthPoints(int hp);
-	void setVertexBufferOffset(GLintptr o);
 	GLintptr getVertexBufferOffset();
 	static size_t getVertexBytes();
 	void* getVertexPointer();
@@ -83,7 +87,6 @@ public:
 	size_t getColDistanceTo(GridCell* other);
 	size_t getRowDistanceTo(GridCell* other);
 	RoomSegmentMesh::InstanceBufferRange getMeshInstance();
-	void setMeshInstance(RoomSegmentMesh::InstanceBufferRange mesh_instance);
 };
 
 #endif

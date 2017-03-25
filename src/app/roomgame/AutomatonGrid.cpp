@@ -11,11 +11,17 @@ void AutomatonGrid::setCellularAutomaton(GPUCellularAutomaton* automaton) {
 	automaton_ = automaton;
 }
 
-
-void AutomatonGrid::updateGridAt(size_t col, size_t row, GridCell::BuildState state) {
-
+void AutomatonGrid::buildAt(size_t col, size_t row, GridCell::BuildState state) {
+	MeshInstanceGrid::buildAt(col, row, state);
+	GridCell* c = getCellAt(col, row);
+	if (!c) return;
+	c->updateHealthPoints(vbo_, GridCell::MAX_HEALTH);
+	automaton_->updateCell(col, row, state, c->getHealthPoints());
 }
 
-void AutomatonGrid::updateAutomatonAt(size_t col, size_t row, GridCell::BuildState state) {
-	
+void AutomatonGrid::updateGridOnly(size_t col, size_t row, GridCell::BuildState state, int hp) {
+	MeshInstanceGrid::buildAt(col, row, state);
+	GridCell* c = getCellAt(col, row);
+	if (!c) return;
+	c->updateHealthPoints(vbo_, hp);
 }

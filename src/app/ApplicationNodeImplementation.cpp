@@ -12,8 +12,8 @@
 #include "core/gfx/mesh/MeshRenderable.h"
 #include "core/imgui/imgui_impl_glfw_gl3.h"
 
-#define GRID_COLUMNS 16
-#define GRID_ROWS 16
+#define GRID_COLUMNS 128
+#define GRID_ROWS 128
 
 namespace viscom {
 
@@ -23,7 +23,7 @@ namespace viscom {
 		grid_(GRID_COLUMNS, GRID_ROWS, 1.2f, &meshpool_),
 		interaction_mode_(GRID_PLACE_OUTER_INFLUENCE),
 		camera_{},
-		cellular_automaton_(&grid_)
+		cellular_automaton_(&grid_, 0.2)
     {
     }
 
@@ -163,10 +163,9 @@ namespace viscom {
     {
 		if (interaction_mode_ == InteractionMode::GRID)
 			grid_.onMouseMove(-1, x, y);
-		else if (interaction_mode_ == InteractionMode::GRID_PLACE_OUTER_INFLUENCE)
+		else
 			grid_.onMouseMove(-2, x, y);
-		else if (interaction_mode_ == InteractionMode::CAMERA)
-			camera_.onMouseMove((float)x, (float)y);
+		camera_.onMouseMove((float)x, (float)y);
 #ifdef VISCOM_CLIENTGUI
         ImGui_ImplGlfwGL3_MousePositionCallback(x, y);
 #endif

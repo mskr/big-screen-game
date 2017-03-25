@@ -38,4 +38,5 @@ void main()
 	// Outer Influence
 	else if(fBuildState == 11) color = vec4(0,0,.5,1); // dark blue
 	else color = vec4(.5,.5,.5,1); // gray
+	color = color * (float(fHealthPoints)/100.0);
 }

@@ -8,9 +8,9 @@ class AutomatonGrid : public MeshInstanceGrid {
 	GPUCellularAutomaton* automaton_;
 public:
 	AutomatonGrid(size_t columns, size_t rows, float height, RoomSegmentMeshPool* meshpool);
-	void updateGridAt(size_t col, size_t row, GridCell::BuildState state);
-	void updateAutomatonAt(size_t col, size_t row, GridCell::BuildState state);
 	void setCellularAutomaton(GPUCellularAutomaton*);
+	void buildAt(size_t col, size_t row, GridCell::BuildState buildState) override;
+	void updateGridOnly(size_t col, size_t row, GridCell::BuildState state, int hp);
 };
 
 #endif

@@ -1,10 +1,10 @@
 #include "GPUCellularAutomaton.h"
 
-GPUCellularAutomaton::GPUCellularAutomaton(AutomatonGrid* grid) {
+GPUCellularAutomaton::GPUCellularAutomaton(AutomatonGrid* grid, double transition_time) {
 	grid_ = grid;
 	grid_->setCellularAutomaton(this);
 	pixel_size_ = glm::vec2(1.0f / float(grid->getNumColumns()), 1.0f / float(grid->getNumRows()));
-	transition_time_ = 0.5;
+	transition_time_ = transition_time;
 	last_time_ = 0.0;
 	is_initialized_ = false;
 	current_read_index_ = 0;
@@ -91,11 +91,15 @@ void GPUCellularAutomaton::copyFromTextureToGrid(int pair_index) {
 		for (unsigned int y = 0; y < rows*2 - 1; y+=2) {
 			GLint state = tmp_client_buffer_[x*2*rows + y];
 			GLint hp = tmp_client_buffer_[x*2*rows + y + 1];
-			GridCell* c = grid_->getCellAt(y/2, x);
-			grid_->buildAt(y/2, x, (GridCell::BuildState)state);
-			c->setHealthPoints(hp);
+			grid_->updateGridOnly(y/2, x, (GridCell::BuildState)state, hp);
 		}
 	}
+}
+
+void GPUCellularAutomaton::updateCell(size_t x, size_t y, GLint buildState, GLint hp) {
+	GLint data[2] = { buildState, hp };
+	glBindTexture(GL_TEXTURE_2D, texture_pair_[current_read_index_].id);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, (GLint)x, (GLint)y, 1, 1, GL_RG_INTEGER, GL_INT, data);
 }
 
 void GPUCellularAutomaton::transition(double time) {

@@ -21,23 +21,36 @@ public:
 	struct Instance {
 		glm::vec3 translation = glm::vec3(0);
 		glm::vec3 scale = glm::vec3(0);
-		float zRotation = 0.0f;
+		GLfloat zRotation = 0.0f;
+		GLint health = 0;
+		static const void updateHealth(GLuint buffer, int offset_instances, int h) {
+			glBindBuffer(GL_ARRAY_BUFFER, buffer);
+			glBufferSubData(GL_ARRAY_BUFFER,
+				(offset_instances + 1) * sizeof(Instance) - sizeof(health),
+				sizeof(health), &h);
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
+		}
 		static const void setAttribPointer() {
 			GLint transLoc = 3;
 			GLint scaleLoc = 4;
 			GLint zRotLoc = 5;
+			GLint healthLoc = 6;
 			glVertexAttribPointer(transLoc, 3, GL_FLOAT, false,
 				sizeof(Instance), (GLvoid*)0);
 			glVertexAttribPointer(scaleLoc, 3, GL_FLOAT, false,
-				sizeof(Instance), (GLvoid*)(3 * sizeof(float)));
+				sizeof(Instance), (GLvoid*)(3 * sizeof(GLfloat)));
 			glVertexAttribPointer(zRotLoc, 1, GL_FLOAT, false,
-				sizeof(Instance), (GLvoid*)(6 * sizeof(float)));
+				sizeof(Instance), (GLvoid*)(6 * sizeof(GLfloat)));
+			glVertexAttribIPointer(healthLoc, 1, GL_INT,
+				sizeof(Instance), (GLvoid*)(7 * sizeof(GLfloat)));
 			glEnableVertexAttribArray(transLoc);
 			glEnableVertexAttribArray(scaleLoc);
 			glEnableVertexAttribArray(zRotLoc);
+			glEnableVertexAttribArray(healthLoc);
 			glVertexAttribDivisor(transLoc, 1);
 			glVertexAttribDivisor(scaleLoc, 1);
 			glVertexAttribDivisor(zRotLoc, 1);
+			glVertexAttribDivisor(healthLoc, 1);
 		}
 	};
 	struct InstanceBufferRange {

@@ -100,9 +100,6 @@ void RoomSegmentMesh::removeInstanceUnordered(int offset_instances) {
 		last_free_offset_ = last_free_offset_->el_;
 	}
 	Instance zeros;
-	zeros.translation = glm::vec3(0);
-	zeros.scale = glm::vec3(0);
-	zeros.zRotation = 0.0f;
 	glBindBuffer(GL_ARRAY_BUFFER, unordered_buffer_.id_);
 	glBufferSubData(GL_ARRAY_BUFFER, offset_instances * sizeof(Instance), sizeof(Instance), &zeros);
 }
