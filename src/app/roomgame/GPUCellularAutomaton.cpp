@@ -136,3 +136,7 @@ void GPUCellularAutomaton::transition(double time) {
 	// Swap buffers
 	current_read_index_ = current_write_index;
 }
+
+void GPUCellularAutomaton::setTransitionTime(double t) {
+	transition_time_ = t;
+}

@@ -16,7 +16,12 @@
 uniform vec2 pxsize;
 uniform isampler2D inputGrid;
 
-ivec2 moveDirection = ivec2(1,0);
+uniform ivec2 moveDirection;
+uniform float BIRTH_THRESHOLD;// = 0.4;
+uniform float DEATH_THRESHOLD;// = 0.5;
+uniform float ROOM_NBORS_AHEAD_THRESHOLD;// = 0.2;
+uniform int OUTER_INFL_NBORS_THRESHOLD;// = 1;
+uniform int DAMAGE_PER_CELL;// = 5;
 
 in vec2 pixel;
 out ivec2 outputCell;
@@ -188,8 +193,6 @@ int applyMoveRule(int st, ivec4 nbors, ivec2 movDir) {
 	else {
 		nborsBehindNormalized /= 3.0;
 	}
-	const float BIRTH_THRESHOLD = 0.4;
-	const float DEATH_THRESHOLD = 0.5;
 	if (st==BSTATE_EMPTY && nborsBehindNormalized>BIRTH_THRESHOLD)
 		return BSTATE_OUTER_INFLUENCE; // birth
 	else if (st==BSTATE_OUTER_INFLUENCE && nborsBehindNormalized<DEATH_THRESHOLD)
@@ -199,7 +202,6 @@ int applyMoveRule(int st, ivec4 nbors, ivec2 movDir) {
 }
 
 int applyDamageRule(int st, int hp, int outerInflNbors, int roomNbors) {
-	const int DAMAGE_PER_CELL = 5;
 	if(st >= BSTATE_INSIDE_ROOM && st <= BSTATE_WALL_BOTTOM) {
 		return outerInflNbors * DAMAGE_PER_CELL;
 	}
@@ -220,8 +222,6 @@ int applySplitRule(int st, ivec4 roomNbors, int outerInflNbors, ivec2 movDir) {
 	float roomNborsAheadNormalized = roomNborsAhead;
 	if(movDir.x!=0 && movDir.y!=0) roomNborsAheadNormalized /= 6.0;
 	else roomNborsAheadNormalized /= 3.0;
-	const float ROOM_NBORS_AHEAD_THRESHOLD = 0.2;
-	const int OUTER_INFL_NBORS_THRESHOLD = 1;
 	if(roomNborsAheadNormalized>ROOM_NBORS_AHEAD_THRESHOLD
 		&& outerInflNbors>OUTER_INFL_NBORS_THRESHOLD) return BSTATE_OUTER_INFLUENCE;
 	else return st;

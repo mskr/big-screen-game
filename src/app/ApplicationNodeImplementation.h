@@ -80,6 +80,6 @@ namespace viscom {
 		RoomSegmentMeshPool meshpool_;
 		DragAndZoomCamera camera_;
 		enum InteractionMode { GRID, CAMERA, GRID_PLACE_OUTER_INFLUENCE } interaction_mode_;
-		GPUCellularAutomaton cellular_automaton_;
+		OuterInfluenceAutomaton cellular_automaton_;
     };
 }

@@ -42,6 +42,7 @@ namespace viscom {
 #ifndef VISCOM_CLIENTGUI
             ImGui::ShowTestWindow();
 #endif
+			/*
             ImGui::SetNextWindowPos(ImVec2(700, 60), ImGuiSetCond_FirstUseEver);
             ImGui::SetNextWindowSize(ImVec2(550, 680), ImGuiSetCond_FirstUseEver);
             if (ImGui::Begin("MasterTestWindow", nullptr, ImGuiWindowFlags_ShowBorders))
@@ -49,6 +50,7 @@ namespace viscom {
                 ImGui::Text("Hello World on Master!");
             }
             ImGui::End();
+			*/
         });
 
         ApplicationNodeImplementation::Draw2D(fbo);

@@ -15,6 +15,14 @@
 #define GRID_COLUMNS 128
 #define GRID_ROWS 128
 
+static float automaton_transition_time = 0.04f;
+static int automaton_movedir_[2] = { 1,0 };
+static float automaton_birth_thd = 0.4f;
+static float automaton_death_thd = 0.5f;
+static float automaton_collision_thd = 0.2f;
+static int automaton_outer_infl_nbors_thd = 1;
+static int automaton_damage_per_cell = 5;
+
 namespace viscom {
 
 	ApplicationNodeImplementation::ApplicationNodeImplementation(ApplicationNode* appNode) :
@@ -23,7 +31,7 @@ namespace viscom {
 		grid_(GRID_COLUMNS, GRID_ROWS, 1.2f, &meshpool_),
 		interaction_mode_(GRID_PLACE_OUTER_INFLUENCE),
 		camera_{},
-		cellular_automaton_(&grid_, 0.2)
+		cellular_automaton_(&grid_, automaton_transition_time)
     {
     }
 
@@ -57,6 +65,8 @@ namespace viscom {
 
 		grid_.loadShader(appNode_->GetGPUProgramManager());
 		grid_.uploadVertexData();
+
+		ImGui::GetIO().FontGlobalScale = 1.5f;
     }
 
     void ApplicationNodeImplementation::PreSync()
@@ -69,6 +79,13 @@ namespace viscom {
 
     void ApplicationNodeImplementation::UpdateFrame(double currentTime, double elapsedTime)
     {
+		cellular_automaton_.setTransitionTime(automaton_transition_time);
+		cellular_automaton_.setMoveDir(automaton_movedir_[0], automaton_movedir_[1]);
+		cellular_automaton_.setBirthThreshold(automaton_birth_thd);
+		cellular_automaton_.setDeathThreshold(automaton_death_thd);
+		cellular_automaton_.setCollisionThreshold(automaton_collision_thd);
+		cellular_automaton_.setOuterInfluenceNeighborThreshold(automaton_outer_infl_nbors_thd);
+		cellular_automaton_.setDamagePerCell(automaton_damage_per_cell);
 		cellular_automaton_.transition(currentTime);
     }
 
@@ -91,10 +108,23 @@ namespace viscom {
 
     void ApplicationNodeImplementation::Draw2D(FrameBuffer& fbo)
     {
-        fbo.DrawToFBO([]() {
+        fbo.DrawToFBO([&]() {
 #ifdef VISCOM_CLIENTGUI
             ImGui::ShowTestWindow();
 #endif
+			if (ImGui::Begin("Roomgame Controls")) {
+				//ImGui::SetWindowFontScale(2.0f);
+				ImGui::Text("Interaction mode: %s", (interaction_mode_==GRID)?"GRID":((interaction_mode_==GRID_PLACE_OUTER_INFLUENCE)?"GRID_PLACE_OUTER_INFLUENCE":"CAMERA"));
+				ImGui::Text("AUTOMATON");
+				ImGui::SliderFloat("transition time", &automaton_transition_time, 0.017f, 1.0f);
+				ImGui::SliderInt2("move direction", automaton_movedir_, -1, 1);
+				ImGui::SliderFloat("birth thd", &automaton_birth_thd, 0.0f, 1.0f);
+				ImGui::SliderFloat("death thd", &automaton_death_thd, 0.0f, 1.0f);
+				ImGui::SliderFloat("collision thd", &automaton_collision_thd, 0.0f, 1.0f);
+				ImGui::SliderInt("neighbor thd", &automaton_outer_infl_nbors_thd, 1, 8);
+				ImGui::SliderInt("damage per cell per timestep", &automaton_damage_per_cell, 1, 100);
+			}
+			ImGui::End();
         });
     }
 
@@ -124,8 +154,13 @@ namespace viscom {
 			}
 		}
 		else if (key == GLFW_KEY_S && action == GLFW_PRESS) {
-			interaction_mode_ = InteractionMode::GRID;
-			cellular_automaton_.init(appNode_->GetGPUProgramManager());
+			if (interaction_mode_ == GRID_PLACE_OUTER_INFLUENCE) {
+				interaction_mode_ = InteractionMode::GRID;
+				cellular_automaton_.init(appNode_->GetGPUProgramManager());
+			}
+			else {
+				interaction_mode_ = GRID_PLACE_OUTER_INFLUENCE;
+			}
 		}
 #ifdef VISCOM_CLIENTGUI
         ImGui_ImplGlfwGL3_KeyCallback(key, scancode, action, mods);
