@@ -18,6 +18,12 @@ void GridCell::updateBuildState(GLuint vbo, BuildState s) {
 		vertex_buffer_offset_ + 2 * sizeof(GLfloat),
 		sizeof(vertex_.build_state),
 		(GLvoid*)&vertex_.build_state);
+	if (vertex_.build_state != EMPTY) {
+		RoomSegmentMesh::Instance::updateBuildState(
+			mesh_instance_.buffer_->id_,
+			mesh_instance_.offset_instances_,
+			vertex_.build_state);
+	}
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 

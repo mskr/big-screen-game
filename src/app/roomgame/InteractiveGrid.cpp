@@ -14,10 +14,10 @@ InteractiveGrid::InteractiveGrid(size_t columns, size_t rows, float height) {
 	}
 	for (int x = 0; x < columns; x++) {
 		for (int y = 0; y < rows; y++) {
-			cells_[x][y].setNorthNeighbor((y == rows - 1) ? 0 : &cells_[x][y + 1]);
-			cells_[x][y].setEastNeighbor((x == columns - 1) ? 0 : &cells_[x + 1][y]);
-			cells_[x][y].setSouthNeighbor((y == 0) ? 0 : &cells_[x][y - 1]);
-			cells_[x][y].setWestNeighbor((x == 0) ? 0 : &cells_[x - 1][y]);
+			cells_[x][y].setNorthNeighbor((y == rows - 1) ? &cells_[x][0] : &cells_[x][y + 1]);
+			cells_[x][y].setEastNeighbor((x == columns - 1) ? &cells_[0][y] : &cells_[x + 1][y]);
+			cells_[x][y].setSouthNeighbor((y == 0) ? &cells_[x][rows - 1] : &cells_[x][y - 1]);
+			cells_[x][y].setWestNeighbor((x == 0) ? &cells_[columns - 1][y] : &cells_[x - 1][y]);
 		}
 	}
 	mvp_uniform_location_ = -1;

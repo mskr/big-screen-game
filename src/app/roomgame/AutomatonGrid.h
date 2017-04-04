@@ -10,7 +10,8 @@ public:
 	AutomatonGrid(size_t columns, size_t rows, float height, RoomSegmentMeshPool* meshpool);
 	void setCellularAutomaton(GPUCellularAutomaton*);
 	void buildAt(size_t col, size_t row, GridCell::BuildState buildState) override;
-	void updateGridOnly(size_t col, size_t row, GridCell::BuildState state, int hp);
+	void updateGridOnly(size_t col, size_t row, GridCell::BuildState state, int hp, glm::ivec2 neighborStates);
+	void setUniformAutomatonTimeDelta(GLfloat t);
 };
 
 #endif

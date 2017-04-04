@@ -19,6 +19,7 @@ protected:
 	double transition_time_;
 	double last_time_;
 	bool is_initialized_;
+	static const int NUM_TEXTURE_CHANNELS = 4;
 	// Helper
 	void copyFromGridToTexture(int pair_index);
 	void copyFromTextureToGrid(int pair_index);
@@ -52,7 +53,7 @@ public:
 		birth_thd_(0.4f),
 		death_thd_(0.5f),
 		room_nbors_ahead_thd_(0.2f),
-		outer_infl_nbors_thd_(1),
+		outer_infl_nbors_thd_(2),
 		damage_per_cell_(5) {}
 	void init(viscom::GPUProgramManager mgr) {
 		GPUCellularAutomaton::init(mgr);
