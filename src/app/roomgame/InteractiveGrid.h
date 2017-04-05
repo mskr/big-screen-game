@@ -18,7 +18,7 @@ protected:
 	GLuint vao_, vbo_;
 	std::shared_ptr<viscom::GPUProgram> shader_;
 	GLint mvp_uniform_location_;
-	glm::mat4 model_matrix_;
+	glm::vec3 translation_;
 	GLsizei num_vertices_;
 	glm::mat4 last_view_projection_;
 	// Input-related members
@@ -46,7 +46,7 @@ public:
 	GridCell* getCellAt(size_t col, size_t row);
 	// Render functions
 	void uploadVertexData();
-	void loadShader(viscom::GPUProgramManager mgr);
+	virtual void loadShader(viscom::GPUProgramManager mgr);
 	void render(glm::mat4 sgctMVP);
 	void cleanup();
 	void translate(float dx, float dy, float dz);

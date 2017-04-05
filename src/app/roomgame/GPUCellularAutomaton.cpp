@@ -81,6 +81,7 @@ void GPUCellularAutomaton::copyFromGridToTexture(int pair_index) {
 }
 
 void GPUCellularAutomaton::copyFromTextureToGrid(int pair_index) {
+	//TODO save this step by binding texture to mesh shader
 	size_t rows = grid_->getNumColumns();
 	size_t cols = grid_->getNumRows();
 	glBindTexture(GL_TEXTURE_2D, texture_pair_[pair_index].id);
@@ -106,11 +107,14 @@ void GPUCellularAutomaton::transition(double time) {
 	// Test if simulation can begin
 	if (!is_initialized_) return;
 	// Test if it is time for the next generation
-	if ((time - last_time_) >= transition_time_) {
+	double delta = time - last_time_;
+	if (delta >= transition_time_) {
 		last_time_ = time;
 	}
 	else {
-		return; //TODO interpolate
+		// enable interpolation in shader
+		grid_->updateUniformAutomatonTimeDelta((GLfloat)(delta / transition_time_));
+		return;
 	}
 	int current_write_index = (current_read_index_ == 0) ? 1 : 0;
 	// Do transition on gpu

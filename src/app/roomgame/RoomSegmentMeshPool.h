@@ -17,15 +17,18 @@ class RoomSegmentMeshPool {
 	std::set<std::shared_ptr<viscom::Mesh>> owned_resources_;
 	// The shader used by all meshes
 	std::shared_ptr<viscom::GPUProgram> shader_;
+	std::vector<GLint> matrix_uniform_locations_;
 	std::vector<GLint> uniform_locations_;
 public:
 	RoomSegmentMeshPool(const size_t MAX_INSTANCES);
 	~RoomSegmentMeshPool();
-	void setShader(std::shared_ptr<viscom::GPUProgram> shader);
+	void loadShader(viscom::GPUProgramManager mgr);
 	void addMesh(std::vector<GridCell::BuildState> types, std::shared_ptr<viscom::Mesh> mesh);
 	void addMeshVariations(std::vector<GridCell::BuildState> types, std::vector<std::shared_ptr<viscom::Mesh>> mesh_variations);
 	RoomSegmentMesh* getMeshOfType(GridCell::BuildState type);
-	RoomSegmentMesh::InstanceBufferRange addInstanceUnordered(GridCell::BuildState type, RoomSegmentMesh::Instance instance);
+	void addUniformLocation(std::string uniform_name);
+	GLint getUniformLocation(size_t index);
+	GLuint getShaderID();
 	void renderAllMeshes(glm::mat4 view_projection);
 	void cleanup();
 private:

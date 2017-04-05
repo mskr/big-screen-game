@@ -16,12 +16,12 @@
 uniform vec2 pxsize;
 uniform isampler2D inputGrid;
 
-uniform ivec2 moveDirection;
-uniform float BIRTH_THRESHOLD;// = 0.4;
-uniform float DEATH_THRESHOLD;// = 0.5;
-uniform float ROOM_NBORS_AHEAD_THRESHOLD;// = 0.2;
-uniform int OUTER_INFL_NBORS_THRESHOLD;// = 1;
-uniform int DAMAGE_PER_CELL;// = 5;
+uniform ivec2 moveDirection;// each component in {-1,0,1}
+uniform float BIRTH_THRESHOLD;// in [0,1]
+uniform float DEATH_THRESHOLD;// in [0,1]
+uniform float ROOM_NBORS_AHEAD_THRESHOLD;// in [0,1]
+uniform int OUTER_INFL_NBORS_THRESHOLD;// integer from 0 to 8
+uniform int DAMAGE_PER_CELL;// integer from 0 to 100
 
 in vec2 pixel;
 out ivec2 outputCell;
@@ -173,10 +173,31 @@ void life(int state, int neighbors) {
 	}
 }
 
-//Rules:
-// 1) Move
-// 2) Damage
-// 3) Split
+///////////
+// Rules //
+///////////
+// 1) Move:
+//    - Neighbors in opposite moving direction are
+//      considered to follow behind the current cell.
+//    - Outer influence cell is born, if enough
+//      other outer influence cells follow behind it
+//      (more than BIRTH_THRESHOLD).
+//    - Outer influence cell dies, if too few other
+//      outer influence cells follow behind it
+//      (fewer than DEATH_THRESHOLD).
+// 2) Split:
+//    - As response to a collision with a room, outer
+//      influence body "splits".
+//    - Split rule takes the new state after the move rule.
+//    - Outer influence cell is born next to at least
+//      OUTER_INFL_NBORS_THRESHOLD other outer influence
+//      cells, if enough room cells are ahead (more than
+//      ROOM_NBORS_AHEAD_THRESHOLD).
+// 3) Damage:
+//    - Room cell health decreases by the value of
+//      DAMAGE_PER_CELL for each outer influence neighbor.
+//    - Outer influence cell health decreases by the
+//      value of DAMAGE_PER_CELL for each room neighbor.
 
 int applyMoveRule(int st, ivec4 nbors, ivec2 movDir) {
 	int nborsBehind = 0;
@@ -201,15 +222,6 @@ int applyMoveRule(int st, ivec4 nbors, ivec2 movDir) {
 		return st; // remain dead/alive
 }
 
-int applyDamageRule(int st, int hp, int outerInflNbors, int roomNbors) {
-	if(st >= BSTATE_INSIDE_ROOM && st <= BSTATE_WALL_BOTTOM) {
-		return outerInflNbors * DAMAGE_PER_CELL;
-	}
-	else if(st == BSTATE_OUTER_INFLUENCE) {
-		return roomNbors * DAMAGE_PER_CELL;
-	}
-}
-
 int applySplitRule(int st, ivec4 roomNbors, int outerInflNbors, ivec2 movDir) {
 	if(st!=BSTATE_EMPTY) return st;
 	int roomNborsAhead = 0;
@@ -223,8 +235,47 @@ int applySplitRule(int st, ivec4 roomNbors, int outerInflNbors, ivec2 movDir) {
 	if(movDir.x!=0 && movDir.y!=0) roomNborsAheadNormalized /= 6.0;
 	else roomNborsAheadNormalized /= 3.0;
 	if(roomNborsAheadNormalized>ROOM_NBORS_AHEAD_THRESHOLD
-		&& outerInflNbors>OUTER_INFL_NBORS_THRESHOLD) return BSTATE_OUTER_INFLUENCE;
+		&& outerInflNbors>=OUTER_INFL_NBORS_THRESHOLD) return BSTATE_OUTER_INFLUENCE;
 	else return st;
+}
+
+int applyDamageRule(int st, int hp, int outerInflNbors, int roomNbors) {
+	if(st >= BSTATE_INSIDE_ROOM && st <= BSTATE_WALL_BOTTOM) {
+		return hp - outerInflNbors * DAMAGE_PER_CELL;
+	}
+	else if(st == BSTATE_OUTER_INFLUENCE) {
+		return hp - roomNbors * DAMAGE_PER_CELL;
+	}
+	else return hp;
+}
+
+// ALTERNATIVE RULES (tried to conserve number of cells)
+int moveCollision(int st) {
+	int stBehind = texture(inputGrid, pixel - vec2(moveDirection) * pxsize).r;
+	int stAhead = texture(inputGrid, pixel + vec2(moveDirection) * pxsize).r;
+	// Movement
+	if(st==BSTATE_EMPTY && stBehind==BSTATE_OUTER_INFLUENCE) // rule
+		return BSTATE_OUTER_INFLUENCE;
+	if(st==BSTATE_OUTER_INFLUENCE && stBehind==BSTATE_EMPTY) // counter-rule
+		return BSTATE_EMPTY;
+	// Collision
+	if(stAhead>=BSTATE_INSIDE_ROOM && stAhead<=BSTATE_INVALID) {
+		//TODO cells in the middle get lost
+		// try to propagate collision information in extra channel
+		int stLeft = texture(inputGrid, pixel + vec2(-moveDirection.y,moveDirection.x) * pxsize).r;
+		int stRight = texture(inputGrid, pixel + vec2(moveDirection.y,-moveDirection.x) * pxsize).r;
+		if(st==BSTATE_OUTER_INFLUENCE && (stLeft==BSTATE_EMPTY || stRight==BSTATE_EMPTY))
+			return BSTATE_EMPTY;
+		if(st==BSTATE_EMPTY && (stLeft==BSTATE_OUTER_INFLUENCE || stRight==BSTATE_OUTER_INFLUENCE))
+			return BSTATE_OUTER_INFLUENCE;
+		if(st==BSTATE_EMPTY && (stLeft==BSTATE_OUTER_INFLUENCE && stRight==BSTATE_OUTER_INFLUENCE)) {
+			//TODO conflict in empty cell: two outer influence cells want to move here
+			// But can only set one, so we lose one cell (not conservative)
+			return BSTATE_OUTER_INFLUENCE;
+		}
+		return st;
+	}
+	return st;
 }
 
 void main() {
@@ -236,9 +287,8 @@ void main() {
 	ivec4 roomNborsDir = countNeighborsWithStateBetweenDirected(BSTATE_INSIDE_ROOM, BSTATE_WALL_BOTTOM);
 	int roomNbors = roomNborsDir.x+roomNborsDir.y+roomNborsDir.z+roomNborsDir.w;
 	newState = applySplitRule(newState, roomNborsDir, outerInflNbors, moveDirection);
-	int damage = applyDamageRule(cell.r, cell.g, outerInflNbors, roomNbors);
-	int newHealth = cell.g - damage;
+	int newHealth = applyDamageRule(cell.r, cell.g, outerInflNbors, roomNbors);
 	if(newHealth <= 0) newState = BSTATE_EMPTY;
-	if(newState == BSTATE_EMPTY) newHealth = 100;
+	if(newState == BSTATE_EMPTY) newHealth = 100; //TODO Dynamic cells die too slow. Better track cells and their health
 	outputCell = ivec2(newState, newHealth);
 }

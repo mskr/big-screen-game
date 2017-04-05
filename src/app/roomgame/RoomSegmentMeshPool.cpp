@@ -81,40 +81,35 @@ RoomSegmentMesh* RoomSegmentMeshPool::getMeshOfType(GridCell::BuildState type) {
 	return mesh_variations[variation];
 }
 
-RoomSegmentMesh::InstanceBufferRange RoomSegmentMeshPool::addInstanceUnordered(GridCell::BuildState type, RoomSegmentMesh::Instance instance) {
-	RoomSegmentMesh* mesh = getMeshOfType(type);
-	if (!mesh) return RoomSegmentMesh::InstanceBufferRange();
-	// Problem: One mesh can be used with different instance attributes for different build types
-	// Very specific solution: Choose rotation for corners and walls
-	//TODO Find more generic solution
-	if (type == GridCell::BuildState::LEFT_UPPER_CORNER || type == GridCell::BuildState::WALL_LEFT)
-		instance.zRotation = glm::half_pi<float>();
-	else if (type == GridCell::BuildState::LEFT_LOWER_CORNER || type == GridCell::BuildState::WALL_BOTTOM)
-		instance.zRotation = 0.0f;
-	else if (type == GridCell::BuildState::RIGHT_UPPER_CORNER || type == GridCell::BuildState::WALL_TOP)
-		instance.zRotation = glm::pi<float>();
-	else if (type == GridCell::BuildState::RIGHT_LOWER_CORNER || type == GridCell::BuildState::WALL_RIGHT)
-		instance.zRotation = glm::three_over_two_pi<float>();
-	return mesh->addInstanceUnordered(instance.translation, instance.scale, instance.zRotation);
-}
-
 
 
 void RoomSegmentMeshPool::renderAllMeshes(glm::mat4 view_projection) {
-	if (shader_ == 0) return;
 	glUseProgram(shader_->getProgramId());
-	glUniformMatrix4fv(uniform_locations_[0], 1, GL_FALSE, glm::value_ptr(view_projection));
+	glUniformMatrix4fv(matrix_uniform_locations_[0], 1, GL_FALSE, glm::value_ptr(view_projection));
 	//TODO Set other uniforms: normal matrix, submesh local matrix...
 
 	for (GridCell::BuildState i : build_states_) {
 		for (RoomSegmentMesh* mesh : meshes_[i]) {
-			mesh->renderAllInstances(&uniform_locations_);
+			mesh->renderAllInstances(&matrix_uniform_locations_);
 		}
 	}
 }
 
-void RoomSegmentMeshPool::setShader(std::shared_ptr<viscom::GPUProgram> shader) {
-	shader_ = shader;
-	uniform_locations_ = shader_->getUniformLocations({
+void RoomSegmentMeshPool::loadShader(viscom::GPUProgramManager mgr) {
+	shader_ = mgr.GetResource("foregroundMesh",
+			std::initializer_list<std::string>{ "foregroundMesh.vert", "foregroundMesh.frag" });
+	matrix_uniform_locations_ = shader_->getUniformLocations({
 		"viewProjectionMatrix", "subMeshLocalMatrix", "normalMatrix" });
+}
+
+void RoomSegmentMeshPool::addUniformLocation(std::string uniform_name) {
+	uniform_locations_.push_back(shader_->getUniformLocation(uniform_name));
+}
+
+GLint RoomSegmentMeshPool::getUniformLocation(size_t index) {
+	return uniform_locations_[index];
+}
+
+GLuint RoomSegmentMeshPool::getShaderID() {
+	return shader_->getProgramId();
 }

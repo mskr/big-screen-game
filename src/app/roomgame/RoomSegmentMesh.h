@@ -10,7 +10,7 @@
 
 class RoomSegmentMesh : public viscom::MeshRenderable {
 public:
-	typedef viscom::SimpleMeshVertex Vertex;
+	typedef viscom::SimpleMeshVertex Vertex; // vertex attribs
 	struct InstanceBuffer {
 		GLuint id_;
 		int num_instances_;
@@ -18,10 +18,10 @@ public:
 		size_t num_reallocations_;
 		InstanceBuffer(size_t pool_allocation_bytes);
 	};
-	struct Instance {
+	struct Instance { // instance attribs
 		glm::vec3 translation = glm::vec3(0);
-		glm::vec3 scale = glm::vec3(0);
-		GLfloat zRotation = 0.0f;
+		GLfloat scale = 0.0f;
+		GLint buildState = 0;
 		GLint health = 0;
 		static const void updateHealth(GLuint buffer, int offset_instances, int h) {
 			glBindBuffer(GL_ARRAY_BUFFER, buffer);
@@ -33,23 +33,23 @@ public:
 		static const void setAttribPointer() {
 			GLint transLoc = 3;
 			GLint scaleLoc = 4;
-			GLint zRotLoc = 5;
+			GLint buildStateLoc = 5;
 			GLint healthLoc = 6;
-			glVertexAttribPointer(transLoc, 3, GL_FLOAT, false,
-				sizeof(Instance), (GLvoid*)0);
-			glVertexAttribPointer(scaleLoc, 3, GL_FLOAT, false,
-				sizeof(Instance), (GLvoid*)(3 * sizeof(GLfloat)));
-			glVertexAttribPointer(zRotLoc, 1, GL_FLOAT, false,
-				sizeof(Instance), (GLvoid*)(6 * sizeof(GLfloat)));
-			glVertexAttribIPointer(healthLoc, 1, GL_INT,
-				sizeof(Instance), (GLvoid*)(7 * sizeof(GLfloat)));
+			size_t off = 0;
+			glVertexAttribPointer(transLoc, 3, GL_FLOAT, false, sizeof(Instance), (GLvoid*)off);
+			off += 3 * sizeof(GLfloat);
+			glVertexAttribPointer(scaleLoc, 1, GL_FLOAT, false, sizeof(Instance), (GLvoid*)off);
+			off += sizeof(GLfloat);
+			glVertexAttribIPointer(buildStateLoc, 1, GL_INT, sizeof(Instance), (GLvoid*)off);
+			off += sizeof(GLint);
+			glVertexAttribIPointer(healthLoc, 1, GL_INT, sizeof(Instance), (GLvoid*)off);
 			glEnableVertexAttribArray(transLoc);
 			glEnableVertexAttribArray(scaleLoc);
-			glEnableVertexAttribArray(zRotLoc);
+			glEnableVertexAttribArray(buildStateLoc);
 			glEnableVertexAttribArray(healthLoc);
 			glVertexAttribDivisor(transLoc, 1);
 			glVertexAttribDivisor(scaleLoc, 1);
-			glVertexAttribDivisor(zRotLoc, 1);
+			glVertexAttribDivisor(buildStateLoc, 1);
 			glVertexAttribDivisor(healthLoc, 1);
 		}
 	};
@@ -73,7 +73,7 @@ private:
 public:
 	RoomSegmentMesh(viscom::Mesh* mesh, viscom::GPUProgram* program, size_t pool_allocation_bytes);
 	~RoomSegmentMesh();
-	InstanceBufferRange addInstanceUnordered(glm::vec3 position, glm::vec3 scale, float zRot);
+	InstanceBufferRange addInstanceUnordered(Instance);
 	void removeInstanceUnordered(int offset_instances);
 	InstanceBufferRange moveInstancesToRoomOrderedBuffer(std::initializer_list<int> offsets);
 	void renderAllInstances(std::vector<GLint>* uniformLocations);

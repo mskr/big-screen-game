@@ -39,7 +39,7 @@ RoomSegmentMesh::~RoomSegmentMesh() {
 	}
 }
 
-RoomSegmentMesh::InstanceBufferRange RoomSegmentMesh::addInstanceUnordered(glm::vec3 position, glm::vec3 scale, float zRot) {
+RoomSegmentMesh::InstanceBufferRange RoomSegmentMesh::addInstanceUnordered(Instance i) {
 	int next_free_offset;
 	if (!next_free_offset_) next_free_offset = unordered_buffer_.num_instances_;
 	else {
@@ -69,11 +69,7 @@ RoomSegmentMesh::InstanceBufferRange RoomSegmentMesh::addInstanceUnordered(glm::
 		Instance::setAttribPointer();
 	}
 	glBindBuffer(GL_ARRAY_BUFFER, unordered_buffer_.id_);
-	Instance data;
-	data.translation = position;
-	data.scale = scale;
-	data.zRotation = zRot;
-	glBufferSubData(GL_ARRAY_BUFFER, next_free_offset * sizeof(Instance), sizeof(Instance), &data);
+	glBufferSubData(GL_ARRAY_BUFFER, next_free_offset * sizeof(Instance), sizeof(Instance), &i);
 	/*glBufferSubData(GL_ARRAY_BUFFER, unordered_buffer_.num_instances_ * sizeof(Instance), sizeof(Instance), &data);*/
 	InstanceBufferRange r;
 	r.buffer_ = &unordered_buffer_;

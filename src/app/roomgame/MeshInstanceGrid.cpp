@@ -7,13 +7,15 @@ MeshInstanceGrid::MeshInstanceGrid(size_t columns, size_t rows, float height, Ro
 }
 
 void MeshInstanceGrid::addInstanceAt(GridCell* c, GridCell::BuildState st) {
+	RoomSegmentMesh* mesh = meshpool_->getMeshOfType(st);
+	if (!mesh) return;
 	RoomSegmentMesh::Instance instance;
-	instance.scale = glm::vec3(model_matrix_ * glm::vec4(cell_size_)) / 2.0f;
-	instance.translation = glm::vec3(model_matrix_ *
-		glm::vec4(c->getPosition() + glm::vec2(cell_size_ / 2.0f, -cell_size_ / 2.0f), 0.0f, 1.0f));
+	instance.scale = cell_size_ / 2.0f;
+	instance.translation = translation_; // grid translation + relative cell translation
+	instance.translation += glm::vec3(c->getPosition() + glm::vec2(cell_size_ / 2.0f, -cell_size_ / 2.0f), 0.0f);
+	instance.buildState = st;
 	instance.health = c->getHealthPoints();
-	RoomSegmentMesh::InstanceBufferRange bufferRange = meshpool_->addInstanceUnordered(st, instance);
-	c->setMeshInstance(bufferRange);
+	c->setMeshInstance(mesh->addInstanceUnordered(instance));
 }
 
 void MeshInstanceGrid::removeInstanceAt(GridCell* c) {
