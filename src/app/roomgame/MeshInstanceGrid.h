@@ -7,7 +7,6 @@ class RoomSegmentMeshPool;
 #include "RoomSegmentMeshPool.h"
 
 class MeshInstanceGrid : public RoomInteractiveGrid {
-protected:
 	RoomSegmentMeshPool* meshpool_;
 	void addInstanceAt(GridCell*, GridCell::BuildState);
 	void removeInstanceAt(GridCell*);

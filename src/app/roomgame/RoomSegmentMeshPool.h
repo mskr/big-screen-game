@@ -17,9 +17,7 @@ class RoomSegmentMeshPool {
 	std::set<std::shared_ptr<viscom::Mesh>> owned_resources_;
 	// The shader used by all meshes
 	std::shared_ptr<viscom::GPUProgram> shader_;
-	// Uniforms
-	std::vector<GLint> matrix_locations_;
-	GLint automaton_time_delta_location_;
+	std::vector<GLint> uniform_locations_;
 public:
 	RoomSegmentMeshPool(const size_t MAX_INSTANCES);
 	~RoomSegmentMeshPool();
@@ -30,7 +28,6 @@ public:
 	RoomSegmentMesh::InstanceBufferRange addInstanceUnordered(GridCell::BuildState type, RoomSegmentMesh::Instance instance);
 	void renderAllMeshes(glm::mat4 view_projection);
 	void cleanup();
-	void setUniformAutomatonTimeDelta(GLfloat t);
 private:
 	// Pool allocation bytes based on estimated number of instances
 	const size_t POOL_ALLOC_BYTES_CORNERS;

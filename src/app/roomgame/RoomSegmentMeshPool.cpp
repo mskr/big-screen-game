@@ -103,24 +103,18 @@ RoomSegmentMesh::InstanceBufferRange RoomSegmentMeshPool::addInstanceUnordered(G
 void RoomSegmentMeshPool::renderAllMeshes(glm::mat4 view_projection) {
 	if (shader_ == 0) return;
 	glUseProgram(shader_->getProgramId());
-	glUniformMatrix4fv(matrix_locations_[0], 1, GL_FALSE, glm::value_ptr(view_projection));
+	glUniformMatrix4fv(uniform_locations_[0], 1, GL_FALSE, glm::value_ptr(view_projection));
 	//TODO Set other uniforms: normal matrix, submesh local matrix...
 
 	for (GridCell::BuildState i : build_states_) {
 		for (RoomSegmentMesh* mesh : meshes_[i]) {
-			mesh->renderAllInstances(&matrix_locations_);
+			mesh->renderAllInstances(&uniform_locations_);
 		}
 	}
 }
 
 void RoomSegmentMeshPool::setShader(std::shared_ptr<viscom::GPUProgram> shader) {
 	shader_ = shader;
-	matrix_locations_ = shader_->getUniformLocations({ "viewProjectionMatrix",
-		"subMeshLocalMatrix", "normalMatrix" });
-	automaton_time_delta_location_ = shader_->getUniformLocation("automatonTimeDelta");
-}
-
-void RoomSegmentMeshPool::setUniformAutomatonTimeDelta(GLfloat t) {
-	glUseProgram(shader_->getProgramId());
-	glUniform1f(automaton_time_delta_location_, t);
+	uniform_locations_ = shader_->getUniformLocations({
+		"viewProjectionMatrix", "subMeshLocalMatrix", "normalMatrix" });
 }
