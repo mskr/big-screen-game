@@ -181,7 +181,6 @@ void InteractiveGrid::uploadVertexData() {
 
 
 void InteractiveGrid::loadShader(viscom::GPUProgramManager mgr) {
-	glEnable(GL_POINT_SPRITE);
 	glEnable(GL_PROGRAM_POINT_SIZE);
 	shader_ = mgr.GetResource("interactiveGrid",
 		std::initializer_list<std::string>{ "interactiveGrid.vert", "interactiveGrid.frag" });

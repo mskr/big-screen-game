@@ -31,12 +31,21 @@ namespace viscom {
         static void SetVertexAttributes(const GPUProgram* program)
         {
             auto attribLoc = program->getAttributeLocations({ "position", "normal", "texCoords" });
-            glEnableVertexAttribArray(attribLoc[0]);
-            glVertexAttribPointer(attribLoc[0], 3, GL_FLOAT, GL_FALSE, sizeof(SimpleMeshVertex), reinterpret_cast<GLvoid*>(offsetof(SimpleMeshVertex, position_)));
-            glEnableVertexAttribArray(attribLoc[1]);
-            glVertexAttribPointer(attribLoc[1], 3, GL_FLOAT, GL_FALSE, sizeof(SimpleMeshVertex), reinterpret_cast<GLvoid*>(offsetof(SimpleMeshVertex, normal_)));
-            glEnableVertexAttribArray(attribLoc[2]);
-            glVertexAttribPointer(attribLoc[2], 2, GL_FLOAT, GL_FALSE, sizeof(SimpleMeshVertex), reinterpret_cast<GLvoid*>(offsetof(SimpleMeshVertex, texCoords_)));
+			if (attribLoc[0] == -1) printf("WARNING: Vertex attrib 'position' not found in '%s'.\n", program->getProgramName());
+			else {
+				glEnableVertexAttribArray(attribLoc[0]);
+				glVertexAttribPointer(attribLoc[0], 3, GL_FLOAT, GL_FALSE, sizeof(SimpleMeshVertex), reinterpret_cast<GLvoid*>(offsetof(SimpleMeshVertex, position_)));
+			}
+			if (attribLoc[1] == -1) printf("WARNING: Vertex attrib 'normal' not found in '%s'.\n", program->getProgramName());
+			else {
+				glEnableVertexAttribArray(attribLoc[1]);
+				glVertexAttribPointer(attribLoc[1], 3, GL_FLOAT, GL_FALSE, sizeof(SimpleMeshVertex), reinterpret_cast<GLvoid*>(offsetof(SimpleMeshVertex, normal_)));
+			}
+			if (attribLoc[2] == -1)printf("WARNING: Vertex attrib 'texCoords' not found in '%s'.\n", program->getProgramName());
+			else {
+				glEnableVertexAttribArray(attribLoc[2]);
+				glVertexAttribPointer(attribLoc[2], 2, GL_FLOAT, GL_FALSE, sizeof(SimpleMeshVertex), reinterpret_cast<GLvoid*>(offsetof(SimpleMeshVertex, texCoords_)));
+			}
         }
 
         static GLuint CreateVertexBuffer(const Mesh* mesh)

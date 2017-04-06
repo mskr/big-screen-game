@@ -37,6 +37,8 @@ namespace viscom {
         /** Returns a list of uniform locations. */
         std::vector<GLint> getUniformLocations(const std::initializer_list<std::string>& names) const;
 
+		const char* getProgramName() const { return programName_.c_str(); }
+
         /** Returns a attribute locations. */
         GLint getAttributeLocation(const std::string& name) const;
         /** Returns a list of attribute locations. */
