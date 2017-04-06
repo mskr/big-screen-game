@@ -86,8 +86,7 @@ RoomSegmentMesh* RoomSegmentMeshPool::getMeshOfType(GridCell::BuildState type) {
 void RoomSegmentMeshPool::renderAllMeshes(glm::mat4 view_projection) {
 	glUseProgram(shader_->getProgramId());
 	glUniformMatrix4fv(matrix_uniform_locations_[0], 1, GL_FALSE, glm::value_ptr(view_projection));
-	//TODO Set other uniforms: normal matrix, submesh local matrix...
-
+	for (unsigned int i = 0; i < uniform_locations_.size(); i++) uniform_callbacks_[i](uniform_locations_[i]);
 	for (GridCell::BuildState i : build_states_) {
 		for (RoomSegmentMesh* mesh : meshes_[i]) {
 			mesh->renderAllInstances(&matrix_uniform_locations_);
@@ -102,8 +101,9 @@ void RoomSegmentMeshPool::loadShader(viscom::GPUProgramManager mgr) {
 		"viewProjectionMatrix", "subMeshLocalMatrix", "normalMatrix" });
 }
 
-void RoomSegmentMeshPool::addUniformLocation(std::string uniform_name) {
+void RoomSegmentMeshPool::updateUniformEveryFrame(std::string uniform_name, std::function<void(GLint)> update_func) {
 	uniform_locations_.push_back(shader_->getUniformLocation(uniform_name));
+	uniform_callbacks_.push_back(update_func);
 }
 
 GLint RoomSegmentMeshPool::getUniformLocation(size_t index) {

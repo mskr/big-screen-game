@@ -9,8 +9,7 @@ class AutomatonGrid : public MeshInstanceGrid {
 public:
 	AutomatonGrid(size_t columns, size_t rows, float height, RoomSegmentMeshPool* meshpool);
 	void setCellularAutomaton(GPUCellularAutomaton*);
-	void loadShader(viscom::GPUProgramManager) override;
-	void updateUniformAutomatonTimeDelta(GLfloat t);
+	void onMeshpoolInitialized();
 	void buildAt(size_t col, size_t row, GridCell::BuildState buildState) override;
 	void updateGridOnly(size_t col, size_t row, GridCell::BuildState state, int hp);
 };

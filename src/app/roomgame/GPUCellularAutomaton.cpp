@@ -6,6 +6,7 @@ GPUCellularAutomaton::GPUCellularAutomaton(AutomatonGrid* grid, double transitio
 	pixel_size_ = glm::vec2(1.0f / float(grid->getNumColumns()), 1.0f / float(grid->getNumRows()));
 	transition_time_ = transition_time;
 	last_time_ = 0.0;
+	delta_time_ = 0.0;
 	is_initialized_ = false;
 	current_read_index_ = 0;
 }
@@ -31,14 +32,14 @@ void GPUCellularAutomaton::init(viscom::GPUProgramManager mgr) {
 	GLuint cols = (GLuint)grid_->getNumColumns();
 	GLuint rows = (GLuint)grid_->getNumRows();
 	texture_pair_[0].attachmentType = texture_pair_[1].attachmentType = GL_COLOR_ATTACHMENT0;
-	texture_pair_[0].sized_format = texture_pair_[1].sized_format = GL_RG32I;
-	texture_pair_[0].format = texture_pair_[1].format = GL_RG_INTEGER;
-	texture_pair_[0].datatype = texture_pair_[1].datatype = GL_INT;
+	texture_pair_[0].sized_format = texture_pair_[1].sized_format = GL_RG8;
+	texture_pair_[0].format = texture_pair_[1].format = GL_RG;
+	texture_pair_[0].datatype = texture_pair_[1].datatype = GL_UNSIGNED_BYTE;
 	framebuffer_pair_[0] = new GPUBuffer(cols, rows, { &texture_pair_[0] });
 	framebuffer_pair_[1] = new GPUBuffer(cols, rows, { &texture_pair_[1] });
 	// Temporary client buffer to transfer pixels from and to
-	size_t bytes = cols * rows * 2 * sizeof(GLint);
-	tmp_client_buffer_ = (GLint*)malloc(bytes);
+	size_t bytes = cols * rows * 2 * sizeof(GLubyte);
+	tmp_client_buffer_ = (GLubyte*)malloc(bytes);
 	if (!tmp_client_buffer_) throw std::runtime_error("");
 	// Get initial state of grid
 	copyFromGridToTexture(0);
@@ -77,45 +78,41 @@ void GPUCellularAutomaton::copyFromGridToTexture(int pair_index) {
 		}
 	}
 	glBindTexture(GL_TEXTURE_2D, texture_pair_[pair_index].id);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, (GLsizei)cols, (GLsizei)rows, GL_RG_INTEGER, GL_INT, tmp_client_buffer_);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, (GLsizei)cols, (GLsizei)rows,
+		texture_pair_[pair_index].format, texture_pair_[pair_index].datatype, tmp_client_buffer_);
 }
 
 void GPUCellularAutomaton::copyFromTextureToGrid(int pair_index) {
-	//TODO save this step by binding texture to mesh shader
 	size_t rows = grid_->getNumColumns();
 	size_t cols = grid_->getNumRows();
 	glBindTexture(GL_TEXTURE_2D, texture_pair_[pair_index].id);
-	glGetTexImage(GL_TEXTURE_2D, 0, GL_RG_INTEGER, GL_INT, tmp_client_buffer_);
-	GLenum err;
-	while (err = glGetError() != GL_NO_ERROR) printf("GL error %x in copyFromTextureToGrid\n", err);
+	glGetTexImage(GL_TEXTURE_2D, 0, texture_pair_[pair_index].format,
+		texture_pair_[pair_index].datatype, tmp_client_buffer_);
 	for (unsigned int x = 0; x < cols; x++) {
 		for (unsigned int y = 0; y < rows*2 - 1; y+=2) {
-			GLint state = tmp_client_buffer_[x*2*rows + y];
-			GLint hp = tmp_client_buffer_[x*2*rows + y + 1];
+			GLubyte state = tmp_client_buffer_[x*2*rows + y];
+			GLubyte hp = tmp_client_buffer_[x*2*rows + y + 1];
 			grid_->updateGridOnly(y/2, x, (GridCell::BuildState)state, hp);
 		}
 	}
 }
 
 void GPUCellularAutomaton::updateCell(size_t x, size_t y, GLint buildState, GLint hp) {
-	GLint data[2] = { buildState, hp };
+	if (!is_initialized_) return;
+	GLubyte data[2] = { (GLubyte)buildState, (GLubyte)hp };
 	glBindTexture(GL_TEXTURE_2D, texture_pair_[current_read_index_].id);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, (GLint)x, (GLint)y, 1, 1, GL_RG_INTEGER, GL_INT, data);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, (GLint)x, (GLint)y, 1, 1,
+		texture_pair_[0].format, texture_pair_[0].datatype, data);
 }
 
 void GPUCellularAutomaton::transition(double time) {
 	// Test if simulation can begin
 	if (!is_initialized_) return;
 	// Test if it is time for the next generation
-	double delta = time - last_time_;
-	if (delta >= transition_time_) {
+	delta_time_ = time - last_time_;
+	if (delta_time_ >= transition_time_)
 		last_time_ = time;
-	}
-	else {
-		// enable interpolation in shader
-		grid_->updateUniformAutomatonTimeDelta((GLfloat)(delta / transition_time_));
-		return;
-	}
+	else return;
 	int current_write_index = (current_read_index_ == 0) ? 1 : 0;
 	// Do transition on gpu
 	framebuffer_pair_[current_write_index]->bind();
@@ -143,4 +140,16 @@ void GPUCellularAutomaton::transition(double time) {
 
 void GPUCellularAutomaton::setTransitionTime(double t) {
 	transition_time_ = t;
+}
+
+GLfloat GPUCellularAutomaton::getTimeDeltaNormalized() {
+	return (GLfloat)(delta_time_ / transition_time_);
+}
+
+GLuint GPUCellularAutomaton::getLatestTexture() {
+	return texture_pair_[current_read_index_].id;
+}
+
+bool GPUCellularAutomaton::isInitialized() {
+	return is_initialized_;
 }

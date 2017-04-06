@@ -12,8 +12,8 @@
 #include "core/gfx/mesh/MeshRenderable.h"
 #include "core/imgui/imgui_impl_glfw_gl3.h"
 
-#define GRID_COLUMNS 128
-#define GRID_ROWS 128
+#define GRID_COLUMNS 32
+#define GRID_ROWS 32
 
 static float automaton_transition_time = 0.04f;
 static int automaton_movedir_[2] = { 1,0 };
@@ -28,7 +28,7 @@ namespace viscom {
 	ApplicationNodeImplementation::ApplicationNodeImplementation(ApplicationNode* appNode) :
 		appNode_{ appNode },
 		meshpool_(GRID_COLUMNS * GRID_ROWS),
-		grid_(GRID_COLUMNS, GRID_ROWS, 1.2f, &meshpool_),
+		grid_(GRID_COLUMNS, GRID_ROWS, 1.0f, &meshpool_),
 		interaction_mode_(GRID_PLACE_OUTER_INFLUENCE),
 		camera_{},
 		cellular_automaton_(&grid_, automaton_transition_time)
@@ -47,7 +47,7 @@ namespace viscom {
 		auto floorMesh = appNode_->GetMeshManager().GetResource("/models/roomgame_models/floor.obj");
 		auto cornerMesh = appNode_->GetMeshManager().GetResource("/models/roomgame_models/corner.obj");
 		auto wallMesh = appNode_->GetMeshManager().GetResource("/models/roomgame_models/wall.obj");
-		auto outerInfluenceMesh = appNode_->GetMeshManager().GetResource("/models/roomgame_models/cube.obj");
+		auto outerInfluenceMesh = appNode_->GetMeshManager().GetResource("/models/roomgame_models/4vertexplane.obj");
 		meshpool_.loadShader(appNode_->GetGPUProgramManager());
 		meshpool_.addMesh({ GridCell::BuildState::INSIDE_ROOM }, floorMesh);
 		meshpool_.addMesh({ GridCell::BuildState::LEFT_LOWER_CORNER,
@@ -60,6 +60,8 @@ namespace viscom {
 							GridCell::BuildState::WALL_RIGHT,
 							GridCell::BuildState::WALL_LEFT }, wallMesh);
 		meshpool_.addMesh({ GridCell::BuildState::OUTER_INFLUENCE }, outerInfluenceMesh);
+
+		grid_.onMeshpoolInitialized();
 
 		grid_.loadShader(appNode_->GetGPUProgramManager());
 		grid_.uploadVertexData();
@@ -128,6 +130,9 @@ namespace viscom {
 
     void ApplicationNodeImplementation::PostDraw()
     {
+		GLenum e;
+		while((e = glGetError()) != GL_NO_ERROR)
+			printf("GL error in PostDraw()! %x\n", e);
     }
 
     void ApplicationNodeImplementation::CleanUp()

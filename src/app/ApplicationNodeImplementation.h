@@ -13,7 +13,7 @@
 #include "app/roomgame/AutomatonGrid.h"
 #include "app/roomgame/RoomSegmentMeshPool.h"
 #include "app/roomgame/DragAndZoomCamera.h"
-#include "app/roomgame/GPUCellularAutomaton.h"
+#include "app/roomgame/OuterInfluenceAutomaton.h"
 
 
 

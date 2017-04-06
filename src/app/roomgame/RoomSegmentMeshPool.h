@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <stdexcept>
+#include <functional>
 #include "core/gfx/mesh/MeshRenderable.h"
 #include "../Vertices.h"
 #include "InteractiveGrid.h"
@@ -19,6 +20,7 @@ class RoomSegmentMeshPool {
 	std::shared_ptr<viscom::GPUProgram> shader_;
 	std::vector<GLint> matrix_uniform_locations_;
 	std::vector<GLint> uniform_locations_;
+	std::vector<std::function<void(GLint)>> uniform_callbacks_;
 public:
 	RoomSegmentMeshPool(const size_t MAX_INSTANCES);
 	~RoomSegmentMeshPool();
@@ -26,7 +28,7 @@ public:
 	void addMesh(std::vector<GridCell::BuildState> types, std::shared_ptr<viscom::Mesh> mesh);
 	void addMeshVariations(std::vector<GridCell::BuildState> types, std::vector<std::shared_ptr<viscom::Mesh>> mesh_variations);
 	RoomSegmentMesh* getMeshOfType(GridCell::BuildState type);
-	void addUniformLocation(std::string uniform_name);
+	void updateUniformEveryFrame(std::string uniform_name, std::function<void(GLint)> update_func);
 	GLint getUniformLocation(size_t index);
 	GLuint getShaderID();
 	void renderAllMeshes(glm::mat4 view_projection);

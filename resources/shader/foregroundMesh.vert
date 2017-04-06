@@ -32,31 +32,30 @@ uniform mat4 subMeshLocalMatrix;
 uniform mat3 normalMatrix;
 uniform mat4 viewProjectionMatrix;
 
-uniform float automatonTimeDelta;
+uniform vec2 gridDimensions;
+uniform vec3 gridTranslation;
+uniform float gridCellSize;
 
 out vec3 vPosition;
 out vec3 vNormal;
 out vec2 vTexCoords;
-flat out int vHealth;
 
-mat4 rotationMatrix(vec3 axis, float angle)
-{
-    axis = normalize(axis);
-    float s = sin(angle);
-    float c = cos(angle);
-    float oc = 1.0 - c;
-    
-    return mat4(oc * axis.x * axis.x + c,           oc * axis.x * axis.y - axis.z * s,  oc * axis.z * axis.x + axis.y * s,  0.0,
-                oc * axis.x * axis.y + axis.z * s,  oc * axis.y * axis.y + c,           oc * axis.y * axis.z - axis.x * s,  0.0,
-                oc * axis.z * axis.x - axis.y * s,  oc * axis.y * axis.z + axis.x * s,  oc * axis.z * axis.z + c,           0.0,
-                0.0,                                0.0,                                0.0,                                1.0);
+mat4 rotationMatrix(vec3 axis, float angle) {
+	axis = normalize(axis);
+	float s = sin(angle);
+	float c = cos(angle);
+	float oc = 1.0 - c;
+	return mat4(oc * axis.x * axis.x + c,           oc * axis.x * axis.y - axis.z * s,  oc * axis.z * axis.x + axis.y * s,  0.0,
+				oc * axis.x * axis.y + axis.z * s,  oc * axis.y * axis.y + c,           oc * axis.y * axis.z - axis.x * s,  0.0,
+				oc * axis.z * axis.x - axis.y * s,  oc * axis.y * axis.z + axis.x * s,  oc * axis.z * axis.z + c,           0.0,
+				0.0,                                0.0,                                0.0,                                1.0);
 }
 
 float chooseZRotation(const int st) {
-	// Problem: One mesh can be used with different instance attributes for different build types
+	// Problem: One mesh can be used with different instance attributes for different build states
 	// Very specific solution: Choose rotation for corners and walls
 	//TODO Find more generic solution
-	if (st == BSTATE_LEFT_UPPER_CORNER || st == BSTATE_WALL_LEFT)
+	if (st == BSTATE_LEFT_UPPER_CORNER || st == BSTATE_WALL_LEFT || st == BSTATE_OUTER_INFLUENCE)
 		return M_HALF_PI;
 	else if (st == BSTATE_RIGHT_UPPER_CORNER || st == BSTATE_WALL_TOP)
 		return M_PI;
@@ -66,8 +65,11 @@ float chooseZRotation(const int st) {
 		return 0.0;
 }
 
-void main()
-{
+flat out int st;
+flat out int hp;
+out vec2 cellCoords;
+
+void main() {
 	mat4 modelMatrix;
 	modelMatrix[3] = vec4(translation, 1);
 	modelMatrix[0][0] = scale;
@@ -75,15 +77,19 @@ void main()
 	modelMatrix[2][2] = scale;
 	mat4 rotation = rotationMatrix(vec3(0,0,1), chooseZRotation(buildState));
 	// Flip everything 90 deg around X (could also change models)
-	rotation *= rotationMatrix(vec3(1,0,0), -M_PI/2.0);
+	rotation *= rotationMatrix(vec3(1,0,0), -M_HALF_PI);
 	modelMatrix *= rotation;
 
-    vec4 posV4 = modelMatrix * subMeshLocalMatrix * vec4(position, 1);
-    vPosition = vec3(posV4);
-    vNormal = normalize(mat3(rotation) * normal);
-    vTexCoords = texCoords;
-    vHealth = health;
+	st = buildState;
+	hp = health;
+	cellCoords = (translation.xy + 1.0 - gridTranslation.xy) / gridDimensions;
+	cellCoords += vec2(texCoords.x -.5, 1 - texCoords.y +.5) * gridCellSize;
 
-    gl_Position = viewProjectionMatrix * posV4;
+	vec4 posV4 = modelMatrix * subMeshLocalMatrix * vec4(position, 1);
+	vPosition = vec3(posV4);
+	vNormal = normalize(mat3(rotation) * normal);
+	vTexCoords = texCoords;
+
+	gl_Position = viewProjectionMatrix * posV4;
 }
 
