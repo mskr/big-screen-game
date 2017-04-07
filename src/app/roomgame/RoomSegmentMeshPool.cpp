@@ -14,54 +14,34 @@ RoomSegmentMeshPool::~RoomSegmentMeshPool() {
 }
 
 void RoomSegmentMeshPool::cleanup() {
-	// Delete all pointers to RoomSegmentMeshes, but no pointer twice
-	for (GridCell::BuildState i : build_states_) {
-		for (RoomSegmentMesh* m : meshes_[i]) {
-			if (m) {
-				delete m;
-				// Null all pointers to m after deletion of m
-				for (GridCell::BuildState j : build_states_) {
-					for (unsigned int k = 0; k < meshes_[j].size(); k++) {
-						if (m == meshes_[j][k]) meshes_[j][k] = 0;
-					}
-				}
-			}
-		}
-	}
+	for (GridCell::BuildState i : render_list_)
+		for (RoomSegmentMesh* mesh : meshes_[i])
+			delete mesh;
 	owned_resources_.clear();
 }
 
-size_t RoomSegmentMeshPool::determinePoolAllocationBytes(GridCell::BuildState type) {
-	if (type == GridCell::BuildState::LEFT_LOWER_CORNER || type == GridCell::BuildState::RIGHT_LOWER_CORNER ||
-		type == GridCell::BuildState::LEFT_UPPER_CORNER || type == GridCell::BuildState::RIGHT_UPPER_CORNER) {
-		return POOL_ALLOC_BYTES_CORNERS;
-	}
-	else if (type == GridCell::BuildState::INSIDE_ROOM) {
-		return POOL_ALLOC_BYTES_FLOORS;
-	}
-	else if (type == GridCell::BuildState::WALL_RIGHT || type == GridCell::BuildState::WALL_LEFT ||
-		type == GridCell::BuildState::WALL_TOP || type == GridCell::BuildState::WALL_BOTTOM) {
-		return POOL_ALLOC_BYTES_WALLS;
-	}
-	else if (type == GridCell::BuildState::OUTER_INFLUENCE) {
-		return POOL_ALLOC_BYTES_OUTER_INFLUENCE;
-	}
-	else {
-		return POOL_ALLOC_BYTES_DEFAULT;
-	}
-}
-
 void RoomSegmentMeshPool::addMesh(std::vector<GridCell::BuildState> types, std::shared_ptr<viscom::Mesh> mesh) {
-	size_t pool_allocation_bytes = determinePoolAllocationBytes(types[0]);
-	RoomSegmentMesh* segmentMesh = new RoomSegmentMesh(mesh.get(), shader_.get(), pool_allocation_bytes);
+	// Map one mesh to possibly multiple build states
+	// (first build state is considered representative for the mesh)
+	size_t pool_allocation_bytes = determinePoolAllocationBytes(types[0]); // use pool alloc bytes of representative build state
+	RoomSegmentMesh* meshptr = new RoomSegmentMesh(mesh.get(), shader_.get(), pool_allocation_bytes);
 	for (GridCell::BuildState type : types) {
-		meshes_[type].push_back(segmentMesh);
-		build_states_.insert(type);
+		// Copy the mesh pointer for each build state
+		// (ensures that a mesh for a requested build state can quickly be found)
+		meshes_[type].push_back(meshptr);
 	}
-	owned_resources_.insert(mesh);
+	if (owned_resources_.find(mesh) == owned_resources_.end()) {
+		// Store representative build state in render list
+		// (ensures each mesh is only rendered once)
+		render_list_.push_back(types[0]);
+		// Hold the mesh resource in memory as long as the mesh pool lives
+		owned_resources_.insert(mesh);
+	}
 }
 
 void RoomSegmentMeshPool::addMeshVariations(std::vector<GridCell::BuildState> types, std::vector<std::shared_ptr<viscom::Mesh>> mesh_variations) {
+	// Map possibly multiple meshes to possibly multiple build states
+	// (if one of these build states is requested, a mesh is chosen randomly)
 	for (std::shared_ptr<viscom::Mesh> variation : mesh_variations)
 		addMesh(types, variation);
 }
@@ -81,13 +61,11 @@ RoomSegmentMesh* RoomSegmentMeshPool::getMeshOfType(GridCell::BuildState type) {
 	return mesh_variations[variation];
 }
 
-
-
 void RoomSegmentMeshPool::renderAllMeshes(glm::mat4 view_projection) {
 	glUseProgram(shader_->getProgramId());
 	glUniformMatrix4fv(matrix_uniform_locations_[0], 1, GL_FALSE, glm::value_ptr(view_projection));
 	for (unsigned int i = 0; i < uniform_locations_.size(); i++) uniform_callbacks_[i](uniform_locations_[i]);
-	for (GridCell::BuildState i : build_states_) {
+	for (GridCell::BuildState i : render_list_) {
 		for (RoomSegmentMesh* mesh : meshes_[i]) {
 			mesh->renderAllInstances(&matrix_uniform_locations_);
 		}
@@ -112,4 +90,24 @@ GLint RoomSegmentMeshPool::getUniformLocation(size_t index) {
 
 GLuint RoomSegmentMeshPool::getShaderID() {
 	return shader_->getProgramId();
+}
+
+size_t RoomSegmentMeshPool::determinePoolAllocationBytes(GridCell::BuildState type) {
+	if (type == GridCell::BuildState::LEFT_LOWER_CORNER || type == GridCell::BuildState::RIGHT_LOWER_CORNER ||
+		type == GridCell::BuildState::LEFT_UPPER_CORNER || type == GridCell::BuildState::RIGHT_UPPER_CORNER) {
+		return POOL_ALLOC_BYTES_CORNERS;
+	}
+	else if (type == GridCell::BuildState::INSIDE_ROOM) {
+		return POOL_ALLOC_BYTES_FLOORS;
+	}
+	else if (type == GridCell::BuildState::WALL_RIGHT || type == GridCell::BuildState::WALL_LEFT ||
+		type == GridCell::BuildState::WALL_TOP || type == GridCell::BuildState::WALL_BOTTOM) {
+		return POOL_ALLOC_BYTES_WALLS;
+	}
+	else if (type == GridCell::BuildState::OUTER_INFLUENCE) {
+		return POOL_ALLOC_BYTES_OUTER_INFLUENCE;
+	}
+	else {
+		return POOL_ALLOC_BYTES_DEFAULT;
+	}
 }
