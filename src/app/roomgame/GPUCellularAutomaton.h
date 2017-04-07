@@ -34,6 +34,7 @@ public:
 	//Getter
 	GLfloat getTimeDeltaNormalized();
 	GLuint getLatestTexture();
+	GLuint getPreviousTexture();
 	bool isInitialized();
 };
 

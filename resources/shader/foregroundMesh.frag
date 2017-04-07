@@ -22,10 +22,12 @@ in vec2 vTexCoords;
 flat in int st;
 flat in int hp;
 
-in float interst;
 in vec2 cellCoords;
 uniform sampler2D gridTex;
+uniform sampler2D gridTex_PrevState;
 uniform float automatonTimeDelta;
+
+const float OUTER_INFLUENCE_DISPLAY_THRESHOLD = 0.5;
 
 out vec4 color;
 
@@ -36,15 +38,22 @@ void main()
 	// float NdotL = clamp(dot(lightDir, normalize(vNormal)), 0.0f, 1.0f);
 	// vec3 texColor = texture(diffuseTexture, vTexCoords).rgb;
 
-	float interpolated_state = texture(gridTex, cellCoords).r;
-	interpolated_state *= (255.0/BSTATE_OUTER_INFLUENCE);
 
+	//TODO Define a threshold and discard "low-value" outer influence pixels
 	//TODO Why are the edges still not completely black?
 	//TODO What to do with the time delta? Need the texture with the previous state as well?
 	
 	float healthNormalized = float(hp)/100;
-	if(st==BSTATE_OUTER_INFLUENCE)
-		color = vec4(interpolated_state,0,0,1) * healthNormalized;
-	else
-		color = vec4(vNormal,1) * healthNormalized;
+	if(st==BSTATE_OUTER_INFLUENCE) {
+		float v_prev = texture(gridTex_PrevState, cellCoords).r;
+		float v = texture(gridTex, cellCoords).r;
+		v = mix(v_prev, v, automatonTimeDelta);
+		v *= (255.0 / BSTATE_OUTER_INFLUENCE);
+		if(v < OUTER_INFLUENCE_DISPLAY_THRESHOLD)
+			discard;
+		color = vec4(v, 0, 0, 1) * healthNormalized;
+	}
+	else {
+		color = vec4(vNormal, 1) * healthNormalized;
+	}
 }

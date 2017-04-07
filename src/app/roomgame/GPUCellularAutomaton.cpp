@@ -92,7 +92,8 @@ void GPUCellularAutomaton::copyFromTextureToGrid(int pair_index) {
 		for (unsigned int y = 0; y < rows*2 - 1; y+=2) {
 			GLubyte state = tmp_client_buffer_[x*2*rows + y];
 			GLubyte hp = tmp_client_buffer_[x*2*rows + y + 1];
-			grid_->updateGridOnly(y/2, x, (GridCell::BuildState)state, hp);
+			GridCell* c = grid_->getCellAt(y / 2, x);
+			grid_->updateMeshInstancesAt(c, (GridCell::BuildState)state, hp);
 		}
 	}
 }
@@ -133,6 +134,7 @@ void GPUCellularAutomaton::transition(double time) {
 	glBindVertexArray(0);
 	glEnable(GL_DEPTH_TEST);
 	// Update grid
+	grid_->onTransition();
 	copyFromTextureToGrid(current_write_index);
 	// Swap buffers
 	current_read_index_ = current_write_index;
@@ -148,6 +150,10 @@ GLfloat GPUCellularAutomaton::getTimeDeltaNormalized() {
 
 GLuint GPUCellularAutomaton::getLatestTexture() {
 	return texture_pair_[current_read_index_].id;
+}
+
+GLuint GPUCellularAutomaton::getPreviousTexture() {
+	return texture_pair_[(current_read_index_ + 1) % 2].id;
 }
 
 bool GPUCellularAutomaton::isInitialized() {

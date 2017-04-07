@@ -35,6 +35,7 @@ uniform mat4 viewProjectionMatrix;
 uniform vec2 gridDimensions;
 uniform vec3 gridTranslation;
 uniform float gridCellSize;
+uniform float automatonTimeDelta;
 
 out vec3 vPosition;
 out vec3 vNormal;
