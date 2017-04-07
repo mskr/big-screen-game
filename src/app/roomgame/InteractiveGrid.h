@@ -35,7 +35,6 @@ public:
 	GridCell* getCellAt(glm::vec2 positionNDC);
 	bool isInsideGrid(glm::vec2 positionNDC);
 	bool isInsideCell(glm::vec2 positionNDC, GridCell* cell);
-	glm::vec2 getNDC(glm::vec2 position);
 	bool isColumnEmptyBetween(size_t col, size_t startRow, size_t endRow);
 	bool isRowEmptyBetween(size_t row, size_t startCol, size_t endCol);
 	// Getters
@@ -47,13 +46,15 @@ public:
 	// Render functions
 	void uploadVertexData();
 	virtual void loadShader(viscom::GPUProgramManager mgr);
-	void render(glm::mat4 sgctMVP);
+	void onFrame();
 	void cleanup();
 	void translate(float dx, float dy, float dz);
-	// Input functions
+	// Input and interaction functions
 	virtual void onTouch(int touchID);
 	virtual void onRelease(int touchID);
 	virtual void onMouseMove(int touchID, double newx, double newy);
+	glm::vec2 getNDC(glm::vec2 position);
+	void updateProjection(glm::mat4);
 	// Functions for grid modification
 	virtual void buildAt(size_t col, size_t row, GridCell::BuildState buildState);
 	void buildAtLastMousePosition(GridCell::BuildState buildState);

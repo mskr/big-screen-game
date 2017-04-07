@@ -37,6 +37,20 @@ void InteractiveGrid::translate(float dx, float dy, float dz) {
 }
 
 
+void InteractiveGrid::updateProjection(glm::mat4 p) {
+	last_view_projection_ = p;
+}
+
+
+glm::vec2 InteractiveGrid::getNDC(glm::vec2 position) {
+	// Apply grid translation
+	glm::vec4 pos(position.x + translation_.x, position.y + translation_.y, 0.0f, 1.0f);
+	// Apply camera projection
+	pos = last_view_projection_ * pos;
+	return glm::vec2(pos.x, pos.y) / pos.w;
+}
+
+
 void InteractiveGrid::forEachCell(std::function<void(GridCell*)> callback) {
 	for (std::vector<GridCell> &row : cells_) {
 		for (GridCell &cell : row) {
@@ -106,15 +120,6 @@ bool InteractiveGrid::isInsideCell(glm::vec2 positionNDC, GridCell* cell) {
 	else if (positionNDC.x > cellRightLowerNDC.x || positionNDC.y < cellRightLowerNDC.y)
 		return false;
 	return true;
-}
-
-
-glm::vec2 InteractiveGrid::getNDC(glm::vec2 position) {
-	// Apply grid translation
-	glm::vec4 pos(position.x + translation_.x, position.y + translation_.y, 0.0f, 1.0f);
-	// Apply camera projection
-	pos = last_view_projection_ * pos;
-	return glm::vec2(pos.x, pos.y) / pos.w;
 }
 
 
@@ -188,16 +193,16 @@ void InteractiveGrid::loadShader(viscom::GPUProgramManager mgr) {
 }
 
 
-void InteractiveGrid::render(glm::mat4 view_projection) {
+void InteractiveGrid::onFrame() {
+	// Debug render
 	glDisable(GL_DEPTH_TEST);
 	glBindVertexArray(vao_);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_);
 	glUseProgram(shader_->getProgramId());
-	view_projection[3] += glm::vec4(translation_, 0);
-	glUniformMatrix4fv(mvp_uniform_location_, 1, GL_FALSE, glm::value_ptr(view_projection));
+	last_view_projection_[3] += glm::vec4(translation_, 0);
+	glUniformMatrix4fv(mvp_uniform_location_, 1, GL_FALSE, glm::value_ptr(last_view_projection_));
 	glDrawArrays(GL_POINTS, 0, num_vertices_);
 	glEnable(GL_DEPTH_TEST);
-	last_view_projection_ = view_projection;
 }
 
 

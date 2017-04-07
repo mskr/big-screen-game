@@ -30,7 +30,7 @@ namespace viscom {
 		meshpool_(GRID_COLUMNS * GRID_ROWS),
 		grid_(GRID_COLUMNS, GRID_ROWS, 1.0f, &meshpool_),
 		interaction_mode_(GRID_PLACE_OUTER_INFLUENCE),
-		camera_{},
+		camera_(glm::mat4(1)),
 		cellular_automaton_(&grid_, automaton_transition_time)
     {
     }
@@ -100,9 +100,10 @@ namespace viscom {
 
     void ApplicationNodeImplementation::DrawFrame(FrameBuffer& fbo)
     {
+		grid_.updateProjection(GetEngine()->getCurrentModelViewProjectionMatrix() * camera_.getViewProjection());
         fbo.DrawToFBO([this]() {
 			meshpool_.renderAllMeshes(GetEngine()->getCurrentModelViewProjectionMatrix() * camera_.getViewProjection());
-			grid_.render(GetEngine()->getCurrentModelViewProjectionMatrix() * camera_.getViewProjection());
+			grid_.onFrame(); // debug render
         });
     }
 
