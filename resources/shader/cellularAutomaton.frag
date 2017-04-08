@@ -51,16 +51,16 @@ uvec2 lookup(sampler2D s, vec2 c) {
 
 void life(uint state, int neighbors) {
 	if(state == BSTATE_EMPTY && neighbors == 3) {
-		outputCell = uvec2(BSTATE_OUTER_INFLUENCE, 100);
+		outputCell = vec2(BSTATE_OUTER_INFLUENCE/255.0, 100/255.0);
 	}
 	else if(state == BSTATE_OUTER_INFLUENCE && neighbors < 2) {
-		outputCell = uvec2(BSTATE_EMPTY, 100);
+		outputCell = vec2(BSTATE_EMPTY/255.0, 100/255.0);
 	}
 	else if(state == BSTATE_OUTER_INFLUENCE && neighbors > 3) {
-		outputCell = uvec2(BSTATE_EMPTY, 100);
+		outputCell = vec2(BSTATE_EMPTY/255.0, 100/255.0);
 	}
 	else {
-		outputCell = uvec2(state, 100);
+		outputCell = vec2(state/255.0, 100/255.0);
 	}
 }
 
@@ -170,7 +170,7 @@ uint moveCollision(uint st) {
 	return st;
 }
 
-void main() {
+void main() {	
 	uvec2 cell = lookup(inputGrid, pixel);
 	lookupNeighborhood8();
 
@@ -186,6 +186,8 @@ void main() {
 	if(newHealth == 0U) newState = BSTATE_EMPTY;
 	if(newState == BSTATE_EMPTY) newHealth = 100U; //TODO Dynamic cells die too slow. Better track cells and their health
 	outputCell = vec2(newState/255.0, newHealth/255.0);
+	
+	// life(cell.r, outerInflNbors);
 }
 
 

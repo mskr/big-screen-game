@@ -24,23 +24,19 @@ void MeshInstanceGrid::removeInstanceAt(GridCell* c) {
 		bufferRange.mesh_->removeInstanceUnordered(bufferRange.offset_instances_);
 }
 
+void MeshInstanceGrid::buildAt(GridCell* c, GridCell::BuildState newSt) {
+	GridCell::BuildState current = (GridCell::BuildState)c->getBuildState();
+	if (current == newSt) return;
+	else if (current == GridCell::BuildState::EMPTY) addInstanceAt(c, newSt);
+	else if (newSt == GridCell::BuildState::EMPTY) removeInstanceAt(c);
+	else {
+		removeInstanceAt(c);
+		addInstanceAt(c, newSt);
+	}
+	c->updateBuildState(vbo_, newSt);
+}
+
 void MeshInstanceGrid::buildAt(size_t col, size_t row, GridCell::BuildState buildState) {
 	GridCell* maybeCell = getCellAt(col, row);
-	if (!maybeCell) return;
-	GridCell::BuildState oldBuildState = (GridCell::BuildState)maybeCell->getBuildState();
-	if (oldBuildState == buildState) return;
-	if (oldBuildState == GridCell::BuildState::EMPTY) {
-		// Add instance, if cell was empty
-		addInstanceAt(maybeCell, buildState);
-	}
-	else if (buildState == GridCell::BuildState::EMPTY) {
-		// Remove instance, if cell is going to be empty
-		removeInstanceAt(maybeCell);
-	}
-	else {
-		// Alter instance, if build states change between others than empty
-		removeInstanceAt(maybeCell);
-		addInstanceAt(maybeCell, buildState);
-	}
-	maybeCell->updateBuildState(vbo_, buildState);
+	if (maybeCell) buildAt(maybeCell, buildState);
 }

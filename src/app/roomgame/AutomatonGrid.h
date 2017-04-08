@@ -22,7 +22,7 @@ public:
 	void setCellularAutomaton(GPUCellularAutomaton*);
 	void onMeshpoolInitialized();
 	void buildAt(size_t col, size_t row, GridCell::BuildState buildState) override;
-	void updateMeshInstancesAt(GridCell* c, GridCell::BuildState state, int hp);
+	void updateCell(GridCell* c, GridCell::BuildState state, int hp);
 	void onTransition();
 };
 

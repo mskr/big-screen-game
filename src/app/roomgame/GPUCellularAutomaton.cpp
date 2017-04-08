@@ -93,16 +93,18 @@ void GPUCellularAutomaton::copyFromTextureToGrid(int pair_index) {
 			GLubyte state = tmp_client_buffer_[x*2*rows + y];
 			GLubyte hp = tmp_client_buffer_[x*2*rows + y + 1];
 			GridCell* c = grid_->getCellAt(y / 2, x);
-			grid_->updateMeshInstancesAt(c, (GridCell::BuildState)state, hp);
+			if (c->getBuildState() == (int)state && c->getHealthPoints() == (int)hp)
+				continue;
+			grid_->updateCell(c, (GridCell::BuildState)state, hp);
 		}
 	}
 }
 
-void GPUCellularAutomaton::updateCell(size_t x, size_t y, GLint buildState, GLint hp) {
+void GPUCellularAutomaton::updateCell(GridCell* c, GLint buildState, GLint hp) {
 	if (!is_initialized_) return;
 	GLubyte data[2] = { (GLubyte)buildState, (GLubyte)hp };
 	glBindTexture(GL_TEXTURE_2D, texture_pair_[current_read_index_].id);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, (GLint)x, (GLint)y, 1, 1,
+	glTexSubImage2D(GL_TEXTURE_2D, 0, (GLint)c->getCol(), (GLint)c->getRow(), 1, 1,
 		texture_pair_[0].format, texture_pair_[0].datatype, data);
 }
 
@@ -111,8 +113,10 @@ void GPUCellularAutomaton::transition(double time) {
 	if (!is_initialized_) return;
 	// Test if it is time for the next generation
 	delta_time_ = time - last_time_;
-	if (delta_time_ >= transition_time_)
+	if (delta_time_ >= transition_time_) {
 		last_time_ = time;
+		delta_time_ = 0;
+	}
 	else return;
 	int current_write_index = (current_read_index_ == 0) ? 1 : 0;
 	// Do transition on gpu
@@ -135,7 +139,7 @@ void GPUCellularAutomaton::transition(double time) {
 	glEnable(GL_DEPTH_TEST);
 	// Update grid
 	grid_->onTransition();
-	copyFromTextureToGrid(current_write_index);
+	copyFromTextureToGrid(current_write_index); // Performance bottleneck
 	// Swap buffers
 	current_read_index_ = current_write_index;
 }

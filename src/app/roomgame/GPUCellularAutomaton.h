@@ -25,7 +25,7 @@ protected:
 	void copyFromTextureToGrid(int pair_index);
 public:
 	GPUCellularAutomaton(AutomatonGrid* grid, double transition_time);
-	void updateCell(size_t x, size_t y, GLint state, GLint hp);
+	void updateCell(GridCell* c, GLint state, GLint hp);
 	virtual void init(viscom::GPUProgramManager mgr);
 	virtual void transition(double time);
 	void cleanup();

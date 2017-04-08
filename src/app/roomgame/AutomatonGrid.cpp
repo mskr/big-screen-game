@@ -62,15 +62,15 @@ void AutomatonGrid::onMeshpoolInitialized() {
 
 void AutomatonGrid::buildAt(size_t col, size_t row, GridCell::BuildState state) {
 	// Called on user input
-	MeshInstanceGrid::buildAt(col, row, state);
 	GridCell* c = getCellAt(col, row);
 	if (!c) return;
+	MeshInstanceGrid::buildAt(c, state);
 	c->updateHealthPoints(vbo_, GridCell::MAX_HEALTH);
 	// Route results to automaton
-	automaton_->updateCell(col, row, state, c->getHealthPoints());
+	automaton_->updateCell(c, state, c->getHealthPoints());
 }
 
-void AutomatonGrid::updateMeshInstancesAt(GridCell* c, GridCell::BuildState state, int hp) {
+void AutomatonGrid::updateCell(GridCell* c, GridCell::BuildState state, int hp) {
 	// Called on automaton transitions for each cell
 	if (c->getBuildState() == GridCell::BuildState::OUTER_INFLUENCE && state == GridCell::BuildState::EMPTY) {
 		DelayedUpdate* tmp = delayed_update_list_;
@@ -78,7 +78,7 @@ void AutomatonGrid::updateMeshInstancesAt(GridCell* c, GridCell::BuildState stat
 		delayed_update_list_->next_ = tmp;
 		return;
 	}
-	MeshInstanceGrid::buildAt(c->getCol(), c->getRow(), state);
+	MeshInstanceGrid::buildAt(c, state);
 	c->updateHealthPoints(vbo_, hp); // thinking of dynamic outer influence...
 	// a fixed-on-cell health is not very practical
 }
@@ -89,7 +89,7 @@ void AutomatonGrid::onTransition() {
 	while (dup) {
 		dup->wait_count_--;
 		if (dup->wait_count_ == 0) {
-			MeshInstanceGrid::buildAt(dup->target_->getCol(), dup->target_->getRow(), dup->to_);
+			MeshInstanceGrid::buildAt(dup->target_, dup->to_);
 			if (last) {
 				last->next_ = dup->next_;
 				delete dup;
