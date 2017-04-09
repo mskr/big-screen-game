@@ -12,8 +12,8 @@
 #include "core/gfx/mesh/MeshRenderable.h"
 #include "core/imgui/imgui_impl_glfw_gl3.h"
 
-#define GRID_COLUMNS 32
-#define GRID_ROWS 32
+#define GRID_COLUMNS 128
+#define GRID_ROWS 128
 
 static float automaton_transition_time = 0.04f;
 static int automaton_movedir_[2] = { 1,0 };
@@ -44,29 +44,36 @@ namespace viscom {
 
     void ApplicationNodeImplementation::InitOpenGL()
     {
-		auto floorMesh = appNode_->GetMeshManager().GetResource("/models/roomgame_models/floor.obj");
-		auto cornerMesh = appNode_->GetMeshManager().GetResource("/models/roomgame_models/corner.obj");
-		auto wallMesh = appNode_->GetMeshManager().GetResource("/models/roomgame_models/wall.obj");
-		auto outerInfluenceMesh = appNode_->GetMeshManager().GetResource("/models/roomgame_models/4vertexplane.obj");
 		meshpool_.loadShader(appNode_->GetGPUProgramManager());
-		meshpool_.addMesh({ GridCell::BuildState::INSIDE_ROOM }, floorMesh);
+		meshpool_.addMesh({ GridCell::BuildState::INSIDE_ROOM },
+							appNode_->GetMeshManager().GetResource("/models/roomgame_models/floor.obj"));
 		meshpool_.addMesh({ GridCell::BuildState::LEFT_LOWER_CORNER,
 							GridCell::BuildState::LEFT_UPPER_CORNER,
 							GridCell::BuildState::RIGHT_LOWER_CORNER,
 							GridCell::BuildState::RIGHT_UPPER_CORNER,
-							GridCell::BuildState::INVALID }, cornerMesh);
+							GridCell::BuildState::INVALID },
+							appNode_->GetMeshManager().GetResource("/models/roomgame_models/corner.obj"));
 		meshpool_.addMesh({ GridCell::BuildState::WALL_BOTTOM,
 							GridCell::BuildState::WALL_TOP,
 							GridCell::BuildState::WALL_RIGHT,
-							GridCell::BuildState::WALL_LEFT }, wallMesh);
-		meshpool_.addMesh({ GridCell::BuildState::OUTER_INFLUENCE }, outerInfluenceMesh);
+							GridCell::BuildState::WALL_LEFT },
+							appNode_->GetMeshManager().GetResource("/models/roomgame_models/wall.obj"));
+		meshpool_.addMesh({ GridCell::BuildState::OUTER_INFLUENCE },
+							appNode_->GetMeshManager().GetResource("/models/roomgame_models/4vertexplane.obj"));
 
 		grid_.onMeshpoolInitialized();
-
 		grid_.loadShader(appNode_->GetGPUProgramManager());
 		grid_.uploadVertexData();
 
+		ImGui::GetIO().FontAllowUserScaling = true;
 		ImGui::GetIO().FontGlobalScale = 1.5f;
+
+        backgroundMesh_.shader = appNode_->GetGPUProgramManager().GetResource("applyTexture",
+			std::initializer_list<std::string>{ "applyTexture.vert", "applyTexture.frag" });
+		backgroundMesh_.view_projection_uniform_location = backgroundMesh_.shader->getUniformLocation("viewProjectionMatrix");
+		backgroundMesh_.mesh_resource = appNode_->GetMeshManager().GetResource("/models/roomgame_models/textured_4vertexplane/textured_4vertexplane.obj");
+		backgroundMesh_.mesh_renderable = MeshRenderable::create<SimpleMeshVertex>(backgroundMesh_.mesh_resource.get(), backgroundMesh_.shader.get());
+		backgroundMesh_.model_matrix = glm::scale(glm::translate(glm::mat4(1), glm::vec3(-3.0f, 0.0f, -5.0f)), glm::vec3(2.0f));
     }
 
     void ApplicationNodeImplementation::PreSync()
@@ -100,10 +107,12 @@ namespace viscom {
 
     void ApplicationNodeImplementation::DrawFrame(FrameBuffer& fbo)
     {
-		grid_.updateProjection(GetEngine()->getCurrentModelViewProjectionMatrix() * camera_.getViewProjection());
-        fbo.DrawToFBO([this]() {
-			meshpool_.renderAllMeshes(GetEngine()->getCurrentModelViewProjectionMatrix() * camera_.getViewProjection());
+		glm::mat4 proj = GetEngine()->getCurrentModelViewProjectionMatrix() * camera_.getViewProjection();
+		grid_.updateProjection(proj);
+        fbo.DrawToFBO([&]() {
+			meshpool_.renderAllMeshes(proj);
 			grid_.onFrame(); // debug render
+			backgroundMesh_.render(proj);
         });
     }
 
@@ -133,7 +142,7 @@ namespace viscom {
     {
 		GLenum e;
 		while((e = glGetError()) != GL_NO_ERROR)
-			printf("GL error in PostDraw()! %x\n", e);
+			printf("Something went wrong during the last frame (GL error %x).\n", e);
     }
 
     void ApplicationNodeImplementation::CleanUp()

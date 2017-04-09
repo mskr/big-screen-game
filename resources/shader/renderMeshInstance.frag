@@ -51,6 +51,7 @@ void main()
 		v *= (255.0 / BSTATE_OUTER_INFLUENCE);
 		if(v < OUTER_INFLUENCE_DISPLAY_THRESHOLD)
 			discard;
+		if(v > 0.6) v = 1;
 		color = vec4(v, 0, 0, 1) * healthNormalized;
 	}
 	else {

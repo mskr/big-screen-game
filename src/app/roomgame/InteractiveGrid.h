@@ -54,7 +54,7 @@ public:
 	virtual void onRelease(int touchID);
 	virtual void onMouseMove(int touchID, double newx, double newy);
 	glm::vec2 getNDC(glm::vec2 position);
-	void updateProjection(glm::mat4);
+	void updateProjection(glm::mat4&);
 	// Functions for grid modification
 	virtual void buildAt(size_t col, size_t row, GridCell::BuildState buildState);
 	void buildAtLastMousePosition(GridCell::BuildState buildState);

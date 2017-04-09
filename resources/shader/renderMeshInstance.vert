@@ -80,6 +80,12 @@ void main() {
 	// Flip everything 90 deg around X (could also change models)
 	rotation *= rotationMatrix(vec3(1,0,0), -M_HALF_PI);
 	modelMatrix *= rotation;
+	/* TODO Instead of using model matrix, try this:
+	position += translation;
+	position *= scale;
+	position = position.xzy; // Flip 90 deg around X
+	// 90, 180, 270 deg rotations are just axis flips too...
+	*/
 
 	st = buildState;
 	hp = health;

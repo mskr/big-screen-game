@@ -34,7 +34,7 @@ public:
 	// Building function (request mesh for given build state)
 	RoomSegmentMesh* getMeshOfType(GridCell::BuildState type);
 	// Render function (renders each mesh once by using render list)
-	void renderAllMeshes(glm::mat4 view_projection);
+	void renderAllMeshes(glm::mat4& view_projection);
 	void cleanup();
 	// Set a uniform with a update function for the mesh pool shader
 	void updateUniformEveryFrame(std::string uniform_name, std::function<void(GLint)> update_func);

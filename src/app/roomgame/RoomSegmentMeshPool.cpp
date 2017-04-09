@@ -61,7 +61,7 @@ RoomSegmentMesh* RoomSegmentMeshPool::getMeshOfType(GridCell::BuildState type) {
 	return mesh_variations[variation];
 }
 
-void RoomSegmentMeshPool::renderAllMeshes(glm::mat4 view_projection) {
+void RoomSegmentMeshPool::renderAllMeshes(glm::mat4& view_projection) {
 	glUseProgram(shader_->getProgramId());
 	glUniformMatrix4fv(matrix_uniform_locations_[0], 1, GL_FALSE, glm::value_ptr(view_projection));
 	for (unsigned int i = 0; i < uniform_locations_.size(); i++) uniform_callbacks_[i](uniform_locations_[i]);
@@ -73,8 +73,8 @@ void RoomSegmentMeshPool::renderAllMeshes(glm::mat4 view_projection) {
 }
 
 void RoomSegmentMeshPool::loadShader(viscom::GPUProgramManager mgr) {
-	shader_ = mgr.GetResource("foregroundMesh",
-			std::initializer_list<std::string>{ "foregroundMesh.vert", "foregroundMesh.frag" });
+	shader_ = mgr.GetResource("renderMeshInstance",
+			std::initializer_list<std::string>{ "renderMeshInstance.vert", "renderMeshInstance.frag" });
 	matrix_uniform_locations_ = shader_->getUniformLocations({
 		"viewProjectionMatrix", "subMeshLocalMatrix", "normalMatrix" });
 }

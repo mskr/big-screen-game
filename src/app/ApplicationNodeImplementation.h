@@ -81,5 +81,18 @@ namespace viscom {
 		DragAndZoomCamera camera_;
 		enum InteractionMode { GRID, CAMERA, GRID_PLACE_OUTER_INFLUENCE } interaction_mode_;
 		OuterInfluenceAutomaton cellular_automaton_;
-    };
+
+		struct BackgroundMesh {
+			std::shared_ptr<GPUProgram> shader;
+			GLint view_projection_uniform_location = -1;
+			std::shared_ptr<Mesh> mesh_resource;
+			std::unique_ptr<MeshRenderable> mesh_renderable;
+			glm::mat4 model_matrix;
+			void render(glm::mat4& vp) const {
+				glUseProgram(shader->getProgramId());
+				glUniformMatrix4fv(view_projection_uniform_location, 1, GL_FALSE, &vp[0][0]);
+				mesh_renderable->Draw(model_matrix);
+			}
+		} backgroundMesh_;
+	};
 }

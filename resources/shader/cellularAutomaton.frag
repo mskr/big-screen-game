@@ -46,7 +46,11 @@ int countNeighborsWithState(uint state, ivec2 start, ivec2 end);
 ivec4 countNeighborsWithStateDirected(uint state, ivec2 start, ivec2 end);
 
 uvec2 lookup(sampler2D s, vec2 c) {
-	return uvec2(texture(s,c).rg * 255); // convert back the UNORM
+	return uvec2(texture(s,c).rg * 255); // convert UNORM to uint
+}
+
+void setOutput(uint buildState, uint healthPoints) {
+	outputCell = vec2(buildState/255.0, healthPoints/255.0); // convert uint to UNORM
 }
 
 void life(uint state, int neighbors) {
@@ -185,7 +189,7 @@ void main() {
 
 	if(newHealth == 0U) newState = BSTATE_EMPTY;
 	if(newState == BSTATE_EMPTY) newHealth = 100U; //TODO Dynamic cells die too slow. Better track cells and their health
-	outputCell = vec2(newState/255.0, newHealth/255.0);
+	setOutput(newState, newHealth);
 	
 	// life(cell.r, outerInflNbors);
 }

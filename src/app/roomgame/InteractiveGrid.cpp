@@ -37,7 +37,7 @@ void InteractiveGrid::translate(float dx, float dy, float dz) {
 }
 
 
-void InteractiveGrid::updateProjection(glm::mat4 p) {
+void InteractiveGrid::updateProjection(glm::mat4& p) {
 	last_view_projection_ = p;
 }
 
@@ -187,8 +187,8 @@ void InteractiveGrid::uploadVertexData() {
 
 void InteractiveGrid::loadShader(viscom::GPUProgramManager mgr) {
 	glEnable(GL_PROGRAM_POINT_SIZE);
-	shader_ = mgr.GetResource("interactiveGrid",
-		std::initializer_list<std::string>{ "interactiveGrid.vert", "interactiveGrid.frag" });
+	shader_ = mgr.GetResource("viewBuildStates",
+		std::initializer_list<std::string>{ "viewBuildStates.vert", "viewBuildStates.frag" });
 	mvp_uniform_location_ = shader_->getUniformLocation("MVP");
 }
 
