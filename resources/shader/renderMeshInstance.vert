@@ -56,7 +56,7 @@ float chooseZRotation(const int st) {
 	// Problem: One mesh can be used with different instance attributes for different build states
 	// Very specific solution: Choose rotation for corners and walls
 	//TODO Find more generic solution
-	if (st == BSTATE_LEFT_UPPER_CORNER || st == BSTATE_WALL_LEFT || st == BSTATE_OUTER_INFLUENCE)
+	if (st == BSTATE_LEFT_UPPER_CORNER || st == BSTATE_WALL_LEFT)
 		return M_HALF_PI;
 	else if (st == BSTATE_RIGHT_UPPER_CORNER || st == BSTATE_WALL_TOP)
 		return M_PI;
@@ -80,17 +80,12 @@ void main() {
 	// Flip everything 90 deg around X (could also change models)
 	rotation *= rotationMatrix(vec3(1,0,0), -M_HALF_PI);
 	modelMatrix *= rotation;
-	/* TODO Instead of using model matrix, try this:
-	position += translation;
-	position *= scale;
-	position = position.xzy; // Flip 90 deg around X
-	// 90, 180, 270 deg rotations are just axis flips too...
-	*/
 
 	st = buildState;
 	hp = health;
-	cellCoords = (translation.xy + 1.0 - gridTranslation.xy) / gridDimensions;
-	cellCoords += vec2(texCoords.x -.5, 1 - texCoords.y +.5) * gridCellSize;
+	cellCoords = translation.xy + vec2(1, 1 + gridCellSize) - gridTranslation.xy;
+	cellCoords += (texCoords.yx - 0.5) * gridCellSize;
+	cellCoords /= gridDimensions;
 
 	vec4 posV4 = modelMatrix * subMeshLocalMatrix * vec4(position, 1);
 	vPosition = vec3(posV4);

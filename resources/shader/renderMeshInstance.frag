@@ -27,6 +27,7 @@ uniform sampler2D gridTex;
 uniform sampler2D gridTex_PrevState;
 uniform float automatonTimeDelta;
 
+// threshold to discard "low-value" outer influence pixels
 const float OUTER_INFLUENCE_DISPLAY_THRESHOLD = 0.5;
 
 out vec4 color;
@@ -38,8 +39,6 @@ void main()
 	// float NdotL = clamp(dot(lightDir, normalize(vNormal)), 0.0f, 1.0f);
 	// vec3 texColor = texture(diffuseTexture, vTexCoords).rgb;
 
-
-	//TODO Define a threshold and discard "low-value" outer influence pixels
 	//TODO Why are the edges still not completely black?
 	//TODO What to do with the time delta? Need the texture with the previous state as well?
 	
