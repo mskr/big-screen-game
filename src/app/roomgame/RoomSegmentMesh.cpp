@@ -123,10 +123,10 @@ void RoomSegmentMesh::renderNode(std::vector<GLint>* uniformLocations, const vis
 }
 
 void RoomSegmentMesh::renderSubMesh(std::vector<GLint>* uniformLocations, const glm::mat4& modelMatrix, const viscom::SubMesh* subMesh, bool overrideBump) {
-	glUniformMatrix4fv(uniformLocations->at(1), 1, GL_FALSE,
-		glm::value_ptr(modelMatrix));
-	glUniformMatrix4fv(uniformLocations->at(2), 1, GL_FALSE,
-		glm::value_ptr(glm::inverseTranspose(glm::mat3(modelMatrix))));
+	if(uniformLocations->size() > 1)
+		glUniformMatrix4fv(uniformLocations->at(1), 1, GL_FALSE, glm::value_ptr(modelMatrix));
+	if(uniformLocations->size() > 2)
+		glUniformMatrix3fv(uniformLocations->at(2), 1, GL_FALSE, glm::value_ptr(glm::inverseTranspose(glm::mat3(modelMatrix))));
 	if (subMesh->GetMaterial()->diffuseTex && uniformLocations->size() > 2) {
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, subMesh->GetMaterial()->diffuseTex->getTextureId());
