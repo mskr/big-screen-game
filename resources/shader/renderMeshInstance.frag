@@ -28,7 +28,7 @@ uniform sampler2D gridTex_PrevState;
 uniform float automatonTimeDelta;
 
 // threshold to discard "low-value" outer influence pixels
-const float OUTER_INFLUENCE_DISPLAY_THRESHOLD = 0.5;
+const float OUTER_INFLUENCE_DISPLAY_THRESHOLD = 0.6;
 
 out vec4 color;
 
@@ -50,8 +50,10 @@ void main()
 		v *= (255.0 / BSTATE_OUTER_INFLUENCE);
 		if(v < OUTER_INFLUENCE_DISPLAY_THRESHOLD)
 			discard;
-		if(v > 0.6) v = 1;
-		color = vec4(v, 0, 0, 1) * healthNormalized;
+		if(v > 0.65) // "high-value" threshold
+			color = vec4(0, v-0.1, v, 0.5) * healthNormalized;
+		else // edge between high-value and discarded pixels
+			color = vec4(1) * healthNormalized;
 	}
 	else {
 		color = vec4(vNormal, 1) * healthNormalized;

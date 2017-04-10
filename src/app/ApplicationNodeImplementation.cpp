@@ -111,8 +111,10 @@ namespace viscom {
 		glm::mat4 proj = GetEngine()->getCurrentModelViewProjectionMatrix() * camera_.getViewProjection();
 		grid_.updateProjection(proj);
         fbo.DrawToFBO([&]() {
-			meshpool_.renderAllMeshes(proj);
 			backgroundMesh_.render(proj);
+			glEnable(GL_BLEND); glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			meshpool_.renderAllMeshes(proj);
+			glDisable(GL_BLEND);
 			grid_.onFrame(); // debug render
         });
     }
