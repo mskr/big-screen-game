@@ -30,3 +30,7 @@ void DragAndZoomCamera::onMouseMove(float newx, float newy) {
 void DragAndZoomCamera::onScroll(float offset) {
 	view_projection_[3][2] += (offset * zoom_speed_);
 }
+
+void DragAndZoomCamera::setXRotation(float angle) {
+	view_projection_ = glm::rotate(view_projection_, angle, glm::vec3(1, 0, 0));
+}

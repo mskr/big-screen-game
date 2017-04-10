@@ -12,8 +12,8 @@
 #include "core/gfx/mesh/MeshRenderable.h"
 #include "core/imgui/imgui_impl_glfw_gl3.h"
 
-#define GRID_COLUMNS 128
-#define GRID_ROWS 128
+#define GRID_COLUMNS 64
+#define GRID_ROWS 64
 
 static float automaton_transition_time = 0.04f;
 static int automaton_movedir_[2] = { 1,0 };
@@ -28,7 +28,7 @@ namespace viscom {
 	ApplicationNodeImplementation::ApplicationNodeImplementation(ApplicationNode* appNode) :
 		appNode_{ appNode },
 		meshpool_(GRID_COLUMNS * GRID_ROWS),
-		grid_(GRID_COLUMNS, GRID_ROWS, 1.0f, &meshpool_),
+		grid_(GRID_COLUMNS, GRID_ROWS, 2.0f, &meshpool_),
 		interaction_mode_(GRID_PLACE_OUTER_INFLUENCE),
 		camera_(glm::mat4(1)),
 		cellular_automaton_(&grid_, automaton_transition_time)
@@ -73,7 +73,7 @@ namespace viscom {
 		backgroundMesh_.view_projection_uniform_location = backgroundMesh_.shader->getUniformLocation("viewProjectionMatrix");
 		backgroundMesh_.mesh_resource = appNode_->GetMeshManager().GetResource("/models/roomgame_models/textured_4vertexplane/textured_4vertexplane.obj");
 		backgroundMesh_.mesh_renderable = MeshRenderable::create<SimpleMeshVertex>(backgroundMesh_.mesh_resource.get(), backgroundMesh_.shader.get());
-		backgroundMesh_.model_matrix = glm::scale(glm::translate(glm::mat4(1), glm::vec3(-3.0f, 0.0f, -5.0f)), glm::vec3(2.0f));
+		backgroundMesh_.model_matrix = glm::scale(glm::translate(glm::mat4(1), glm::vec3(0,-grid_.getCellSize(),-0.0001f)), glm::vec3(1.0f));
     }
 
     void ApplicationNodeImplementation::PreSync()
@@ -94,6 +94,7 @@ namespace viscom {
 		cellular_automaton_.setOuterInfluenceNeighborThreshold(automaton_outer_infl_nbors_thd);
 		cellular_automaton_.setDamagePerCell(automaton_damage_per_cell);
 		cellular_automaton_.transition(currentTime);
+		//backgroundMesh_.model_matrix[3] -= glm::vec4(0, 0, 0.00001f, 1);
     }
 
     void ApplicationNodeImplementation::ClearBuffer(FrameBuffer& fbo)
@@ -111,8 +112,8 @@ namespace viscom {
 		grid_.updateProjection(proj);
         fbo.DrawToFBO([&]() {
 			meshpool_.renderAllMeshes(proj);
-			grid_.onFrame(); // debug render
 			backgroundMesh_.render(proj);
+			grid_.onFrame(); // debug render
         });
     }
 
@@ -165,6 +166,9 @@ namespace viscom {
 			else if (action == GLFW_RELEASE) {
 				interaction_mode_ = (InteractionMode)mode_before_switch_to_camera;
 			}
+		}
+		else if (key == GLFW_KEY_V && action == GLFW_PRESS) {
+			camera_.setXRotation(-glm::quarter_pi<float>());
 		}
 		else if (key == GLFW_KEY_S && action == GLFW_PRESS) {
 			if (interaction_mode_ == GRID_PLACE_OUTER_INFLUENCE) {

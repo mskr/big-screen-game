@@ -16,6 +16,7 @@ public:
 	void onMouseMove(float newx, float newy);
 	void onScroll(float offset);
 	glm::mat4 getViewProjection() { return view_projection_; }
+	void setXRotation(float);
 };
 
 #endif
