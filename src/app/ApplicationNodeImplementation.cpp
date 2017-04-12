@@ -68,12 +68,21 @@ namespace viscom {
 		ImGui::GetIO().FontAllowUserScaling = true;
 		ImGui::GetIO().FontGlobalScale = 1.5f;
 
-        backgroundMesh_.shader = appNode_->GetGPUProgramManager().GetResource("applyTexture",
-			std::initializer_list<std::string>{ "applyTexture.vert", "applyTexture.frag" });
+        backgroundMesh_.shader = appNode_->GetGPUProgramManager().GetResource("applyTextureAndShadow",
+			std::initializer_list<std::string>{ "applyTextureAndShadow.vert", "applyTextureAndShadow.frag" });
 		backgroundMesh_.view_projection_uniform_location = backgroundMesh_.shader->getUniformLocation("viewProjectionMatrix");
+		backgroundMesh_.lightspace_matrix_uniform_location_ = backgroundMesh_.shader->getUniformLocation("lightSpaceMatrix");
+		backgroundMesh_.shadow_map_uniform_location_ = backgroundMesh_.shader->getUniformLocation("shadowMap");
 		backgroundMesh_.mesh_resource = appNode_->GetMeshManager().GetResource("/models/roomgame_models/textured_4vertexplane/textured_4vertexplane.obj");
 		backgroundMesh_.mesh_renderable = MeshRenderable::create<SimpleMeshVertex>(backgroundMesh_.mesh_resource.get(), backgroundMesh_.shader.get());
-		backgroundMesh_.model_matrix = glm::scale(glm::translate(glm::mat4(1), glm::vec3(0,-grid_.getCellSize(),-0.0001f)), glm::vec3(1.0f));
+		backgroundMesh_.model_matrix = glm::scale(glm::translate(glm::mat4(1), glm::vec3(0,-grid_.getCellSize(),-0.001f/*TODO better remove the z bias and use thicker meshes*/)), glm::vec3(1.0f));
+		
+		screenfilling_quad_.init(appNode_->GetGPUProgramManager());
+
+		shadowMapFBO_ = new FrameBuffer(1024, 1024, { { FrameBufferTextureDescriptor(GL_DEPTH_COMPONENT32F) },{} });
+		lightSpaceMatrix_ = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0), glm::vec3(0, 1, 0));
+		
+		GetEngine()->setNearAndFarClippingPlanes(0.1f, 100.0f);
     }
 
     void ApplicationNodeImplementation::PreSync()
@@ -94,7 +103,6 @@ namespace viscom {
 		cellular_automaton_.setOuterInfluenceNeighborThreshold(automaton_outer_infl_nbors_thd);
 		cellular_automaton_.setDamagePerCell(automaton_damage_per_cell);
 		cellular_automaton_.transition(currentTime);
-		//backgroundMesh_.model_matrix[3] -= glm::vec4(0, 0, 0.00001f, 1);
     }
 
     void ApplicationNodeImplementation::ClearBuffer(FrameBuffer& fbo)
@@ -104,16 +112,29 @@ namespace viscom {
             glClearColor(colorPtr[0], colorPtr[1], colorPtr[2], colorPtr[3]);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         });
+
+		shadowMapFBO_->DrawToFBO([&]() {
+			glClearDepth(1.0f);
+			glClear(GL_DEPTH_BUFFER_BIT);
+		});
     }
 
     void ApplicationNodeImplementation::DrawFrame(FrameBuffer& fbo)
     {
 		glm::mat4 proj = GetEngine()->getCurrentModelViewProjectionMatrix() * camera_.getViewProjection();
+		glm::mat4 lightspace = GetEngine()->getCurrentModelViewProjectionMatrix() * lightSpaceMatrix_;
 		grid_.updateProjection(proj);
+		
+		shadowMapFBO_->DrawToFBO([&]() {
+			meshpool_.renderAllMeshes(lightspace);
+			//TODO optimize by doing nothing in fragment shader in shadow mapping mode
+			//TODO optimize by picking shadow casters (exclude outer influence meshes)
+		});
+		
         fbo.DrawToFBO([&]() {
-			backgroundMesh_.render(proj);
+			backgroundMesh_.render(proj, lightspace, shadowMapFBO_->GetTextures()[0]);
 			glEnable(GL_BLEND); glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-			meshpool_.renderAllMeshes(proj);
+			meshpool_.renderAllMeshes(proj); //TODO rooms can also be shadow receivers
 			glDisable(GL_BLEND);
 			grid_.onFrame(); // debug render
         });
@@ -153,6 +174,7 @@ namespace viscom {
 		grid_.cleanup();
 		meshpool_.cleanup();
 		cellular_automaton_.cleanup();
+		delete shadowMapFBO_;
     }
 
     // ReSharper disable CppParameterNeverUsed

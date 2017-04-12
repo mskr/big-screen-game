@@ -87,7 +87,8 @@ namespace viscom {
             try {
                 wpResource = resources_.at(resId);
             }
-            catch (std::out_of_range e) {
+            catch (std::out_of_range) {
+				// Exception warning is still printed in VS which is annoying
                 LOG(INFO) << "No resource with id \"" << resId << "\" found. Creating new one.";
             }
             if (wpResource.expired()) {

@@ -94,7 +94,8 @@ namespace viscom {
         unsigned int GetWidth() const { return width_; };
         unsigned int GetHeight() const { return height_; };
 
-    private:
+    protected:
+		static GLenum determineTextureBaseFormatFromInternalFormat(GLenum internalFormat);
         static unsigned int findAttachment(GLenum internalFormat, unsigned int& colorAtt, std::vector<GLenum> &drawBuffers);
 
         /** holds the frame buffers OpenGL name. */

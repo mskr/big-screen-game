@@ -153,8 +153,13 @@ namespace viscom {
                     glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, desc_.texDesc_[i].internalFormat_, width_, height_, 0, GL_RGBA, GL_FLOAT, nullptr);
                 }
             } else {
-                if (desc_.numSamples_ == 1) { glTexImage2D(desc_.texDesc_[i].texType_, 0, desc_.texDesc_[i].internalFormat_, width_, height_, 0, GL_RGBA, GL_FLOAT, nullptr); }
-                else { glTexImage2DMultisample(desc_.texDesc_[i].texType_, desc_.numSamples_, desc_.texDesc_[i].internalFormat_, width_, height_, GL_TRUE); }
+                if (desc_.numSamples_ == 1) {
+					GLenum baseFormat = determineTextureBaseFormatFromInternalFormat(desc_.texDesc_[i].internalFormat_);
+					glTexImage2D(desc_.texDesc_[i].texType_, 0, desc_.texDesc_[i].internalFormat_, width_, height_, 0, baseFormat, GL_FLOAT, nullptr);
+				}
+                else { 
+					glTexImage2DMultisample(desc_.texDesc_[i].texType_, desc_.numSamples_, desc_.texDesc_[i].internalFormat_, width_, height_, GL_TRUE); 
+				}
             }
 
             if (desc_.texDesc_[i].texType_ == GL_TEXTURE_CUBE_MAP) {
@@ -164,7 +169,8 @@ namespace viscom {
                 }
             } else {
                 auto attachment = findAttachment(desc_.texDesc_[i].internalFormat_, colorAtt, drawBuffers_);
-                glFramebufferTexture(GL_FRAMEBUFFER, attachment, textures_[i], 0);
+				auto t = textures_[i];
+                glFramebufferTexture(GL_FRAMEBUFFER, attachment, t, 0);
             }
         }
 
@@ -180,11 +186,46 @@ namespace viscom {
             glFramebufferRenderbuffer(GL_FRAMEBUFFER, attachment, GL_RENDERBUFFER, renderBuffers_[i]);
         }
 
-        glDrawBuffers(static_cast<GLsizei>(drawBuffers_.size()), drawBuffers_.data());
+		if (renderBuffers_.size() == 0 && desc_.texDesc_.size() == 1 &&
+			findAttachment(desc_.texDesc_[0].internalFormat_, colorAtt, drawBuffers_) == GL_DEPTH_ATTACHMENT) {
+			// If there is only one texture as depth attachment, only use the z buffer
+			glDrawBuffer(GL_NONE); // Disable color buffer writing
+			glReadBuffer(GL_NONE); // Disable color buffer reading
+		}
+		else glDrawBuffers(static_cast<GLsizei>(drawBuffers_.size()), drawBuffers_.data());
 
         auto fboStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-        if (fboStatus != GL_FRAMEBUFFER_COMPLETE)
-            throw std::runtime_error("Could not create frame buffer.");
+		if (fboStatus != GL_FRAMEBUFFER_COMPLETE) {
+			if (fboStatus == GL_FRAMEBUFFER_UNDEFINED) {
+				printf("Specified framebuffer is the default read or draw framebuffer,");
+				printf("but the default framebuffer does not exist.\n");
+				throw std::runtime_error("Could not create frame buffer.");
+			}
+			else if (fboStatus == GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT) {
+				printf("Any of the framebuffer attachment points are framebuffer incomplete.");
+				throw std::runtime_error("Could not create frame buffer.");
+			}
+			else if (fboStatus == GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT) {
+				printf("The framebuffer does not have at least one image attached to it.");
+				throw std::runtime_error("Could not create frame buffer.");
+			}
+			else if (fboStatus == GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER) {
+				printf("The value of GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE is GL_NONE");
+				printf("for any color attachment point(s) named by GL_DRAW_BUFFERi.\n");
+				throw std::runtime_error("Could not create frame buffer.");
+			}
+			else if (fboStatus == GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER) {
+				printf("GL_READ_BUFFER is not GL_NONE and the value of GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE");
+				printf("is GL_NONE for the color attachment point named by GL_READ_BUFFER.");
+				throw std::runtime_error("Could not create frame buffer.");
+			}
+			else if (fboStatus == GL_FRAMEBUFFER_UNSUPPORTED) {
+				printf("The combination of internal formats of the attached images");
+				printf("violates an implementation-dependent set of restrictions.");
+				throw std::runtime_error("Could not create frame buffer.");
+			}
+			else throw std::runtime_error("Could not create frame buffer.");
+		}
     }
 
     /**
@@ -261,5 +302,34 @@ namespace viscom {
         }
         return attachment;
     }
+
+
+	GLenum FrameBuffer::determineTextureBaseFormatFromInternalFormat(GLenum internalFormat) {
+		switch (internalFormat) {
+		case GL_DEPTH_STENCIL:
+		case GL_DEPTH24_STENCIL8:
+		case GL_DEPTH32F_STENCIL8:
+			return GL_DEPTH_STENCIL;
+		case GL_DEPTH_COMPONENT:
+		case GL_DEPTH_COMPONENT16:
+		case GL_DEPTH_COMPONENT32:
+		case GL_DEPTH_COMPONENT24:
+		case GL_DEPTH_COMPONENT32F:
+			return GL_DEPTH_COMPONENT;
+		case GL_STENCIL_INDEX:
+		case GL_STENCIL_INDEX1:
+		case GL_STENCIL_INDEX4:
+		case GL_STENCIL_INDEX8:
+		case GL_STENCIL_INDEX16:
+			return GL_STENCIL_INDEX;
+		default:
+			return GL_RGBA;
+			// Note that there are countless other sized internal formats for color
+			// that correspond to one of these base internal formats:
+			// GL_RED, GL_RG, GL_RGB, GL_BGR, GL_RGBA, GL_BGRA, GL_RED_INTEGER,
+			// GL_RG_INTEGER, GL_RGB_INTEGER, GL_BGR_INTEGER, GL_RGBA_INTEGER, GL_BGRA_INTEGER
+			// (If accounting for them, we would need also determine the corresponding data type)
+		}
+	}
 
 }
