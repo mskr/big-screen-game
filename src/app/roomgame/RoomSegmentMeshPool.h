@@ -21,9 +21,11 @@ class RoomSegmentMeshPool {
 	std::set<std::shared_ptr<viscom::Mesh>> owned_resources_;
 	// The shader used by all meshes
 	std::shared_ptr<viscom::GPUProgram> shader_;
+	// Uniforms
 	std::vector<GLint> matrix_uniform_locations_;
 	std::vector<GLint> uniform_locations_;
 	std::vector<std::function<void(GLint)>> uniform_callbacks_;
+	GLint depth_pass_flag_uniform_location_;
 public:
 	RoomSegmentMeshPool(const size_t MAX_INSTANCES);
 	~RoomSegmentMeshPool();
@@ -34,7 +36,8 @@ public:
 	// Building function (request mesh for given build state)
 	RoomSegmentMesh* getMeshOfType(GridCell::BuildState type);
 	// Render function (renders each mesh once by using render list)
-	void renderAllMeshes(glm::mat4& view_projection);
+	void renderAllMeshes(glm::mat4& view_projection, GLint isDepthPass = 0);
+	void renderAllMeshesExcept(glm::mat4& view_projection, GridCell::BuildState type_not_to_render, GLint isDepthPass = 0);
 	void cleanup();
 	// Set a uniform with a update function for the mesh pool shader
 	void updateUniformEveryFrame(std::string uniform_name, std::function<void(GLint)> update_func);

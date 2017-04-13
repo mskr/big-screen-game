@@ -27,13 +27,15 @@ uniform sampler2D gridTex;
 uniform sampler2D gridTex_PrevState;
 uniform float automatonTimeDelta;
 
+uniform int isDepthPass;
+
 // threshold to discard "low-value" outer influence pixels
 const float OUTER_INFLUENCE_DISPLAY_THRESHOLD = 0.6;
 
 out vec4 color;
 
-void main()
-{
+void main() {
+	if(isDepthPass == 1) return;
 	// vec3 lightDir = normalize(vPosition - vec3(-10.0f, -10.0f, -10.0f));
 
 	// float NdotL = clamp(dot(lightDir, normalize(vNormal)), 0.0f, 1.0f);
