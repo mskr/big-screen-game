@@ -31,7 +31,9 @@ namespace viscom {
 		grid_(GRID_COLUMNS, GRID_ROWS, 2.0f, &meshpool_),
 		interaction_mode_(GRID_PLACE_OUTER_INFLUENCE),
 		camera_(glm::mat4(1)),
-		cellular_automaton_(&grid_, automaton_transition_time)
+		cellular_automaton_(&grid_, automaton_transition_time),
+		render_mode_(NORMAL),
+		clock_{0.0}
     {
     }
 
@@ -59,13 +61,16 @@ namespace viscom {
 							GridCell::BuildState::WALL_LEFT },
 							appNode_->GetMeshManager().GetResource("/models/roomgame_models/wall.obj"));
 		meshpool_.addMesh({ GridCell::BuildState::OUTER_INFLUENCE },
-							appNode_->GetMeshManager().GetResource("/models/roomgame_models/4vertexplane.obj"));
+							appNode_->GetMeshManager().GetResource("/models/roomgame_models/latticeplane.obj"));
+
+		meshpool_.updateUniformEveryFrame("t_sec", [this](GLint uloc) {
+			glUniform1f(uloc, (float)clock_.t_in_sec);
+		});
 
 		grid_.onMeshpoolInitialized();
 		grid_.loadShader(appNode_->GetGPUProgramManager());
 		grid_.uploadVertexData();
 
-		ImGui::GetIO().FontAllowUserScaling = true;
 		ImGui::GetIO().FontGlobalScale = 1.5f;
 
 		backgroundMesh_ = new ShadowReceivingMesh(
@@ -76,7 +81,7 @@ namespace viscom {
 			glm::vec3(0,-grid_.getCellSize(),-0.001f/*TODO better remove the z bias and use thicker meshes*/)), glm::vec3(1.0f)));
 
 		shadowMap_ = new ShadowMap(1024, 1024);
-		shadowMap_->light_matrix_ = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0), glm::vec3(0, 1, 0));
+		shadowMap_->setLightMatrix(glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0), glm::vec3(0, 1, 0)));
 		
 		GetEngine()->setNearAndFarClippingPlanes(0.1f, 100.0f);
     }
@@ -99,6 +104,7 @@ namespace viscom {
 		cellular_automaton_.setOuterInfluenceNeighborThreshold(automaton_outer_infl_nbors_thd);
 		cellular_automaton_.setDamagePerCell(automaton_damage_per_cell);
 		cellular_automaton_.transition(currentTime);
+		clock_.t_in_sec = currentTime;
     }
 
     void ApplicationNodeImplementation::ClearBuffer(FrameBuffer& fbo)
@@ -118,7 +124,7 @@ namespace viscom {
     void ApplicationNodeImplementation::DrawFrame(FrameBuffer& fbo)
     {
 		glm::mat4 proj = GetEngine()->getCurrentModelViewProjectionMatrix() * camera_.getViewProjection();
-		glm::mat4 lightspace = GetEngine()->getCurrentModelViewProjectionMatrix() * shadowMap_->light_matrix_;
+		glm::mat4 lightspace = GetEngine()->getCurrentModelViewProjectionMatrix() * shadowMap_->getLightMatrix();
 		grid_.updateProjection(proj);
 		
 		shadowMap_->DrawToFBO([&]() {
@@ -126,11 +132,11 @@ namespace viscom {
 		});
 		
         fbo.DrawToFBO([&]() {
-			backgroundMesh_->render(proj, lightspace, shadowMap_->get());
+			backgroundMesh_->render(proj, lightspace, shadowMap_->get(), (render_mode_ == RenderMode::DBUG) ? 1 : 0);
 			glEnable(GL_BLEND); glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-			meshpool_.renderAllMeshes(proj); //TODO rooms can also be shadow receivers
+			meshpool_.renderAllMeshes(proj, 0, (render_mode_ == RenderMode::DBUG) ? 1 : 0);
 			glDisable(GL_BLEND);
-			grid_.onFrame(); // debug render
+			if (render_mode_ == RenderMode::DBUG) grid_.onFrame();
         });
     }
 
@@ -169,6 +175,7 @@ namespace viscom {
 		meshpool_.cleanup();
 		cellular_automaton_.cleanup();
 		delete shadowMap_;
+		delete backgroundMesh_;
     }
 
     // ReSharper disable CppParameterNeverUsed
@@ -197,6 +204,14 @@ namespace viscom {
 				interaction_mode_ = GRID_PLACE_OUTER_INFLUENCE;
 			}
 		}
+		else if (key == GLFW_KEY_D) {
+			if (action == GLFW_PRESS) {
+				render_mode_ = RenderMode::DBUG;
+			}
+			else if (action == GLFW_RELEASE) {
+				render_mode_ = RenderMode::NORMAL;
+			}
+		}
 #ifdef VISCOM_CLIENTGUI
         ImGui_ImplGlfwGL3_KeyCallback(key, scancode, action, mods);
 #endif
@@ -217,7 +232,7 @@ namespace viscom {
 				else if (action == GLFW_RELEASE) grid_.onRelease(-1);
 			}
 			else if (interaction_mode_ == InteractionMode::GRID_PLACE_OUTER_INFLUENCE) {
-				if (action == GLFW_PRESS) grid_.buildAtLastMousePosition(GridCell::BuildState::OUTER_INFLUENCE);
+				if (action == GLFW_PRESS) grid_.populateCircleAtLastMousePosition(5);
 			}
 			else if (interaction_mode_ == InteractionMode::CAMERA) {
 				if (action == GLFW_PRESS) camera_.onTouch();

@@ -37,6 +37,8 @@ uniform vec3 gridTranslation;
 uniform float gridCellSize;
 uniform float automatonTimeDelta;
 
+uniform float t_sec;
+
 out vec3 vPosition;
 out vec3 vNormal;
 out vec2 vTexCoords;
@@ -87,11 +89,16 @@ void main() {
 	cellCoords += (texCoords.yx - 0.5) * gridCellSize;
 	cellCoords /= gridDimensions;
 
+	if(buildState==BSTATE_OUTER_INFLUENCE) {
+		const float WATER_WAVE_LENGTH = 20.0;
+		const float WATER_WAVE_HEIGHT = 40.0;
+		modelMatrix[3][2] += ((1.0 + sin(t_sec * cellCoords.x * WATER_WAVE_LENGTH)) / WATER_WAVE_HEIGHT);
+	}
+
 	vec4 posV4 = modelMatrix * subMeshLocalMatrix * vec4(position, 1);
 	vPosition = vec3(posV4);
-	vNormal = normalize(mat3(rotation) * normal);
+	vNormal = normalize(mat3(rotation) * normal); //TODO calculate normal for sin waves
 	vTexCoords = texCoords;
 
 	gl_Position = viewProjectionMatrix * posV4;
 }
-

@@ -79,11 +79,15 @@ namespace viscom {
 		OuterInfluenceAutomaton cellular_automaton_;
 		ShadowMap* shadowMap_;
 		ShadowReceivingMesh* backgroundMesh_;
+		enum RenderMode { NORMAL, DBUG } render_mode_;
 
+		struct Clock {
+			double t_in_sec;
+		} clock_;
 
 		struct Quad {
 			std::shared_ptr<GPUProgram> shader;
-			GLint texture_uniform_location_;
+			GLint texture_uniform_location;
 			GLuint vao;
 			void init(GPUProgramManager mgr) {
 				glGenVertexArrays(1, &vao);
@@ -108,7 +112,7 @@ namespace viscom {
 				glBindVertexArray(0);
 				shader = mgr.GetResource("applyTextureToQuad",
 					std::initializer_list<std::string>{ "applyTextureToQuad.vert", "applyTextureToQuad.frag" });
-				texture_uniform_location_ = shader->getUniformLocation("texture");
+				texture_uniform_location = shader->getUniformLocation("texture");
 			}
 			void render(GLuint texture) const {
 				glUseProgram(shader->getProgramId());
@@ -122,7 +126,7 @@ namespace viscom {
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 				float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 				glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
-				glUniform1i(texture_uniform_location_, 0);
+				glUniform1i(texture_uniform_location, 0);
 				glBindVertexArray(vao);
 				glDrawArrays(GL_TRIANGLES, 0, 6);
 				glBindVertexArray(0);

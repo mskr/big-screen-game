@@ -86,6 +86,7 @@ public:
 	bool isWestOf(GridCell* other);
 	size_t getColDistanceTo(GridCell* other);
 	size_t getRowDistanceTo(GridCell* other);
+	float getDistanceTo(GridCell* other);
 	RoomSegmentMesh::InstanceBufferRange getMeshInstance();
 };
 

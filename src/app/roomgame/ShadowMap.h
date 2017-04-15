@@ -3,13 +3,15 @@
 
 #include "core/gfx/FrameBuffer.h"
 
-struct ShadowMap : public viscom::FrameBuffer {
+class ShadowMap : public viscom::FrameBuffer {
 	glm::mat4 light_matrix_;
-	ShadowMap(unsigned int w, unsigned int h) :
-		FrameBuffer(w, h, { { viscom::FrameBufferTextureDescriptor(GL_DEPTH_COMPONENT32F) },{} }) {}
+public:
+	ShadowMap(unsigned int w, unsigned int h);
 	GLuint get() const {
 		return textures_[0];
 	}
+	glm::mat4& getLightMatrix();
+	void setLightMatrix(glm::mat4&);
 };
 
 #endif

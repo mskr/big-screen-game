@@ -20,10 +20,11 @@ public:
 	AutomatonGrid(size_t columns, size_t rows, float height, RoomSegmentMeshPool* meshpool);
 	~AutomatonGrid();
 	void setCellularAutomaton(GPUCellularAutomaton*);
-	void onMeshpoolInitialized();
+	void onMeshpoolInitialized() override;
 	void buildAt(size_t col, size_t row, GridCell::BuildState buildState) override;
 	void updateCell(GridCell* c, GridCell::BuildState state, int hp);
 	void onTransition();
+	void populateCircleAtLastMousePosition(int radius);
 };
 
 #endif

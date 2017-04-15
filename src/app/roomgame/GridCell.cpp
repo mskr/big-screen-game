@@ -153,6 +153,10 @@ size_t GridCell::getRowDistanceTo(GridCell* other) {
 		return this->row_idx_ - other->row_idx_;
 }
 
+float GridCell::getDistanceTo(GridCell* other) {
+	return glm::distance(glm::vec2(col_idx_, row_idx_), glm::vec2(other->getCol(), other->getRow()));
+}
+
 RoomSegmentMesh::InstanceBufferRange GridCell::getMeshInstance() {
 	if (vertex_.build_state != BuildState::EMPTY)
 		return mesh_instance_;

@@ -41,3 +41,7 @@ void MeshInstanceGrid::buildAt(size_t col, size_t row, GridCell::BuildState buil
 	GridCell* maybeCell = getCellAt(col, row);
 	if (maybeCell) buildAt(maybeCell, buildState);
 }
+
+void MeshInstanceGrid::onMeshpoolInitialized() {
+
+}
