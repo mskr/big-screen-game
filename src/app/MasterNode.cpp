@@ -15,6 +15,15 @@ namespace viscom {
     MasterNode::MasterNode(ApplicationNode* appNode) :
         ApplicationNodeImplementation{ appNode }
     {
+
+
+#ifdef WITH_TUIO
+		std::stringstream portCvt(GetConfig().tuioPort_);
+        int tuioPort = 3333;
+        portCvt >> tuioPort;
+
+		TuioInputWrapper* tuioInputWrapper = new TuioInputWrapper(tuioPort);
+#endif
     }
 
 
