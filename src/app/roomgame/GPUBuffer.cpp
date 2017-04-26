@@ -102,6 +102,5 @@ GLuint GPUBuffer::new_texture2D(GLsizei w, GLsizei h, GLint sized_format, GLenum
 	glGenTextures(1, &tex);
 	glBindTexture(GL_TEXTURE_2D, tex);
 	glTexStorage2D(GL_TEXTURE_2D, 1, sized_format, w, h);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w, h, format, type, (GLvoid*)0);
 	return tex;
 }
