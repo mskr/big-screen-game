@@ -1,17 +1,17 @@
 #version 330 core
 
-const uint BSTATE_EMPTY = 0;
-const uint BSTATE_INSIDE_ROOM = 1;
-const uint BSTATE_LEFT_UPPER_CORNER = 2;
-const uint BSTATE_RIGHT_UPPER_CORNER = 3;
-const uint BSTATE_LEFT_LOWER_CORNER = 4;
-const uint BSTATE_RIGHT_LOWER_CORNER = 5;
-const uint BSTATE_WALL_LEFT = 6;
-const uint BSTATE_WALL_RIGHT = 7;
-const uint BSTATE_WALL_TOP = 8;
-const uint BSTATE_WALL_BOTTOM = 9;
-const uint BSTATE_INVALID = 10;
-const uint BSTATE_OUTER_INFLUENCE = 11;
+const uint BSTATE_EMPTY = 0U;
+const uint BSTATE_INSIDE_ROOM = 1U;
+const uint BSTATE_LEFT_UPPER_CORNER = 2U;
+const uint BSTATE_RIGHT_UPPER_CORNER = 3U;
+const uint BSTATE_LEFT_LOWER_CORNER = 4U;
+const uint BSTATE_RIGHT_LOWER_CORNER = 5U;
+const uint BSTATE_WALL_LEFT = 6U;
+const uint BSTATE_WALL_RIGHT = 7U;
+const uint BSTATE_WALL_TOP = 8U;
+const uint BSTATE_WALL_BOTTOM = 9U;
+const uint BSTATE_INVALID = 10U;
+const uint BSTATE_OUTER_INFLUENCE = 11U;
 
 uniform vec2 pxsize;
 uniform sampler2D inputGrid;
@@ -50,21 +50,21 @@ uvec2 lookup(sampler2D s, vec2 c) {
 }
 
 void setOutput(uint buildState, uint healthPoints) {
-	outputCell = vec2(buildState/255.0, healthPoints/255.0); // convert uint to UNORM
+	outputCell = vec2(float(buildState)/255.0, float(healthPoints)/255.0); // convert uint to UNORM
 }
 
 void life(uint state, int neighbors) {
 	if(state == BSTATE_EMPTY && neighbors == 3) {
-		outputCell = vec2(BSTATE_OUTER_INFLUENCE/255.0, 100/255.0);
+		outputCell = vec2(float(BSTATE_OUTER_INFLUENCE)/255.0, 100/255.0);
 	}
 	else if(state == BSTATE_OUTER_INFLUENCE && neighbors < 2) {
-		outputCell = vec2(BSTATE_EMPTY/255.0, 100/255.0);
+		outputCell = vec2(float(BSTATE_EMPTY)/255.0, 100/255.0);
 	}
 	else if(state == BSTATE_OUTER_INFLUENCE && neighbors > 3) {
-		outputCell = vec2(BSTATE_EMPTY/255.0, 100/255.0);
+		outputCell = vec2(float(BSTATE_EMPTY)/255.0, 100/255.0);
 	}
 	else {
-		outputCell = vec2(state/255.0, 100/255.0);
+		outputCell = vec2(float(state)/255.0, 100/255.0);
 	}
 }
 
