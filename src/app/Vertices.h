@@ -31,21 +31,27 @@ namespace viscom {
         static void SetVertexAttributes(const GPUProgram* program)
         {
             auto attribLoc = program->getAttributeLocations({ "position", "normal", "texCoords" });
-			if (attribLoc[0] == -1) printf("WARNING: Vertex attrib 'position' not found in '%s'.\n", program->getProgramName());
-			else {
+			if (attribLoc[0] == -1)
+				printf("\nSimpleMeshVertex warns you: \"Vertex attrib 'position' not found in '%s'.\"\n\n", program->getProgramName());
+			//else {
 				glEnableVertexAttribArray(attribLoc[0]);
 				glVertexAttribPointer(attribLoc[0], 3, GL_FLOAT, GL_FALSE, sizeof(SimpleMeshVertex), reinterpret_cast<GLvoid*>(offsetof(SimpleMeshVertex, position_)));
-			}
-			if (attribLoc[1] == -1) printf("WARNING: Vertex attrib 'normal' not found in '%s'.\n", program->getProgramName());
-			else {
+				glVertexAttribDivisor(attribLoc[0], 0);
+			//}
+			if (attribLoc[1] == -1)
+				printf("\nSimpleMeshVertex warns you: \"Vertex attrib 'normal' not found in '%s'.\"\n\n", program->getProgramName());
+			//else {
 				glEnableVertexAttribArray(attribLoc[1]);
 				glVertexAttribPointer(attribLoc[1], 3, GL_FLOAT, GL_FALSE, sizeof(SimpleMeshVertex), reinterpret_cast<GLvoid*>(offsetof(SimpleMeshVertex, normal_)));
-			}
-			if (attribLoc[2] == -1)printf("WARNING: Vertex attrib 'texCoords' not found in '%s'.\n", program->getProgramName());
-			else {
+				glVertexAttribDivisor(attribLoc[1], 0);
+			//}
+			if (attribLoc[2] == -1)
+				printf("\nSimpleMeshVertex warns you: \"Vertex attrib 'texCoords' not found in '%s'.\"\n\n", program->getProgramName());
+			//else {
 				glEnableVertexAttribArray(attribLoc[2]);
 				glVertexAttribPointer(attribLoc[2], 2, GL_FLOAT, GL_FALSE, sizeof(SimpleMeshVertex), reinterpret_cast<GLvoid*>(offsetof(SimpleMeshVertex, texCoords_)));
-			}
+				glVertexAttribDivisor(attribLoc[2], 0);
+			//}
         }
 
         static GLuint CreateVertexBuffer(const Mesh* mesh)

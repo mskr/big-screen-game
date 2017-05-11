@@ -35,6 +35,10 @@ public:
 			GLint scaleLoc = 4;
 			GLint buildStateLoc = 5;
 			GLint healthLoc = 6;
+			glEnableVertexAttribArray(transLoc);
+			glEnableVertexAttribArray(scaleLoc);
+			glEnableVertexAttribArray(buildStateLoc);
+			glEnableVertexAttribArray(healthLoc);
 			size_t off = 0;
 			glVertexAttribPointer(transLoc, 3, GL_FLOAT, false, sizeof(Instance), (GLvoid*)off);
 			off += 3 * sizeof(GLfloat);
@@ -43,10 +47,6 @@ public:
 			glVertexAttribIPointer(buildStateLoc, 1, GL_INT, sizeof(Instance), (GLvoid*)off);
 			off += sizeof(GLint);
 			glVertexAttribIPointer(healthLoc, 1, GL_INT, sizeof(Instance), (GLvoid*)off);
-			glEnableVertexAttribArray(transLoc);
-			glEnableVertexAttribArray(scaleLoc);
-			glEnableVertexAttribArray(buildStateLoc);
-			glEnableVertexAttribArray(healthLoc);
 			glVertexAttribDivisor(transLoc, 1);
 			glVertexAttribDivisor(scaleLoc, 1);
 			glVertexAttribDivisor(buildStateLoc, 1);

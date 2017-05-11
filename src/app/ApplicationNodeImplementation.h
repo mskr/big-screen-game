@@ -68,7 +68,6 @@ namespace viscom {
         double GetCurrentAppTime() const { return appNode_->GetCurrentAppTime(); }
         double GetElapsedTime() const { return appNode_->GetElapsedTime(); }
 
-    private:
         /** Holds the application node. */
         ApplicationNode* appNode_;
 

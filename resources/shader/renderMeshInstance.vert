@@ -88,13 +88,14 @@ void main() {
 	if(buildState==BSTATE_OUTER_INFLUENCE) {
 		const float WATER_WAVE_LENGTH = 20.0;
 		const float WATER_WAVE_HEIGHT = 40.0;
-		modelMatrix[3][2] += ((1.0 + sin(t_sec * cellCoords.x * WATER_WAVE_LENGTH)) / WATER_WAVE_HEIGHT);
+		float WATER_WAVE_DIRECTION = cellCoords.x;
+		//modelMatrix[3][2] += ((1.0 + sin(t_sec * WATER_WAVE_DIRECTION * WATER_WAVE_LENGTH)) / WATER_WAVE_HEIGHT);
 	}
 
 	vec4 posV4 = modelMatrix * subMeshLocalMatrix * vec4(
 		rotateZ_step90(st, position.x, -position.z), position.y, 1);
 	vPosition = vec3(posV4);
-	vNormal = vec3(rotateZ_step90(st, normal.x, -normal.z), normal.y); //TODO incorporate rotation and sin wave
+	vNormal = vec3(rotateZ_step90(st, normal.x, -normal.z), normal.y); //TODO incorporate sin wave
 	vTexCoords = texCoords;
 
 	gl_Position = viewProjectionMatrix * posV4;
