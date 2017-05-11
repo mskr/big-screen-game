@@ -78,10 +78,13 @@ void main() {
 	modelMatrix[0][0] = scale;
 	modelMatrix[1][1] = scale;
 	modelMatrix[2][2] = scale;
-	mat4 rotation = rotationMatrix(vec3(0,0,1), chooseZRotation(buildState));
+
+	//TODO rotate by y-z-permutations
+
+	//mat4 rotation = rotationMatrix(vec3(0,0,1), chooseZRotation(buildState));
 	// Flip everything 90 deg around X (could also change models)
-	rotation *= rotationMatrix(vec3(1,0,0), -M_HALF_PI);
-	modelMatrix *= rotation;
+	//rotation *= rotationMatrix(vec3(1,0,0), -M_HALF_PI);
+	//modelMatrix *= rotation;
 
 	st = buildState;
 	hp = health;
@@ -92,12 +95,13 @@ void main() {
 	if(buildState==BSTATE_OUTER_INFLUENCE) {
 		const float WATER_WAVE_LENGTH = 20.0;
 		const float WATER_WAVE_HEIGHT = 40.0;
-		modelMatrix[3][2] += ((1.0 + sin(t_sec * cellCoords.x * WATER_WAVE_LENGTH)) / WATER_WAVE_HEIGHT);
+		float WATER_WAVE_DIRECTION = cellCoords.x;
+		//modelMatrix[3][2] += ((1.0 + sin(t_sec * WATER_WAVE_DIRECTION * WATER_WAVE_LENGTH)) / WATER_WAVE_HEIGHT);
 	}
 
-	vec4 posV4 = modelMatrix * subMeshLocalMatrix * vec4(position, 1);
+	vec4 posV4 = modelMatrix * subMeshLocalMatrix * vec4(position.x, -position.z, position.y, 1);
 	vPosition = vec3(posV4);
-	vNormal = normalize(mat3(rotation) * normal); //TODO calculate normal for sin waves
+	vNormal = normalize(/*mat3(rotation) **/ normal); //TODO calculate normal for sin waves
 	vTexCoords = texCoords;
 
 	gl_Position = viewProjectionMatrix * posV4;

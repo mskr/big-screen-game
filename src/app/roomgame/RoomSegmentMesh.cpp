@@ -21,8 +21,8 @@ RoomSegmentMesh::RoomSegmentMesh(viscom::Mesh* mesh, viscom::GPUProgram* program
 	NotifyRecompiledShader<Vertex>(program);
 	// Connect instance buffers
 	glBindVertexArray(vao_);
-	glBindBuffer(GL_ARRAY_BUFFER, room_ordered_buffer_.id_);
-	Instance::setAttribPointer();
+	//glBindBuffer(GL_ARRAY_BUFFER, room_ordered_buffer_.id_);
+	//Instance::setAttribPointer();
 	glBindBuffer(GL_ARRAY_BUFFER, unordered_buffer_.id_);
 	Instance::setAttribPointer();
 	glBindVertexArray(0);
@@ -122,11 +122,11 @@ void RoomSegmentMesh::renderNode(std::vector<GLint>* uniformLocations, const vis
 		renderNode(uniformLocations, node->GetChild(i), overrideBump);
 }
 
-void RoomSegmentMesh::renderSubMesh(std::vector<GLint>* uniformLocations, const glm::mat4& modelMatrix, const viscom::SubMesh* subMesh, bool overrideBump) {
+void RoomSegmentMesh::renderSubMesh(std::vector<GLint>* uniformLocations, const glm::mat4& localMatrix, const viscom::SubMesh* subMesh, bool overrideBump) {
 	if(uniformLocations->size() > 1)
-		glUniformMatrix4fv(uniformLocations->at(1), 1, GL_FALSE, glm::value_ptr(modelMatrix));
+		glUniformMatrix4fv(uniformLocations->at(1), 1, GL_FALSE, glm::value_ptr(localMatrix));
 	if(uniformLocations->size() > 2)
-		glUniformMatrix3fv(uniformLocations->at(2), 1, GL_FALSE, glm::value_ptr(glm::inverseTranspose(glm::mat3(modelMatrix))));
+		glUniformMatrix3fv(uniformLocations->at(2), 1, GL_FALSE, glm::value_ptr(glm::inverseTranspose(glm::mat3(localMatrix))));
 	if (subMesh->GetMaterial()->diffuseTex && uniformLocations->size() > 2) {
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, subMesh->GetMaterial()->diffuseTex->getTextureId());
