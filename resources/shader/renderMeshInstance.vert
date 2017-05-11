@@ -43,17 +43,6 @@ out vec3 vPosition;
 out vec3 vNormal;
 out vec2 vTexCoords;
 
-mat4 rotationMatrix(vec3 axis, float angle) {
-	axis = normalize(axis);
-	float s = sin(angle);
-	float c = cos(angle);
-	float oc = 1.0 - c;
-	return mat4(oc * axis.x * axis.x + c,           oc * axis.x * axis.y - axis.z * s,  oc * axis.z * axis.x + axis.y * s,  0.0,
-				oc * axis.x * axis.y + axis.z * s,  oc * axis.y * axis.y + c,           oc * axis.y * axis.z - axis.x * s,  0.0,
-				oc * axis.z * axis.x - axis.y * s,  oc * axis.y * axis.z + axis.x * s,  oc * axis.z * axis.z + c,           0.0,
-				0.0,                                0.0,                                0.0,                                1.0);
-}
-
 float chooseZRotation(const int st) {
 	// Problem: One mesh can be used with different instance attributes for different build states
 	// Very specific solution: Choose rotation for corners and walls
@@ -68,6 +57,17 @@ float chooseZRotation(const int st) {
 		return 0.0;
 }
 
+vec2 rotateZ_step90(const int st, float x, float y) {
+	if (st == BSTATE_LEFT_UPPER_CORNER || st == BSTATE_WALL_LEFT)
+		return vec2(y, -x);
+	else if (st == BSTATE_RIGHT_UPPER_CORNER || st == BSTATE_WALL_TOP)
+		return vec2(-x, -y);
+	else if (st == BSTATE_RIGHT_LOWER_CORNER || st == BSTATE_WALL_RIGHT)
+		return vec2(-y, x);
+	else
+		return vec2(x, y);
+}
+
 flat out int st;
 flat out int hp;
 out vec2 cellCoords;
@@ -78,13 +78,6 @@ void main() {
 	modelMatrix[0][0] = scale;
 	modelMatrix[1][1] = scale;
 	modelMatrix[2][2] = scale;
-
-	//TODO rotate by y-z-permutations
-
-	//mat4 rotation = rotationMatrix(vec3(0,0,1), chooseZRotation(buildState));
-	// Flip everything 90 deg around X (could also change models)
-	//rotation *= rotationMatrix(vec3(1,0,0), -M_HALF_PI);
-	//modelMatrix *= rotation;
 
 	st = buildState;
 	hp = health;
@@ -99,9 +92,10 @@ void main() {
 		//modelMatrix[3][2] += ((1.0 + sin(t_sec * WATER_WAVE_DIRECTION * WATER_WAVE_LENGTH)) / WATER_WAVE_HEIGHT);
 	}
 
-	vec4 posV4 = modelMatrix * subMeshLocalMatrix * vec4(position.x, -position.z, position.y, 1);
+	vec4 posV4 = modelMatrix * subMeshLocalMatrix * vec4(
+		rotateZ_step90(st, position.x, -position.z), position.y, 1);
 	vPosition = vec3(posV4);
-	vNormal = normalize(/*mat3(rotation) **/ normal); //TODO calculate normal for sin waves
+	vNormal = vec3(rotateZ_step90(st, normal.x, -normal.z), normal.y); //TODO incorporate sin wave
 	vTexCoords = texCoords;
 
 	gl_Position = viewProjectionMatrix * posV4;
