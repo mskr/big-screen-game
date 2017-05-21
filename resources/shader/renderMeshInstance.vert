@@ -43,30 +43,23 @@ out vec3 vPosition;
 out vec3 vNormal;
 out vec2 vTexCoords;
 
-float chooseZRotation(const int st) {
+vec2 rotateZ_step90(int st, float x, float y) {
 	// Problem: One mesh can be used with different instance attributes for different build states
 	// Very specific solution: Choose rotation for corners and walls
 	//TODO Find more generic solution
-	if (st == BSTATE_LEFT_UPPER_CORNER || st == BSTATE_WALL_LEFT)
-		return M_HALF_PI;
-	else if (st == BSTATE_RIGHT_UPPER_CORNER || st == BSTATE_WALL_TOP)
-		return M_PI;
-	else if (st == BSTATE_RIGHT_LOWER_CORNER || st == BSTATE_WALL_RIGHT)
-		return M_THREE_OVER_TWO_PI;
-	else
-		return 0.0;
-}
-
-vec2 rotateZ_step90(int st, float x, float y) {
-    if (st == BSTATE_LEFT_UPPER_CORNER || st == BSTATE_WALL_LEFT) {
-		return vec2(y, -x);
-	} else if (st == BSTATE_RIGHT_UPPER_CORNER || st == BSTATE_WALL_TOP) {
-		return vec2(-x, -y);
-	} else if (st == BSTATE_RIGHT_LOWER_CORNER || st == BSTATE_WALL_RIGHT) {
-		return vec2(-y, x);
-	} else {
-		return vec2(x, y);
-    }
+	switch(buildState) {
+		case BSTATE_LEFT_UPPER_CORNER:
+		case BSTATE_WALL_LEFT:
+			return vec2(y, -x);
+		case BSTATE_RIGHT_UPPER_CORNER:
+		case BSTATE_WALL_TOP:
+			return vec2(-x, -y);
+		case BSTATE_RIGHT_LOWER_CORNER:
+		case BSTATE_WALL_RIGHT:
+			return vec2(-y, x);
+		default:
+			return vec2(x, y);
+	}
 }
 
 flat out int st;
@@ -74,35 +67,11 @@ flat out int hp;
 out vec2 cellCoords;
 
 void main() {
-	mat4 modelMatrix = mat4(0);
+	mat4 modelMatrix = mat4(0); // this fixed the glitch
 	modelMatrix[3] = vec4(translation, 1);
 	modelMatrix[0][0] = scale;
 	modelMatrix[1][1] = scale;
 	modelMatrix[2][2] = scale;
-
-	float x = position.x;
-	float y = -position.z;
-	switch(buildState) {
-		case BSTATE_LEFT_UPPER_CORNER:
-		case BSTATE_WALL_LEFT:
-			x = y;
-			y = -x;
-			break;
-		case BSTATE_RIGHT_UPPER_CORNER:
-		case BSTATE_WALL_TOP:
-			x = -x; 
-			y = -y;
-			break;
-		case BSTATE_RIGHT_LOWER_CORNER:
-		case BSTATE_WALL_RIGHT:
-			x = -y;
-			y = x;
-			break;
-		case BSTATE_OUTER_INFLUENCE:
-			break;
-		default:
-			break;
-	}
 
 	st = buildState;
 	hp = health;
