@@ -78,7 +78,7 @@ namespace viscom {
             else if (str == "SGCT_CONFIG=") ifs >> config.sgctConfig_;
             else if (str == "PROJECTOR_DATA=") ifs >> config.projectorData_;
             else if (str == "LOCAL=") ifs >> config.sgctLocal_;
-			else if (str == "TUIO_PORT=") ifs >> config.tuioPort_;
+            else if (str == "TUIO_PORT=") ifs >> config.tuioPort_;
         }
         ifs.close();
 
@@ -91,26 +91,26 @@ namespace viscom {
         std::vector<char*> args;
 
         {
-            argVec.push_back(std::vector<char>());
+            argVec.emplace_back();
             std::string configArg = "-config";
             copy(configArg.begin(), configArg.end(), back_inserter(argVec.back()));
             argVec.back().push_back('\0');
             args.push_back(argVec.back().data());
 
-            argVec.push_back(std::vector<char>());
+            argVec.emplace_back();
             auto configFileArg = config.sgctConfig_;
             copy(configFileArg.begin(), configFileArg.end(), back_inserter(argVec.back()));
             argVec.back().push_back('\0');
             args.push_back(argVec.back().data());
 
             if (config.sgctLocal_ != "-1") {
-                argVec.push_back(std::vector<char>());
+                argVec.emplace_back();
                 std::string localArg = "-local";
                 copy(localArg.begin(), localArg.end(), back_inserter(argVec.back()));
                 argVec.back().push_back('\0');
                 args.push_back(argVec.back().data());
 
-                argVec.push_back(std::vector<char>());
+                argVec.emplace_back();
                 auto localNumberArg = config.sgctLocal_;
                 copy(localNumberArg.begin(), localNumberArg.end(), back_inserter(argVec.back()));
                 argVec.back().push_back('\0');
