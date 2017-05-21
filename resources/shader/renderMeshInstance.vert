@@ -57,15 +57,16 @@ float chooseZRotation(const int st) {
 		return 0.0;
 }
 
-vec2 rotateZ_step90(const int st, float x, float y) {
-	if (st == BSTATE_LEFT_UPPER_CORNER || st == BSTATE_WALL_LEFT)
+vec2 rotateZ_step90(int st, float x, float y) {
+    if (st == BSTATE_LEFT_UPPER_CORNER || st == BSTATE_WALL_LEFT) {
 		return vec2(y, -x);
-	else if (st == BSTATE_RIGHT_UPPER_CORNER || st == BSTATE_WALL_TOP)
+	} else if (st == BSTATE_RIGHT_UPPER_CORNER || st == BSTATE_WALL_TOP) {
 		return vec2(-x, -y);
-	else if (st == BSTATE_RIGHT_LOWER_CORNER || st == BSTATE_WALL_RIGHT)
+	} else if (st == BSTATE_RIGHT_LOWER_CORNER || st == BSTATE_WALL_RIGHT) {
 		return vec2(-y, x);
-	else
+	} else {
 		return vec2(x, y);
+    }
 }
 
 flat out int st;
@@ -73,11 +74,35 @@ flat out int hp;
 out vec2 cellCoords;
 
 void main() {
-	mat4 modelMatrix;
+	mat4 modelMatrix = mat4(0);
 	modelMatrix[3] = vec4(translation, 1);
 	modelMatrix[0][0] = scale;
 	modelMatrix[1][1] = scale;
 	modelMatrix[2][2] = scale;
+
+	float x = position.x;
+	float y = -position.z;
+	switch(buildState) {
+		case BSTATE_LEFT_UPPER_CORNER:
+		case BSTATE_WALL_LEFT:
+			x = y;
+			y = -x;
+			break;
+		case BSTATE_RIGHT_UPPER_CORNER:
+		case BSTATE_WALL_TOP:
+			x = -x; 
+			y = -y;
+			break;
+		case BSTATE_RIGHT_LOWER_CORNER:
+		case BSTATE_WALL_RIGHT:
+			x = -y;
+			y = x;
+			break;
+		case BSTATE_OUTER_INFLUENCE:
+			break;
+		default:
+			break;
+	}
 
 	st = buildState;
 	hp = health;
@@ -92,10 +117,9 @@ void main() {
 		//modelMatrix[3][2] += ((1.0 + sin(t_sec * WATER_WAVE_DIRECTION * WATER_WAVE_LENGTH)) / WATER_WAVE_HEIGHT);
 	}
 
-	vec4 posV4 = modelMatrix * subMeshLocalMatrix * vec4(
-		rotateZ_step90(st, position.x, -position.z), position.y, 1);
+	vec4 posV4 = modelMatrix * subMeshLocalMatrix * vec4(rotateZ_step90(buildState, position.x, -position.z), position.y, 1);
 	vPosition = vec3(posV4);
-	vNormal = vec3(rotateZ_step90(st, normal.x, -normal.z), normal.y); //TODO incorporate sin wave
+	vNormal = vec3(rotateZ_step90(buildState, normal.x, -normal.z), normal.y); //TODO incorporate sin wave
 	vTexCoords = texCoords;
 
 	gl_Position = viewProjectionMatrix * posV4;
