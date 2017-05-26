@@ -71,18 +71,35 @@ namespace viscom {
         /** Holds the application node. */
         ApplicationNode* appNode_;
 
+        // Grid runs only on master node
+        // (As soon as grid uses RoomSegmentMeshes to add instances, data is written into buffer, that is synced with slaves)
 		AutomatonGrid grid_;
+
+        // Meshpool has to run partly on master and partly on all nodes, see RoomSegmentMeshPool.cpp for details!
 		RoomSegmentMeshPool meshpool_;
+
+        // Camera is needed only on master
+        // (As soon as matrix is passed to a render method, this render method should run on all slaves)
 		DragAndZoomCamera camera_;
-		enum InteractionMode { GRID, CAMERA, GRID_PLACE_OUTER_INFLUENCE } interaction_mode_;
+
+        // Automaton only created and running on master node
+        // (As soon as automaton updates MeshInstanceGrid, data is written into buffer, that is synced with slaves)
 		OuterInfluenceAutomaton cellular_automaton_;
+
+        // FBOs have to be created on each node
 		ShadowMap* shadowMap_;
+
+        // GameMeshes aka MeshRenderables have to be created on each node
 		ShadowReceivingMesh* backgroundMesh_;
+
+        enum InteractionMode { GRID, CAMERA, GRID_PLACE_OUTER_INFLUENCE } interaction_mode_;
 		enum RenderMode { NORMAL, DBUG } render_mode_;
 
 		struct Clock {
 			double t_in_sec;
 		} clock_;
+
+        bool mouseTest = false;
 
 		struct Quad {
 			std::shared_ptr<GPUProgram> shader;

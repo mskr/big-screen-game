@@ -1,0 +1,19 @@
+SYNCHRONIZATION:
+
+Data sync is only important in MeshInstanceGrid::[add|remove]Instance method.
+Up to this point everything runs only on master node.
+When a RoomSegmentMesh is updated (i.e. instance added/removed) it first updates a CPU side buffer.
+Before each frame this whole buffer is synced with all nodes.
+After sync each node uploads data to GPU.
+
+The render command and uniform updates must also be made on each node.
+This is done by RoomSegmentMeshPool.
+RoomSegmentMeshPool has to be divided into master code and slave code.
+Management data structures (espescially pointers to RoomSegmentMeshes) must be only on master node.
+POINTERS SHOULD NEVER BE SYNCED!
+The creation of instance buffers, that happens inside RoomSegmentMesh constructor, must be done on all nodes.
+
+GameMeshes aka MeshRenderables can be created and rendered entirely on all nodes.
+
+The automaton can run entirely always on master node.
+As soon as states change it calls MeshInstanceGrid:[add|remove]Instance.

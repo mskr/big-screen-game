@@ -1,5 +1,25 @@
 #include "RoomSegmentMeshPool.h"
 
+size_t RoomSegmentMeshPool::determinePoolAllocationBytes(GridCell::BuildState type) {
+    if (type == GridCell::BuildState::LEFT_LOWER_CORNER || type == GridCell::BuildState::RIGHT_LOWER_CORNER ||
+        type == GridCell::BuildState::LEFT_UPPER_CORNER || type == GridCell::BuildState::RIGHT_UPPER_CORNER) {
+        return POOL_ALLOC_BYTES_CORNERS;
+    }
+    else if (type == GridCell::BuildState::INSIDE_ROOM) {
+        return POOL_ALLOC_BYTES_FLOORS;
+    }
+    else if (type == GridCell::BuildState::WALL_RIGHT || type == GridCell::BuildState::WALL_LEFT ||
+        type == GridCell::BuildState::WALL_TOP || type == GridCell::BuildState::WALL_BOTTOM) {
+        return POOL_ALLOC_BYTES_WALLS;
+    }
+    else if (type == GridCell::BuildState::OUTER_INFLUENCE) {
+        return POOL_ALLOC_BYTES_OUTER_INFLUENCE;
+    }
+    else {
+        return POOL_ALLOC_BYTES_DEFAULT;
+    }
+}
+
 RoomSegmentMeshPool::RoomSegmentMeshPool(const size_t MAX_INSTANCES) :
 	POOL_ALLOC_BYTES_CORNERS((MAX_INSTANCES / 128 + 1) * sizeof(RoomSegmentMesh::Instance)),
 	POOL_ALLOC_BYTES_WALLS((MAX_INSTANCES / 32 + 1) * sizeof(RoomSegmentMesh::Instance)),
@@ -61,6 +81,11 @@ RoomSegmentMesh* RoomSegmentMeshPool::getMeshOfType(GridCell::BuildState type) {
 	return mesh_variations[variation];
 }
 
+//TODO All code above has to run only on master
+//TODO Only exception: creation of instance buffer (in RoomSegmentMesh constructor) on all nodes!
+//===============================================================================================
+//TODO Starting from here all code has to run on all nodes
+
 void RoomSegmentMeshPool::renderAllMeshes(glm::mat4& view_projection, GLint isDepthPass, GLint isDebugMode) {
 	glUseProgram(shader_->getProgramId());
 	glUniformMatrix4fv(matrix_uniform_locations_[0], 1, GL_FALSE, glm::value_ptr(view_projection));
@@ -112,24 +137,4 @@ GLint RoomSegmentMeshPool::getUniformLocation(size_t index) {
 
 GLuint RoomSegmentMeshPool::getShaderID() {
 	return shader_->getProgramId();
-}
-
-size_t RoomSegmentMeshPool::determinePoolAllocationBytes(GridCell::BuildState type) {
-	if (type == GridCell::BuildState::LEFT_LOWER_CORNER || type == GridCell::BuildState::RIGHT_LOWER_CORNER ||
-		type == GridCell::BuildState::LEFT_UPPER_CORNER || type == GridCell::BuildState::RIGHT_UPPER_CORNER) {
-		return POOL_ALLOC_BYTES_CORNERS;
-	}
-	else if (type == GridCell::BuildState::INSIDE_ROOM) {
-		return POOL_ALLOC_BYTES_FLOORS;
-	}
-	else if (type == GridCell::BuildState::WALL_RIGHT || type == GridCell::BuildState::WALL_LEFT ||
-		type == GridCell::BuildState::WALL_TOP || type == GridCell::BuildState::WALL_BOTTOM) {
-		return POOL_ALLOC_BYTES_WALLS;
-	}
-	else if (type == GridCell::BuildState::OUTER_INFLUENCE) {
-		return POOL_ALLOC_BYTES_OUTER_INFLUENCE;
-	}
-	else {
-		return POOL_ALLOC_BYTES_DEFAULT;
-	}
 }

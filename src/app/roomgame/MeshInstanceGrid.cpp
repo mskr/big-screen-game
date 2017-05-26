@@ -5,7 +5,14 @@ MeshInstanceGrid::MeshInstanceGrid(size_t columns, size_t rows, float height, Ro
 {
 
 }
-
+/* Called only on master //TODO
+    Updates CPU data on master.
+    This data is synchronized with slaves before each frame.
+    After synchronization, each slave updates its GPU data.
+    RoomSegmentMesh has two parts:
+        1) Instances on CPU
+        2) The after-sync method to upload all instances
+*/
 void MeshInstanceGrid::addInstanceAt(GridCell* c, GridCell::BuildState st) {
 	RoomSegmentMesh* mesh = meshpool_->getMeshOfType(st);
 	if (!mesh) return;
@@ -19,6 +26,9 @@ void MeshInstanceGrid::addInstanceAt(GridCell* c, GridCell::BuildState st) {
 	c->setMeshInstance(mesh->addInstanceUnordered(instance));
 }
 
+/* Called only on master //TODO
+    Same scheme as with addInstanceAt, see above
+*/
 void MeshInstanceGrid::removeInstanceAt(GridCell* c) {
 	RoomSegmentMesh::InstanceBufferRange bufferRange = c->getMeshInstance();
 	if (bufferRange.mesh_)
