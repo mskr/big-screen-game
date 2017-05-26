@@ -1,0 +1,383 @@
+<?xml version="1.0"?>
+<opencv_storage>
+<WallCorners type_id="opencv-matrix">
+  <rows>4</rows>
+  <cols>1</cols>
+  <dt>"2f"</dt>
+  <data>
+    356. 278. 4822. 308. 4827. 3218. 356. 3246.</data></WallCorners>
+ <!-- resumed -->
+
+<LocalLowHighVP0 type_id="opencv-matrix">
+  <rows>2</rows>
+  <cols>1</cols>
+  <dt>"2f"</dt>
+  <data>
+    -1.77777779e+00 6.19945228e-01 -5.11553884e-01 1.</data></LocalLowHighVP0>
+ <!-- resumed -->
+
+<quad_corners0 type_id="opencv-matrix">
+  <rows>4</rows>
+  <cols>1</cols>
+  <dt>"2f"</dt>
+  <data>
+    8.51071719e-03 6.24956787e-01 1.00401998e+00 5.90209723e-01
+    1.00999367e+00 -1.87471136e-02 1.72153823e-02 -3.21935251e-04</data></quad_corners0>
+ <!-- resumed -->
+
+<TexCoordinates0 type_id="opencv-matrix">
+  <rows>4</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. 2.02407217e+00 1.97152019e+00 0. 1.97152019e+00 1.97649360e+00
+    1.97649360e+00 1.97649360e+00 0. 2.02931452e+00 2.02931452e+00</data></TexCoordinates0>
+ <!-- resumed -->
+
+<LocalLowHighVP1 type_id="opencv-matrix">
+  <rows>2</rows>
+  <cols>1</cols>
+  <dt>"2f"</dt>
+  <data>
+    -1.77777779e+00 8.71914998e-02 -4.96148050e-01 7.31301486e-01</data></LocalLowHighVP1>
+ <!-- resumed -->
+
+<quad_corners1 type_id="opencv-matrix">
+  <rows>4</rows>
+  <cols>1</cols>
+  <dt>"2f"</dt>
+  <data>
+    3.34400148e-03 1.03806925e+00 1. 1. 1.00943696e+00 -1.70790925e-04
+    9.79684759e-03 -1.62669505e-06</data></quad_corners1>
+ <!-- resumed -->
+
+<TexCoordinates1 type_id="opencv-matrix">
+  <rows>4</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. 2.04137588e+00 1.96660268e+00 0. 1.96660268e+00 1.96026814e+00
+    1.96026814e+00 1.96026814e+00 0. 2.03455138e+00 2.03455138e+00</data></TexCoordinates1>
+ <!-- resumed -->
+
+<LocalLowHighVP2 type_id="opencv-matrix">
+  <rows>2</rows>
+  <cols>1</cols>
+  <dt>"2f"</dt>
+  <data>
+    -1.77777779e+00 -4.69060719e-01 -4.99909282e-01 1.81802452e-01</data></LocalLowHighVP2>
+ <!-- resumed -->
+
+<quad_corners2 type_id="opencv-matrix">
+  <rows>4</rows>
+  <cols>1</cols>
+  <dt>"2f"</dt>
+  <data>
+    1.12855611e-02 1.01907861e+00 1. 1. 1.00401998e+00 8.37378248e-05
+    7.31300982e-03 -2.06833091e-02</data></quad_corners2>
+ <!-- resumed -->
+
+<TexCoordinates2 type_id="opencv-matrix">
+  <rows>4</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. 2.04825282e+00 1.96946180e+00 0. 1.96946180e+00 1.95396841e+00
+    1.95396841e+00 1.95396841e+00 0. 2.03150010e+00 2.03150010e+00</data></TexCoordinates2>
+ <!-- resumed -->
+
+<LocalLowHighVP3 type_id="opencv-matrix">
+  <rows>2</rows>
+  <cols>1</cols>
+  <dt>"2f"</dt>
+  <data>
+    -1.77777779e+00 -1. -4.24792439e-01 -3.48661005e-01</data></LocalLowHighVP3>
+ <!-- resumed -->
+
+<quad_corners3 type_id="opencv-matrix">
+  <rows>4</rows>
+  <cols>1</cols>
+  <dt>"2f"</dt>
+  <data>
+    1.00682788e-02 1.00009000e+00 1.00823402e+00 1.00901890e+00
+    1.00036681e+00 4.49505560e-02 3.91312921e-03 4.73432289e-03</data></quad_corners3>
+ <!-- resumed -->
+
+<TexCoordinates3 type_id="opencv-matrix">
+  <rows>4</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. 2.03050065e+00 1.96664071e+00 0. 1.96664071e+00 1.97040224e+00
+    1.97040224e+00 1.97040224e+00 0. 2.03451061e+00 2.03451061e+00</data></TexCoordinates3>
+ <!-- resumed -->
+
+<LocalLowHighVP4 type_id="opencv-matrix">
+  <rows>2</rows>
+  <cols>1</cols>
+  <dt>"2f"</dt>
+  <data>
+    -6.53575242e-01 6.61624968e-01 6.37480319e-01 1.</data></LocalLowHighVP4>
+ <!-- resumed -->
+
+<quad_corners4 type_id="opencv-matrix">
+  <rows>4</rows>
+  <cols>1</cols>
+  <dt>"2f"</dt>
+  <data>
+    -6.21658517e-04 5.55360794e-01 1.00182652e+00 5.50110161e-01
+    9.99987662e-01 -3.71052627e-03 1.11101204e-15 4.44404836e-16</data></quad_corners4>
+ <!-- resumed -->
+
+<TexCoordinates4 type_id="opencv-matrix">
+  <rows>4</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. 2.00029802e+00 1.99479711e+00 0. 1.99479711e+00 1.99970222e+00
+    1.99970222e+00 1.99970222e+00 0. 2.00522995e+00 2.00522995e+00</data></TexCoordinates4>
+ <!-- resumed -->
+
+<LocalLowHighVP5 type_id="opencv-matrix">
+  <rows>2</rows>
+  <cols>1</cols>
+  <dt>"2f"</dt>
+  <data>
+    -6.91326439e-01 9.04966593e-02 6.86056435e-01 7.52546549e-01</data></LocalLowHighVP5>
+ <!-- resumed -->
+
+<quad_corners5 type_id="opencv-matrix">
+  <rows>4</rows>
+  <cols>1</cols>
+  <dt>"2f"</dt>
+  <data>
+    -1.93414721e-03 1.00099683e+00 1. 1. 1.00000882e+00 2.83536536e-08
+    3.46042293e-06 -1.77448080e-03</data></quad_corners5>
+ <!-- resumed -->
+
+<TexCoordinates5 type_id="opencv-matrix">
+  <rows>4</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. 2.00084448e+00 1.99531829e+00 0. 1.99531829e+00 1.99915612e+00
+    1.99915612e+00 1.99915612e+00 0. 2.00470376e+00 2.00470376e+00</data></TexCoordinates5>
+ <!-- resumed -->
+
+<LocalLowHighVP6 type_id="opencv-matrix">
+  <rows>2</rows>
+  <cols>1</cols>
+  <dt>"2f"</dt>
+  <data>
+    -6.82197154e-01 -4.66471612e-01 6.72360122e-01 1.89046487e-01</data></LocalLowHighVP6>
+ <!-- resumed -->
+
+<quad_corners6 type_id="opencv-matrix">
+  <rows>4</rows>
+  <cols>1</cols>
+  <dt>"2f"</dt>
+  <data>
+    4.50675844e-16 1. 9.99993324e-01 1.00102830e+00 1.00648296e+00
+    3.07914524e-05 -1.04953453e-03 -4.75671608e-03</data></quad_corners6>
+ <!-- resumed -->
+
+<TexCoordinates6 type_id="opencv-matrix">
+  <rows>4</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. 2.01131129e+00 2.00380158e+00 0. 2.00380158e+00 1.98881531e+00
+    1.98881531e+00 1.98881531e+00 0. 1.99621272e+00 1.99621272e+00</data></TexCoordinates6>
+ <!-- resumed -->
+
+<LocalLowHighVP7 type_id="opencv-matrix">
+  <rows>2</rows>
+  <cols>1</cols>
+  <dt>"2f"</dt>
+  <data>
+    -6.56915426e-01 -1. 7.19617605e-01 -3.91063094e-01</data></LocalLowHighVP7>
+ <!-- resumed -->
+
+<quad_corners7 type_id="opencv-matrix">
+  <rows>4</rows>
+  <cols>1</cols>
+  <dt>"2f"</dt>
+  <data>
+    8.32698503e-16 1. 9.99901950e-01 1.00623918e+00 1.01488078e+00
+    5.26353642e-02 -8.94366577e-03 4.98189069e-02</data></quad_corners7>
+ <!-- resumed -->
+
+<TexCoordinates7 type_id="opencv-matrix">
+  <rows>4</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. 2.02012348e+00 2.02771807e+00 0. 2.02771807e+00 1.98027349e+00
+    1.98027349e+00 1.98027349e+00 0. 1.97302938e+00 1.97302938e+00</data></TexCoordinates7>
+ <!-- resumed -->
+
+<LocalLowHighVP8 type_id="opencv-matrix">
+  <rows>2</rows>
+  <cols>1</cols>
+  <dt>"2f"</dt>
+  <data>
+    4.37350035e-01 6.46991909e-01 1.77777779e+00 1.</data></LocalLowHighVP8>
+ <!-- resumed -->
+
+<quad_corners8 type_id="opencv-matrix">
+  <rows>4</rows>
+  <cols>1</cols>
+  <dt>"2f"</dt>
+  <data>
+    -4.01890092e-03 5.06695688e-01 9.93687749e-01 5.49705207e-01
+    9.89119470e-01 -3.10735544e-04 -8.38118419e-03 -2.87936218e-02</data></quad_corners8>
+ <!-- resumed -->
+
+<TexCoordinates8 type_id="opencv-matrix">
+  <rows>4</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. 1.97350979e+00 2.02703285e+00 0. 2.02703285e+00 2.02721095e+00
+    2.02721095e+00 2.02721095e+00 0. 1.97367847e+00 1.97367847e+00</data></TexCoordinates8>
+ <!-- resumed -->
+
+<LocalLowHighVP9 type_id="opencv-matrix">
+  <rows>2</rows>
+  <cols>1</cols>
+  <dt>"2f"</dt>
+  <data>
+    4.73750889e-01 9.92019549e-02 1.77777779e+00 7.58568466e-01</data></LocalLowHighVP9>
+ <!-- resumed -->
+
+<quad_corners9 type_id="opencv-matrix">
+  <rows>4</rows>
+  <cols>1</cols>
+  <dt>"2f"</dt>
+  <data>
+    -7.11809961e-16 1. 9.88412023e-01 1.02981770e+00 9.83671904e-01
+    -4.34140529e-05 -8.69611464e-03 -2.67915404e-03</data></quad_corners9>
+ <!-- resumed -->
+
+<TexCoordinates9 type_id="opencv-matrix">
+  <rows>4</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. 1.97761619e+00 2.03147721e+00 0. 2.03147721e+00 2.02289653e+00
+    2.02289653e+00 2.02289653e+00 0. 1.96948326e+00 1.96948326e+00</data></TexCoordinates9>
+ <!-- resumed -->
+
+<LocalLowHighVP10 type_id="opencv-matrix">
+  <rows>2</rows>
+  <cols>1</cols>
+  <dt>"2f"</dt>
+  <data>
+    5.04616320e-01 -4.57775414e-01 1.77777779e+00 1.91516757e-01</data></LocalLowHighVP10>
+ <!-- resumed -->
+
+<quad_corners10 type_id="opencv-matrix">
+  <rows>4</rows>
+  <cols>1</cols>
+  <dt>"2f"</dt>
+  <data>
+    -1.04427672e-05 9.99999821e-01 9.83428299e-01 1.01374698e+00
+    9.91072774e-01 -1.25000225e-02 -4.81901078e-16 -4.81901078e-16</data></quad_corners10>
+ <!-- resumed -->
+
+<TexCoordinates10 type_id="opencv-matrix">
+  <rows>4</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. 1.98188555e+00 2.03411627e+00 0. 2.03411627e+00 2.01844859e+00
+    2.01844859e+00 2.01844859e+00 0. 1.96700943e+00 1.96700943e+00</data></TexCoordinates10>
+ <!-- resumed -->
+
+<LocalLowHighVP11 type_id="opencv-matrix">
+  <rows>2</rows>
+  <cols>1</cols>
+  <dt>"2f"</dt>
+  <data>
+    4.87618387e-01 -1. 1.77777779e+00 -3.82050693e-01</data></LocalLowHighVP11>
+ <!-- resumed -->
+
+<quad_corners11 type_id="opencv-matrix">
+  <rows>4</rows>
+  <cols>1</cols>
+  <dt>"2f"</dt>
+  <data>
+    -8.35565198e-03 1.01413834e+00 9.86383200e-01 1.00019193e+00
+    9.92179871e-01 1.48757324e-02 -4.95840504e-04 6.01796061e-02</data></quad_corners11>
+ <!-- resumed -->
+
+<TexCoordinates11 type_id="opencv-matrix">
+  <rows>4</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. 1.96588373e+00 2.03057098e+00 0. 2.03057098e+00 2.03532147e+00
+    2.03532147e+00 2.03532147e+00 0. 1.97033572e+00 1.97033572e+00</data></TexCoordinates11>
+ <!-- resumed -->
+
+<ViewPlaneCoordinates type_id="opencv-matrix">
+  <rows>48</rows>
+  <cols>1</cols>
+  <dt>"2f"</dt>
+  <data>
+    -1.00228977e+00 1.22692788e+00 -2.87749052e-01 1.25467861e+00
+    -2.94973344e-01 6.31557107e-01 -1.01202476e+00 6.19946718e-01
+    -1.00249541e+00 7.07521677e-01 -2.79083282e-01 7.31301486e-01
+    -2.86143988e-01 8.73000547e-02 -1.00680399e+00 8.71914998e-02
+    -1.00783539e+00 1.69631794e-01 -2.81198978e-01 1.81802452e-01
+    -2.84213543e-01 -4.69060719e-01 -1.00512564e+00 -4.56125408e-01
+    -1.00743234e+00 -3.48661005e-01 -2.45368943e-01 -3.54691952e-01
+    -2.38945752e-01 -1.03043008e+00 -1.00287342e+00 -1.00300097e+00
+    -3.66829008e-01 1.26972055e+00 3.56175572e-01 1.27364254e+00
+    3.58582675e-01 6.63897574e-01 -3.67636085e-01 6.61624968e-01
+    -3.87381077e-01 7.51891017e-01 3.85906756e-01 7.52546549e-01
+    3.85899961e-01 9.04966593e-02 -3.88871133e-01 9.16704312e-02
+    -3.83735895e-01 1.89046487e-01 3.78202558e-01 1.88367978e-01
+    3.73281628e-01 -4.66471612e-01 -3.82948846e-01 -4.63394612e-01
+    -3.69514912e-01 -3.91063094e-01 4.04784888e-01 -3.95142019e-01
+    3.92965168e-01 -1.03275740e+00 -3.62378359e-01 -1.03115988e+00
+    2.46009544e-01 1.32514524e+00 1.00189292e+00 1.28886867e+00
+    1.00800502e+00 6.46991909e-01 2.52334356e-01 6.65817320e-01
+    2.66484886e-01 7.58568466e-01 1.00846910e+00 7.39177823e-01
+    1.01174390e+00 9.92019549e-02 2.73068696e-01 1.00941017e-01
+    2.83854485e-01 1.91516757e-01 1.01168013e+00 1.82609662e-01
+    1.00635064e+00 -4.49857444e-01 2.83846676e-01 -4.57775414e-01
+    2.80493677e-01 -3.91111523e-01 1.00961280e+00 -3.82051408e-01
+    1.00547326e+00 -1.00912738e+00 2.74285346e-01 -1.03907657e+00</data></ViewPlaneCoordinates>
+ <!-- resumed -->
+
+<projectorCorners type_id="opencv-matrix">
+  <rows>48</rows>
+  <cols>1</cols>
+  <dt>"2f"</dt>
+  <data>
+    3.50785736e+02 -5.83760948e+01 1.96647986e+03 -8.59803467e+01
+    1.95082153e+03 8.31163513e+02 3.28604614e+02 8.41361389e+02
+    3.50315674e+02 7.11587708e+02 1.98641760e+03 6.84466614e+02
+    1.97115100e+03 1.63289478e+03 3.40494843e+02 1.63175513e+03
+    3.38145172e+02 1.50942029e+03 1.98217285e+03 1.49368079e+03
+    1.97599854e+03 2.45286694e+03 3.44316071e+02 2.43825122e+03
+    3.39058716e+02 2.27870337e+03 2.06314624e+03 2.28408643e+03
+    2.07822681e+03 3.28008447e+03 3.49448120e+02 3.25049976e+03
+    1.78877942e+03 -1.09617859e+02 3.40303149e+03 -1.01686546e+02
+    3.40941504e+03 7.90159607e+02 1.78745776e+03 7.86147705e+02
+    1.74296191e+03 6.52911560e+02 3.46983423e+03 6.60775024e+02
+    3.47097949e+03 1.62941248e+03 1.74012695e+03 1.62626477e+03
+    1.75160950e+03 1.48267322e+03 3.45374243e+03 1.48614783e+03
+    3.44396924e+03 2.44494385e+03 1.75389819e+03 2.44513037e+03
+    1.78408337e+03 2.33832495e+03 3.51370264e+03 2.34030615e+03
+    3.48862231e+03 3.27438330e+03 1.80067041e+03 3.28295508e+03
+    3.15846484e+03 -1.79144547e+02 4.82542236e+03 -1.11730408e+02
+    4.84040967e+03 8.21231262e+02 3.17356128e+03 7.86277527e+02
+    3.20485229e+03 6.50602600e+02 4.84119482e+03 6.87220398e+02
+    4.84997217e+03 1.61787769e+03 3.22053760e+03 1.61390393e+03
+    3.24435278e+03 1.48123071e+03 4.84962305e+03 1.49655237e+03
+    4.83953760e+03 2.41685571e+03 3.24539233e+03 2.43275049e+03
+    3.23783301e+03 2.33504150e+03 4.84651416e+03 2.31814209e+03
+    4.83901855e+03 3.23121948e+03 3.22508374e+03 3.28536084e+03</data></projectorCorners>
+</opencv_storage>
