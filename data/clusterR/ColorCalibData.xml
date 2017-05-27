@@ -1,0 +1,385 @@
+<?xml version="1.0"?>
+<opencv_storage>
+<ColorCalibData_0_0 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. -1.</data></ColorCalibData_0_0>
+ <!-- resumed -->
+
+<ColorCalibData_0_1 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. -1.</data></ColorCalibData_0_1>
+ <!-- resumed -->
+
+<ColorCalibData_0_2 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. -1.</data></ColorCalibData_0_2>
+ <!-- resumed -->
+
+<ColorCalibData_0_3 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. -1.</data></ColorCalibData_0_3>
+ <!-- resumed -->
+
+<ColorCalibData_1_0 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. -1.</data></ColorCalibData_1_0>
+ <!-- resumed -->
+
+<ColorCalibData_1_1 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. -1.</data></ColorCalibData_1_1>
+ <!-- resumed -->
+
+<ColorCalibData_1_2 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. -1.</data></ColorCalibData_1_2>
+ <!-- resumed -->
+
+<ColorCalibData_1_3 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. -1.</data></ColorCalibData_1_3>
+ <!-- resumed -->
+
+<ColorCalibData_2_0 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. -1.</data></ColorCalibData_2_0>
+ <!-- resumed -->
+
+<ColorCalibData_2_1 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. -1.</data></ColorCalibData_2_1>
+ <!-- resumed -->
+
+<ColorCalibData_2_2 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. -1.</data></ColorCalibData_2_2>
+ <!-- resumed -->
+
+<ColorCalibData_2_3 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. -1.</data></ColorCalibData_2_3>
+ <!-- resumed -->
+
+<ColorCalibData_3_0 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. -1.</data></ColorCalibData_3_0>
+ <!-- resumed -->
+
+<ColorCalibData_3_1 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. -1.</data></ColorCalibData_3_1>
+ <!-- resumed -->
+
+<ColorCalibData_3_2 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. -1.</data></ColorCalibData_3_2>
+ <!-- resumed -->
+
+<ColorCalibData_3_3 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. -1.</data></ColorCalibData_3_3>
+ <!-- resumed -->
+
+<ColorCalibData_4_0 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. -1.</data></ColorCalibData_4_0>
+ <!-- resumed -->
+
+<ColorCalibData_4_1 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. -1.</data></ColorCalibData_4_1>
+ <!-- resumed -->
+
+<ColorCalibData_4_2 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. -1.</data></ColorCalibData_4_2>
+ <!-- resumed -->
+
+<ColorCalibData_4_3 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. -1.</data></ColorCalibData_4_3>
+ <!-- resumed -->
+
+<ColorCalibData_5_0 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. -1.</data></ColorCalibData_5_0>
+ <!-- resumed -->
+
+<ColorCalibData_5_1 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. -1.</data></ColorCalibData_5_1>
+ <!-- resumed -->
+
+<ColorCalibData_5_2 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. -1.</data></ColorCalibData_5_2>
+ <!-- resumed -->
+
+<ColorCalibData_5_3 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. -1.</data></ColorCalibData_5_3>
+ <!-- resumed -->
+
+<ColorCalibData_6_0 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. -1.</data></ColorCalibData_6_0>
+ <!-- resumed -->
+
+<ColorCalibData_6_1 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. -1.</data></ColorCalibData_6_1>
+ <!-- resumed -->
+
+<ColorCalibData_6_2 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. -1.</data></ColorCalibData_6_2>
+ <!-- resumed -->
+
+<ColorCalibData_6_3 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. -1.</data></ColorCalibData_6_3>
+ <!-- resumed -->
+
+<ColorCalibData_7_0 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. -1.</data></ColorCalibData_7_0>
+ <!-- resumed -->
+
+<ColorCalibData_7_1 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. -1.</data></ColorCalibData_7_1>
+ <!-- resumed -->
+
+<ColorCalibData_7_2 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. -1.</data></ColorCalibData_7_2>
+ <!-- resumed -->
+
+<ColorCalibData_7_3 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. -1.</data></ColorCalibData_7_3>
+ <!-- resumed -->
+
+<ColorCalibData_8_0 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. -1.</data></ColorCalibData_8_0>
+ <!-- resumed -->
+
+<ColorCalibData_8_1 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. -1.</data></ColorCalibData_8_1>
+ <!-- resumed -->
+
+<ColorCalibData_8_2 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. -1.</data></ColorCalibData_8_2>
+ <!-- resumed -->
+
+<ColorCalibData_8_3 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. -1.</data></ColorCalibData_8_3>
+ <!-- resumed -->
+
+<ColorCalibData_9_0 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. -1.</data></ColorCalibData_9_0>
+ <!-- resumed -->
+
+<ColorCalibData_9_1 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. -1.</data></ColorCalibData_9_1>
+ <!-- resumed -->
+
+<ColorCalibData_9_2 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. -1.</data></ColorCalibData_9_2>
+ <!-- resumed -->
+
+<ColorCalibData_9_3 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. -1.</data></ColorCalibData_9_3>
+ <!-- resumed -->
+
+<ColorCalibData_10_0 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. -1.</data></ColorCalibData_10_0>
+ <!-- resumed -->
+
+<ColorCalibData_10_1 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. -1.</data></ColorCalibData_10_1>
+ <!-- resumed -->
+
+<ColorCalibData_10_2 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. -1.</data></ColorCalibData_10_2>
+ <!-- resumed -->
+
+<ColorCalibData_10_3 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. -1.</data></ColorCalibData_10_3>
+ <!-- resumed -->
+
+<ColorCalibData_11_0 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. -1.</data></ColorCalibData_11_0>
+ <!-- resumed -->
+
+<ColorCalibData_11_1 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. -1.</data></ColorCalibData_11_1>
+ <!-- resumed -->
+
+<ColorCalibData_11_2 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. -1.</data></ColorCalibData_11_2>
+ <!-- resumed -->
+
+<ColorCalibData_11_3 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>1</cols>
+  <dt>"3f"</dt>
+  <data>
+    0. 0. -1.</data></ColorCalibData_11_3>
+</opencv_storage>

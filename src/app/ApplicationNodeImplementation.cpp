@@ -124,7 +124,10 @@ namespace viscom {
     void ApplicationNodeImplementation::DrawFrame(FrameBuffer& fbo)
     {
 		glm::mat4 proj = GetEngine()->getCurrentModelViewProjectionMatrix() * camera_.getViewProjection();
+
+        //TODO Is the engine matrix really needed here?
 		glm::mat4 lightspace = GetEngine()->getCurrentModelViewProjectionMatrix() * shadowMap_->getLightMatrix();
+
 		grid_.updateProjection(proj);
 		
 		shadowMap_->DrawToFBO([&]() {
@@ -227,6 +230,7 @@ namespace viscom {
     void ApplicationNodeImplementation::MouseButtonCallback(int button, int action)
     {
 		if (button == GLFW_MOUSE_BUTTON_LEFT) {
+            if (action == GLFW_PRESS) { mouseTest = true; }
 			if (interaction_mode_ == InteractionMode::GRID) {
 				if (action == GLFW_PRESS) grid_.onTouch(-1);
 				else if (action == GLFW_RELEASE) grid_.onRelease(-1);
@@ -246,6 +250,9 @@ namespace viscom {
 
     void ApplicationNodeImplementation::MousePosCallback(double x, double y)
     {
+        if (mouseTest) {
+            LOG(INFO) << "Mouse @(" << x << ", " << y << ")."; mouseTest = false;
+        }
 		if (interaction_mode_ == InteractionMode::GRID)
 			grid_.onMouseMove(-1, x, y);
 		else
