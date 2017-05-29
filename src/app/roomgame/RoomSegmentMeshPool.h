@@ -9,6 +9,13 @@
 #include "InteractiveGrid.h"
 #include "RoomSegmentMesh.h"
 
+/* Management class for RoomSegmentMeshes and associated shader
+ * Maps build states to meshes
+ * Exists on all nodes
+ * Used by nodes to create meshes (each including vertex and instance buffer)
+ * Used by MeshInstanceGrid to get appropriate mesh for build state
+ * Used by nodes to render all meshes
+*/
 class RoomSegmentMeshPool {
 	// Map build state to multiple mesh variations
 	// (when there is one mesh for multiple build states,

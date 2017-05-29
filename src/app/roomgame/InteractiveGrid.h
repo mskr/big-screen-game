@@ -43,6 +43,7 @@ public:
 	size_t getNumRows();
 	size_t getNumCells();
 	GridCell* getCellAt(size_t col, size_t row);
+	glm::vec3 getTranslation() { return translation_; }
 	// Render functions
 	void uploadVertexData();
 	virtual void loadShader(viscom::GPUProgramManager mgr);

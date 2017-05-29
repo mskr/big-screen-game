@@ -21,6 +21,11 @@ namespace viscom {
 
     class MeshRenderable;
 
+	/* Roomgame controller class for all nodes
+	 * Uses RoomSegementMeshPool to create meshes and map them to build states
+	 * Triggers rendering of all meshes in pool
+	 * Creates and renders static meshes
+	*/
     class ApplicationNodeImplementation
     {
     public:
@@ -71,36 +76,38 @@ namespace viscom {
         /** Holds the application node. */
         ApplicationNode* appNode_;
 
-        // Grid runs only on master node
-        // (As soon as grid uses RoomSegmentMeshes to add instances, data is written into buffer, that is synced with slaves)
-		AutomatonGrid grid_;
 
-        // Meshpool has to run partly on master and partly on all nodes, see RoomSegmentMeshPool.cpp for details!
-		RoomSegmentMeshPool meshpool_;
+		// ROOMGAME DATA
+		// =============
 
-        // Camera is needed only on master
-        // (As soon as matrix is passed to a render method, this render method should run on all slaves)
-		DragAndZoomCamera camera_;
+		/* Grid parameters (constant on all nodes) */
+		const int GRID_COLS_;
+		const int GRID_ROWS_;
+		const float GRID_HEIGHT_NDC_;
 
-        // Automaton only created and running on master node
-        // (As soon as automaton updates MeshInstanceGrid, data is written into buffer, that is synced with slaves)
-		OuterInfluenceAutomaton cellular_automaton_;
+		/* Mesh pool manages and renders instanced meshes corresponding to build states of grid cells */
+		RoomSegmentMeshPool meshpool_; // hold mesh and shader resources and render on all nodes
 
-        // FBOs have to be created on each node
-		ShadowMap* shadowMap_;
+        /* Shadow map is basically an offscreen framebuffer */
+		ShadowMap* shadowMap_; // hold shadow map framebuffer on all nodes
 
-        // GameMeshes aka MeshRenderables have to be created on each node
-		ShadowReceivingMesh* backgroundMesh_;
+        /* Shadow receiving meshes are (non-instanced) meshes with a shader receiving a shadow map */
+		ShadowReceivingMesh* backgroundMesh_; // hold static mesh on all nodes
 
-        enum InteractionMode { GRID, CAMERA, GRID_PLACE_OUTER_INFLUENCE } interaction_mode_;
-		enum RenderMode { NORMAL, DBUG } render_mode_;
+		/* Switch for debug rendering */
+		enum RenderMode { NORMAL, DBUG } render_mode_; // hold on all nodes but able to change only on master
 
+		/* Synchronized camera matrix (see MasterNode.cpp and SlaveNode.cpp for sync process) */
+		glm::mat4 camera_matrix_;
+
+		/* Clock holding a (hopefully!) synchronized time on all nodes */
 		struct Clock {
 			double t_in_sec;
 		} clock_;
 
         bool mouseTest = false;
 
+		/* Quad for debug-visualizing offscreen textures */
 		struct Quad {
 			std::shared_ptr<GPUProgram> shader;
 			GLint texture_uniform_location;

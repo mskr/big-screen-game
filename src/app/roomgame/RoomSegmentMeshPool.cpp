@@ -81,11 +81,6 @@ RoomSegmentMesh* RoomSegmentMeshPool::getMeshOfType(GridCell::BuildState type) {
 	return mesh_variations[variation];
 }
 
-//TODO All code above has to run only on master
-//TODO Only exception: creation of instance buffer (in RoomSegmentMesh constructor) on all nodes!
-//===============================================================================================
-//TODO Starting from here all code has to run on all nodes
-
 void RoomSegmentMeshPool::renderAllMeshes(glm::mat4& view_projection, GLint isDepthPass, GLint isDebugMode) {
 	glUseProgram(shader_->getProgramId());
 	glUniformMatrix4fv(matrix_uniform_locations_[0], 1, GL_FALSE, glm::value_ptr(view_projection));
