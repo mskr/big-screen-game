@@ -5,7 +5,7 @@
 #include <memory>
 #include <sgct/Engine.h>
 #include "core/gfx/GPUProgram.h"
-#include "core/ApplicationNode.h"
+#include "core/ApplicationNodeBase.h"
 #include "GridInteraction.h"
 
 class InteractiveGrid {

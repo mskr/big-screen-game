@@ -33,30 +33,30 @@ namespace viscom {
     void ApplicationNodeImplementation::InitOpenGL()
     {
 		/* Load resources on all nodes */
-		meshpool_.loadShader(appNode_->GetGPUProgramManager());
+		meshpool_.loadShader(GetApplication()->GetGPUProgramManager());
 		meshpool_.addMesh({ GridCell::BuildState::INSIDE_ROOM },
-							appNode_->GetMeshManager().GetResource("/models/roomgame_models/floor.obj"));
+                            GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/floor.obj"));
 		meshpool_.addMesh({ GridCell::BuildState::LEFT_LOWER_CORNER,
 							GridCell::BuildState::LEFT_UPPER_CORNER,
 							GridCell::BuildState::RIGHT_LOWER_CORNER,
 							GridCell::BuildState::RIGHT_UPPER_CORNER,
 							GridCell::BuildState::INVALID },
-							appNode_->GetMeshManager().GetResource("/models/roomgame_models/corner.obj"));
+                            GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/corner.obj"));
 		meshpool_.addMesh({ GridCell::BuildState::WALL_BOTTOM,
 							GridCell::BuildState::WALL_TOP,
 							GridCell::BuildState::WALL_RIGHT,
 							GridCell::BuildState::WALL_LEFT },
-							appNode_->GetMeshManager().GetResource("/models/roomgame_models/wall.obj"));
+                            GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/wall.obj"));
 		meshpool_.addMesh({ GridCell::BuildState::OUTER_INFLUENCE },
-							appNode_->GetMeshManager().GetResource("/models/roomgame_models/latticeplane.obj"));
+                            GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/latticeplane.obj"));
 
 		meshpool_.updateUniformEveryFrame("t_sec", [this](GLint uloc) {
 			glUniform1f(uloc, (float)clock_.t_in_sec);
 		});
 
 		backgroundMesh_ = new ShadowReceivingMesh(
-			appNode_->GetMeshManager().GetResource("/models/roomgame_models/textured_4vertexplane/textured_4vertexplane.obj"),
-			appNode_->GetGPUProgramManager().GetResource("applyTextureAndShadow",
+            GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/textured_4vertexplane/textured_4vertexplane.obj"),
+            GetApplication()->GetGPUProgramManager().GetResource("applyTextureAndShadow",
 				std::initializer_list<std::string>{ "applyTextureAndShadow.vert", "applyTextureAndShadow.frag" }));
 		backgroundMesh_->transform(glm::scale(glm::translate(glm::mat4(1), 
 			glm::vec3(
@@ -67,18 +67,9 @@ namespace viscom {
 
 		shadowMap_ = new ShadowMap(1024, 1024);
 		shadowMap_->setLightMatrix(glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0), glm::vec3(0, 1, 0)));
-		
-		GetEngine()->setNearAndFarClippingPlanes(0.1f, 100.0f);
+        GetApplication()->GetEngine()->setNearAndFarClippingPlanes(0.1f, 100.0f);
     }
 
-    void ApplicationNodeImplementation::PreSync()
-    {
-    }
-
-    void ApplicationNodeImplementation::UpdateSyncedInfo()
-    {
-		//TODO Receive camera matrix
-    }
 
     void ApplicationNodeImplementation::UpdateFrame(double currentTime, double elapsedTime)
     {
@@ -100,10 +91,10 @@ namespace viscom {
 
     void ApplicationNodeImplementation::DrawFrame(FrameBuffer& fbo)
     {
-		glm::mat4 proj = GetEngine()->getCurrentModelViewProjectionMatrix() * camera_matrix_;
+        glm::mat4 proj = GetApplication()->GetEngine()->getCurrentModelViewProjectionMatrix() * camera_matrix_;
 
         //TODO Is the engine matrix really needed here?
-		glm::mat4 lightspace = GetEngine()->getCurrentModelViewProjectionMatrix() * shadowMap_->getLightMatrix();
+		glm::mat4 lightspace = GetApplication()->GetEngine()->getCurrentModelViewProjectionMatrix() * shadowMap_->getLightMatrix();
 		
 		shadowMap_->DrawToFBO([&]() {
 			meshpool_.renderAllMeshesExcept(lightspace, GridCell::BuildState::OUTER_INFLUENCE, 1);
@@ -117,21 +108,6 @@ namespace viscom {
         });
     }
 
-    void ApplicationNodeImplementation::Draw2D(FrameBuffer& fbo)
-    {
-        fbo.DrawToFBO([&]() {
-#ifdef VISCOM_CLIENTGUI
-            ImGui::ShowTestWindow();
-#endif
-        });
-    }
-
-    void ApplicationNodeImplementation::PostDraw()
-    {
-		GLenum e;
-		while((e = glGetError()) != GL_NO_ERROR)
-			printf("Something went wrong during the last frame (GL error %x).\n", e);
-    }
 
     void ApplicationNodeImplementation::CleanUp()
     {
@@ -142,60 +118,6 @@ namespace viscom {
 
     bool ApplicationNodeImplementation::KeyboardCallback(int key, int scancode, int action, int mods)
     {
-		/*
-        if (ApplicationNodeBase::KeyboardCallback(key, scancode, action, mods)) return true;
-
-        switch (key)
-        {
-        case GLFW_KEY_W:
-            if (action == GLFW_REPEAT || action == GLFW_PRESS) camPos_ += glm::vec3(0.0, 0.0, -0.001);
-            return true;
-
-        case GLFW_KEY_S:
-            if (action == GLFW_REPEAT || action == GLFW_PRESS) camPos_ += glm::vec3(0.0, 0.0, 0.001);
-            return true;
-			
-		case GLFW_KEY_A:
-            if (action == GLFW_REPEAT || action == GLFW_PRESS) camPos_ += glm::vec3(-0.001, 0.0, 0.0);
-            return true;
-			
-		case GLFW_KEY_D:
-            if (action == GLFW_REPEAT || action == GLFW_PRESS) camPos_ += glm::vec3(0.001, 0.0, 0.0);
-            return true;
-
-        case GLFW_KEY_LEFT_CONTROL:
-            if (action == GLFW_REPEAT || action == GLFW_PRESS) camPos_ += glm::vec3(0.0, -0.001, 0.0);
-            return true;
-
-        case GLFW_KEY_LEFT_SHIFT:
-            if (action == GLFW_REPEAT || action == GLFW_PRESS) camPos_ += glm::vec3(0.0, 0.001, 0.0);
-            return true;
-
-        case GLFW_KEY_UP:
-            if (action == GLFW_REPEAT || action == GLFW_PRESS) camRot_ += glm::vec3(-0.002, 0.0, 0.0);
-            return true;
-
-        case GLFW_KEY_DOWN:
-            if (action == GLFW_REPEAT || action == GLFW_PRESS) camRot_ += glm::vec3(0.002, 0.0, 0.0);
-            return true;
-
-        case GLFW_KEY_LEFT:
-            if (action == GLFW_REPEAT || action == GLFW_PRESS) camRot_ += glm::vec3(0.0, -0.002, 0.0);
-            return true;
-
-        case GLFW_KEY_RIGHT:
-            if (action == GLFW_REPEAT || action == GLFW_PRESS) camRot_ += glm::vec3(0.0, 0.002, 0.0);
-            return true;
-
-        case GLFW_KEY_Q:
-            if (action == GLFW_REPEAT || action == GLFW_PRESS) camRot_ += glm::vec3(0.0, 0.0, -0.002);
-            return true;
-
-        case GLFW_KEY_E:
-            if (action == GLFW_REPEAT || action == GLFW_PRESS) camRot_ += glm::vec3(0.0, 0.0, 0.002);
-            return true;
-        }
-		*/
         return false;
     }
 }
