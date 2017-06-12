@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "core/SlaveNodeInternal.h"
+#include "core/SlaveNodeHelper.h"
 
 namespace viscom {
 
@@ -20,11 +20,7 @@ namespace viscom {
 
     public:
 
-		/* Slave nodes fetch the data shared by master node here */
-		void DecodeData() override;
-		void UpdateSyncedInfo() override;
-
-        explicit SlaveNode(ApplicationNode* appNode);
+        explicit SlaveNode(ApplicationNodeInternal* appNode);
         virtual ~SlaveNode() override;
 
         void Draw2D(FrameBuffer& fbo) override;

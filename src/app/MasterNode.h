@@ -41,7 +41,7 @@ namespace viscom {
 	enum InteractionMode { GRID, CAMERA, GRID_PLACE_OUTER_INFLUENCE } interaction_mode_;
 
     public:
-        explicit MasterNode(ApplicationNode* appNode);
+        explicit MasterNode(ApplicationNodeInternal* appNode);
         virtual ~MasterNode() override;
 
         void InitOpenGL() override;

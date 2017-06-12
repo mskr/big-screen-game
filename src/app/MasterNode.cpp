@@ -8,7 +8,6 @@
 
 #include "MasterNode.h"
 #include <imgui.h>
-#include "core/imgui/imgui_impl_glfw_gl3.h"
 
 static float automaton_transition_time = 0.04f;
 static int automaton_movedir_[2] = { 1,0 };
@@ -20,20 +19,13 @@ static int automaton_damage_per_cell = 5;
 
 namespace viscom {
 
-    MasterNode::MasterNode(ApplicationNode* appNode) :
+    MasterNode::MasterNode(ApplicationNodeInternal* appNode) :
         ApplicationNodeImplementation{ appNode },
 		grid_(GRID_COLS_, GRID_ROWS_, GRID_HEIGHT_NDC_, &meshpool_),
 		cellular_automaton_(&grid_, automaton_transition_time),
 		interaction_mode_(GRID_PLACE_OUTER_INFLUENCE),
 		camera_(glm::mat4(1))
     {
-#ifdef WITH_TUIO
-		std::stringstream portCvt(GetConfig().tuioPort_);
-        int tuioPort = 3333;
-        portCvt >> tuioPort;
-
-		TuioInputWrapper* tuioInputWrapper = new TuioInputWrapper(tuioPort, this);
-#endif
     }
 
     MasterNode::~MasterNode() = default;
@@ -140,22 +132,23 @@ namespace viscom {
 #ifndef VISCOM_CLIENTGUI
             ImGui::ShowTestWindow();
 #endif
-
-		ImGui::GetIO().FontGlobalScale = 1.5f;
-		if (ImGui::Begin("Roomgame Controls")) {
-			//ImGui::SetWindowFontScale(2.0f);
-			ImGui::Text("Interaction mode: %s", (interaction_mode_ == GRID) ? "GRID" : 
-				((interaction_mode_ == GRID_PLACE_OUTER_INFLUENCE) ? "GRID_PLACE_OUTER_INFLUENCE" : "CAMERA"));
-			ImGui::Text("AUTOMATON");
-			ImGui::SliderFloat("transition time", &automaton_transition_time, 0.017f, 1.0f);
-			ImGui::SliderInt2("move direction", automaton_movedir_, -1, 1);
-			ImGui::SliderFloat("BIRTH_THRESHOLD", &automaton_birth_thd, 0.0f, 1.0f);
-			ImGui::SliderFloat("DEATH_THRESHOLD", &automaton_death_thd, 0.0f, 1.0f);
-			ImGui::SliderFloat("ROOM_NBORS_AHEAD_THRESHOLD", &automaton_collision_thd, 0.0f, 1.0f);
-			ImGui::SliderInt("OUTER_INFL_NBORS_THRESHOLD", &automaton_outer_infl_nbors_thd, 1, 8);
-			ImGui::SliderInt("DAMAGE_PER_CELL", &automaton_damage_per_cell, 1, 100);
-		}
-		ImGui::End();
+            ImGui::SetNextWindowPos(ImVec2(700, 60), ImGuiSetCond_FirstUseEver);
+            ImGui::SetNextWindowSize(ImVec2(550, 680), ImGuiSetCond_FirstUseEver);
+			ImGui::GetIO().FontGlobalScale = 1.5f;
+			if (ImGui::Begin("Roomgame Controls")) {
+				//ImGui::SetWindowFontScale(2.0f);
+				ImGui::Text("Interaction mode: %s", (interaction_mode_ == GRID) ? "GRID" : 
+					((interaction_mode_ == GRID_PLACE_OUTER_INFLUENCE) ? "GRID_PLACE_OUTER_INFLUENCE" : "CAMERA"));
+				ImGui::Text("AUTOMATON");
+				ImGui::SliderFloat("transition time", &automaton_transition_time, 0.017f, 1.0f);
+				ImGui::SliderInt2("move direction", automaton_movedir_, -1, 1);
+				ImGui::SliderFloat("BIRTH_THRESHOLD", &automaton_birth_thd, 0.0f, 1.0f);
+				ImGui::SliderFloat("DEATH_THRESHOLD", &automaton_death_thd, 0.0f, 1.0f);
+				ImGui::SliderFloat("ROOM_NBORS_AHEAD_THRESHOLD", &automaton_collision_thd, 0.0f, 1.0f);
+				ImGui::SliderInt("OUTER_INFL_NBORS_THRESHOLD", &automaton_outer_infl_nbors_thd, 1, 8);
+				ImGui::SliderInt("DAMAGE_PER_CELL", &automaton_damage_per_cell, 1, 100);
+			}
+			ImGui::End();
         });
 
         ApplicationNodeImplementation::Draw2D(fbo);

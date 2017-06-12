@@ -32,21 +32,18 @@ namespace viscom {
         {
             auto attribLoc = program->getAttributeLocations({ "position", "normal", "texCoords" });
 			if (attribLoc[0] == -1)
-				printf("\nSimpleMeshVertex warns you: \"Vertex attrib 'position' not found in '%s'.\"\n\n", program->getProgramName());
 			//else {
 				glEnableVertexAttribArray(attribLoc[0]);
 				glVertexAttribPointer(attribLoc[0], 3, GL_FLOAT, GL_FALSE, sizeof(SimpleMeshVertex), reinterpret_cast<GLvoid*>(offsetof(SimpleMeshVertex, position_)));
 				glVertexAttribDivisor(attribLoc[0], 0);
 			//}
 			if (attribLoc[1] == -1)
-				printf("\nSimpleMeshVertex warns you: \"Vertex attrib 'normal' not found in '%s'.\"\n\n", program->getProgramName());
 			//else {
 				glEnableVertexAttribArray(attribLoc[1]);
 				glVertexAttribPointer(attribLoc[1], 3, GL_FLOAT, GL_FALSE, sizeof(SimpleMeshVertex), reinterpret_cast<GLvoid*>(offsetof(SimpleMeshVertex, normal_)));
 				glVertexAttribDivisor(attribLoc[1], 0);
 			//}
 			if (attribLoc[2] == -1)
-				printf("\nSimpleMeshVertex warns you: \"Vertex attrib 'texCoords' not found in '%s'.\"\n\n", program->getProgramName());
 			//else {
 				glEnableVertexAttribArray(attribLoc[2]);
 				glVertexAttribPointer(attribLoc[2], 2, GL_FLOAT, GL_FALSE, sizeof(SimpleMeshVertex), reinterpret_cast<GLvoid*>(offsetof(SimpleMeshVertex, texCoords_)));

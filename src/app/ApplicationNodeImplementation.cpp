@@ -12,11 +12,15 @@
 #include "core/gfx/mesh/MeshRenderable.h"
 #include "core/imgui/imgui_impl_glfw_gl3.h"
 #include <iostream>
+#include <glm/gtc/matrix_inverse.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 namespace viscom {
 
-	ApplicationNodeImplementation::ApplicationNodeImplementation(ApplicationNode* appNode) :
-		appNode_{ appNode },
+    ApplicationNodeImplementation::ApplicationNodeImplementation(ApplicationNodeInternal* appNode) :
+        ApplicationNodeBase{ appNode },
 		GRID_COLS_(64), GRID_ROWS_(64), GRID_HEIGHT_NDC_(2.0f),
 		meshpool_(GRID_COLS_ * GRID_ROWS_),
 		render_mode_(NORMAL),
@@ -25,10 +29,6 @@ namespace viscom {
     }
 
     ApplicationNodeImplementation::~ApplicationNodeImplementation() = default;
-
-    void ApplicationNodeImplementation::PreWindow()
-    {
-    }
 
     void ApplicationNodeImplementation::InitOpenGL()
     {
@@ -88,8 +88,7 @@ namespace viscom {
     void ApplicationNodeImplementation::ClearBuffer(FrameBuffer& fbo)
     {
         fbo.DrawToFBO([]() {
-            auto colorPtr = sgct::Engine::instance()->getClearColor();
-            glClearColor(colorPtr[0], colorPtr[1], colorPtr[2], colorPtr[3]);
+            glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         });
 
@@ -141,51 +140,62 @@ namespace viscom {
 		delete backgroundMesh_;
     }
 
-    // ReSharper disable CppParameterNeverUsed
-    void ApplicationNodeImplementation::KeyboardCallback(int key, int scancode, int action, int mods)
+    bool ApplicationNodeImplementation::KeyboardCallback(int key, int scancode, int action, int mods)
     {
-#ifdef VISCOM_CLIENTGUI
-        ImGui_ImplGlfwGL3_KeyCallback(key, scancode, action, mods);
-#endif
-    }
+		/*
+        if (ApplicationNodeBase::KeyboardCallback(key, scancode, action, mods)) return true;
 
-    void ApplicationNodeImplementation::CharCallback(unsigned int character, int mods)
-    {
-#ifdef VISCOM_CLIENTGUI
-        ImGui_ImplGlfwGL3_CharCallback(character);
-#endif
-    }
+        switch (key)
+        {
+        case GLFW_KEY_W:
+            if (action == GLFW_REPEAT || action == GLFW_PRESS) camPos_ += glm::vec3(0.0, 0.0, -0.001);
+            return true;
 
-    void ApplicationNodeImplementation::MouseButtonCallback(int button, int action)
-    {
-#ifdef VISCOM_CLIENTGUI
-        ImGui_ImplGlfwGL3_MouseButtonCallback(button, action, 0);
-#endif
-    }
+        case GLFW_KEY_S:
+            if (action == GLFW_REPEAT || action == GLFW_PRESS) camPos_ += glm::vec3(0.0, 0.0, 0.001);
+            return true;
+			
+		case GLFW_KEY_A:
+            if (action == GLFW_REPEAT || action == GLFW_PRESS) camPos_ += glm::vec3(-0.001, 0.0, 0.0);
+            return true;
+			
+		case GLFW_KEY_D:
+            if (action == GLFW_REPEAT || action == GLFW_PRESS) camPos_ += glm::vec3(0.001, 0.0, 0.0);
+            return true;
 
-    void ApplicationNodeImplementation::MousePosCallback(double x, double y)
-    {
-        if (mouseTest) {
-            LOG(INFO) << "Mouse @(" << x << ", " << y << ")."; mouseTest = false;
+        case GLFW_KEY_LEFT_CONTROL:
+            if (action == GLFW_REPEAT || action == GLFW_PRESS) camPos_ += glm::vec3(0.0, -0.001, 0.0);
+            return true;
+
+        case GLFW_KEY_LEFT_SHIFT:
+            if (action == GLFW_REPEAT || action == GLFW_PRESS) camPos_ += glm::vec3(0.0, 0.001, 0.0);
+            return true;
+
+        case GLFW_KEY_UP:
+            if (action == GLFW_REPEAT || action == GLFW_PRESS) camRot_ += glm::vec3(-0.002, 0.0, 0.0);
+            return true;
+
+        case GLFW_KEY_DOWN:
+            if (action == GLFW_REPEAT || action == GLFW_PRESS) camRot_ += glm::vec3(0.002, 0.0, 0.0);
+            return true;
+
+        case GLFW_KEY_LEFT:
+            if (action == GLFW_REPEAT || action == GLFW_PRESS) camRot_ += glm::vec3(0.0, -0.002, 0.0);
+            return true;
+
+        case GLFW_KEY_RIGHT:
+            if (action == GLFW_REPEAT || action == GLFW_PRESS) camRot_ += glm::vec3(0.0, 0.002, 0.0);
+            return true;
+
+        case GLFW_KEY_Q:
+            if (action == GLFW_REPEAT || action == GLFW_PRESS) camRot_ += glm::vec3(0.0, 0.0, -0.002);
+            return true;
+
+        case GLFW_KEY_E:
+            if (action == GLFW_REPEAT || action == GLFW_PRESS) camRot_ += glm::vec3(0.0, 0.0, 0.002);
+            return true;
         }
-#ifdef VISCOM_CLIENTGUI
-        ImGui_ImplGlfwGL3_MousePositionCallback(x, y);
-#endif
-    }
-
-    void ApplicationNodeImplementation::MouseScrollCallback(double xoffset, double yoffset)
-    {
-#ifdef VISCOM_CLIENTGUI
-        ImGui_ImplGlfwGL3_ScrollCallback(xoffset, yoffset);
-#endif
-    }
-    // ReSharper restore CppParameterNeverUsed
-
-    void ApplicationNodeImplementation::EncodeData()
-    {
-    }
-
-    void ApplicationNodeImplementation::DecodeData()
-    {
+		*/
+        return false;
     }
 }

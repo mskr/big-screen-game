@@ -7,16 +7,21 @@
  */
 
 #include "SlaveNode.h"
+#include <imgui.h>
 
 namespace viscom {
 
-    SlaveNode::SlaveNode(ApplicationNode* appNode) :
+    SlaveNode::SlaveNode(ApplicationNodeInternal* appNode) :
         SlaveNodeInternal{ appNode }
     {
     }
 
     void SlaveNode::Draw2D(FrameBuffer& fbo)
     {
+#ifdef VISCOM_CLIENTGUI
+        ImGui::ShowTestWindow();
+#endif
+
         // always do this call last!
         SlaveNodeInternal::Draw2D(fbo);
     }
