@@ -8,7 +8,7 @@ class ShadowMap : public viscom::FrameBuffer {
 public:
 	ShadowMap(unsigned int w, unsigned int h);
 	GLuint get() const {
-		return textures_[0];
+		return GetTextures()[0];
 	}
 	glm::mat4& getLightMatrix();
 	void setLightMatrix(glm::mat4&);

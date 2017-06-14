@@ -22,7 +22,8 @@ namespace viscom {
 
         explicit SlaveNode(ApplicationNodeInternal* appNode);
         virtual ~SlaveNode() override;
-
+		void DecodeData();
+		void UpdateSyncedInfo();
         void Draw2D(FrameBuffer& fbo) override;
 
     };

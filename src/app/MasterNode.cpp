@@ -34,7 +34,8 @@ namespace viscom {
     void MasterNode::InitOpenGL()
     {
         ApplicationNodeImplementation::InitOpenGL();
-		grid_.loadShader(appNode_->GetGPUProgramManager()); // for viewing build states...
+		
+		grid_.loadShader(GetApplication()->GetGPUProgramManager()); // for viewing build states...
 		grid_.uploadVertexData(); // ...for debug purposes
 
 		/* TODO
@@ -120,7 +121,7 @@ namespace viscom {
 		cellular_automaton_.setDamagePerCell(automaton_damage_per_cell);
 		cellular_automaton_.transition(clock_.t_in_sec);
 
-		glm::mat4 proj = GetEngine()->getCurrentModelViewProjectionMatrix() * camera_.getViewProjection();
+		glm::mat4 proj = GetApplication()->GetEngine()->getCurrentModelViewProjectionMatrix() * camera_.getViewProjection();
 
 		grid_.updateProjection(proj);
 		if (render_mode_ == RenderMode::DBUG) grid_.onFrame();
@@ -167,7 +168,7 @@ namespace viscom {
 	 * [S] key hit: start automaton and switch between outer influence and room placement
 	 * [D] key down: debug render mode
 	*/
-    void MasterNode::KeyboardCallback(int key, int scancode, int action, int mods)
+    bool MasterNode::KeyboardCallback(int key, int scancode, int action, int mods)
     {
 		// Keys switch input modes
 		static InteractionMode mode_before_switch_to_camera = interaction_mode_;
@@ -186,7 +187,7 @@ namespace viscom {
 		else if (key == GLFW_KEY_S && action == GLFW_PRESS) {
 			if (interaction_mode_ == GRID_PLACE_OUTER_INFLUENCE) {
 				interaction_mode_ = InteractionMode::GRID;
-				cellular_automaton_.init(appNode_->GetGPUProgramManager());
+				cellular_automaton_.init(GetApplication()->GetGPUProgramManager());
 			}
 			else {
 				interaction_mode_ = GRID_PLACE_OUTER_INFLUENCE;
@@ -203,15 +204,15 @@ namespace viscom {
 #ifndef VISCOM_CLIENTGUI
         ImGui_ImplGlfwGL3_KeyCallback(key, scancode, action, mods);
 #endif
-        ApplicationNodeImplementation::KeyboardCallback(key, scancode, action, mods);
+        return ApplicationNodeImplementation::KeyboardCallback(key, scancode, action, mods);
     }
 
-    void MasterNode::CharCallback(unsigned int character, int mods)
+    bool MasterNode::CharCallback(unsigned int character, int mods)
     {
 #ifndef VISCOM_CLIENTGUI
         ImGui_ImplGlfwGL3_CharCallback(character);
 #endif
-        ApplicationNodeImplementation::CharCallback(character, mods);
+        return ApplicationNodeImplementation::CharCallback(character, mods);
     }
 
 	/* Mouse/touch controles camera and room-/outer influence placement
@@ -219,7 +220,7 @@ namespace viscom {
 	 * When in camera mode, click and drag to move camera
 	 * When in grid mode, click and drag to build room
 	*/
-    void MasterNode::MouseButtonCallback(int button, int action)
+    bool MasterNode::MouseButtonCallback(int button, int action)
     {
 		if (button == GLFW_MOUSE_BUTTON_LEFT) {
 			if (action == GLFW_PRESS) { mouseTest = true; }
@@ -238,14 +239,14 @@ namespace viscom {
 #ifndef VISCOM_CLIENTGUI
         ImGui_ImplGlfwGL3_MouseButtonCallback(button, action, 0);
 #endif
-        ApplicationNodeImplementation::MouseButtonCallback(button, action);
+        return ApplicationNodeImplementation::MouseButtonCallback(button, action);
     }
 
 	/* MousePosCallback constantly updates interaction targets with cursor position
 	 * Workaround for missing cursor position in MouseButtonCallback:
 	 * Interaction targets can use their last cursor position
 	*/
-    void MasterNode::MousePosCallback(double x, double y)
+    bool MasterNode::MousePosCallback(double x, double y)
     {
 		if (interaction_mode_ == InteractionMode::GRID)
 			grid_.onMouseMove(-1, x, y);
@@ -255,17 +256,17 @@ namespace viscom {
 #ifndef VISCOM_CLIENTGUI
         ImGui_ImplGlfwGL3_MousePositionCallback(x, y);
 #endif
-        ApplicationNodeImplementation::MousePosCallback(x, y);
+        return ApplicationNodeImplementation::MousePosCallback(x, y);
     }
 
 	/* Mouse scroll events are used to zoom, when in camera mode */
-    void MasterNode::MouseScrollCallback(double xoffset, double yoffset)
+    bool MasterNode::MouseScrollCallback(double xoffset, double yoffset)
     {
 		if (interaction_mode_ == InteractionMode::CAMERA) camera_.onScroll((float)yoffset);
 #ifndef VISCOM_CLIENTGUI
         ImGui_ImplGlfwGL3_ScrollCallback(xoffset, yoffset);
 #endif
-        ApplicationNodeImplementation::MouseScrollCallback(xoffset, yoffset);
+        return ApplicationNodeImplementation::MouseScrollCallback(xoffset, yoffset);
     }
 
 }
