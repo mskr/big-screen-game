@@ -121,7 +121,7 @@ namespace viscom {
 		cellular_automaton_.setOuterInfluenceNeighborThreshold(automaton_outer_infl_nbors_thd);
 		cellular_automaton_.setDamagePerCell(automaton_damage_per_cell);
 		cellular_automaton_.transition(clock_.t_in_sec);
-
+		updateManager_.ManageUpdates(GetApplication()->GetElapsedTime(), true);
 		glm::mat4 proj = GetApplication()->GetEngine()->getCurrentModelViewProjectionMatrix() * camera_.getViewProjection();
 
 		grid_.updateProjection(proj);

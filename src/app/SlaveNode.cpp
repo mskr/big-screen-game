@@ -21,7 +21,7 @@ namespace viscom {
 #ifdef VISCOM_CLIENTGUI
         ImGui::ShowTestWindow();
 #endif
-
+		updateManager_.ManageUpdates(GetApplication()->GetElapsedTime(), false);
         // always do this call last!
         SlaveNodeInternal::Draw2D(fbo);
     }

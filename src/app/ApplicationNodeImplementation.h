@@ -16,6 +16,7 @@
 #include "app/roomgame/OuterInfluenceAutomaton.h"
 #include "app/roomgame/GameMesh.h"
 #include "app/roomgame/ShadowMap.h"
+#include "app/roomgame/UpdateManager.h"
 
 
 namespace viscom {
@@ -48,6 +49,9 @@ namespace viscom {
 
 		// ROOMGAME DATA
 		// =============
+
+		/* Update Manager */
+		roomgame::UpdateManager updateManager_;
 
 		/* Grid parameters (constant on all nodes) */
 		const int GRID_COLS_;
