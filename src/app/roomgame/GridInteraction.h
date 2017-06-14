@@ -1,7 +1,7 @@
 #ifndef GRID_INTERACTION_H_
 #define GRID_INTERACTION_H_
 
-#include <sgct/Engine.h>
+#include <glm/glm.hpp>
 #include "GridCell.h"
 
 class InteractiveGrid;

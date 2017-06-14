@@ -8,6 +8,7 @@
 
 #include "MasterNode.h"
 #include <imgui.h>
+#include "core/imgui/imgui_impl_glfw_gl3.h"
 
 static float automaton_transition_time = 0.04f;
 static int automaton_movedir_[2] = { 1,0 };

@@ -1,9 +1,9 @@
 #ifndef GAME_MESH_H
 #define GAME_MESH_H
 
-#include <memory>
-#include "sgct\Engine.h"
 #include "core/gfx/mesh/Mesh.h"
+#include "sgct\Engine.h"
+#include <memory>
 #include "core/gfx/GPUProgram.h"
 #include "core/gfx/mesh/MeshRenderable.h"
 #include "../Vertices.h"
