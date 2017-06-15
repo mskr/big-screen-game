@@ -122,9 +122,10 @@ namespace viscom {
 		cellular_automaton_.setDamagePerCell(automaton_damage_per_cell);
 		cellular_automaton_.transition(clock_.t_in_sec);
 		updateManager_.ManageUpdates(GetApplication()->GetElapsedTime(), true);
-		glm::mat4 proj = GetApplication()->GetEngine()->getCurrentModelViewProjectionMatrix() * camera_.getViewProjection();
+		glm::mat4 viewProj = GetCamera()->GetViewPerspectiveMatrix();
+		//glm::mat4 proj = GetApplication()->GetEngine()->getCurrentModelViewProjectionMatrix() * camera_.getViewProjection();
 
-		grid_.updateProjection(proj);
+		grid_.updateProjection(viewProj);
 		if (render_mode_ == RenderMode::DBUG) grid_.onFrame();
     }
 

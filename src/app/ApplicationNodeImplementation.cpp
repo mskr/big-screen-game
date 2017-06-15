@@ -68,6 +68,9 @@ namespace viscom {
 		shadowMap_ = new ShadowMap(1024, 1024);
 		shadowMap_->setLightMatrix(glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0), glm::vec3(0, 1, 0)));
         GetApplication()->GetEngine()->setNearAndFarClippingPlanes(0.1f, 100.0f);
+
+		/*Set Up the camera*/
+//		GetCamera()->SetOrientation(glm::quat()));
     }
 
 
@@ -91,19 +94,21 @@ namespace viscom {
 
     void ApplicationNodeImplementation::DrawFrame(FrameBuffer& fbo)
     {
-        glm::mat4 proj = GetApplication()->GetEngine()->getCurrentModelViewProjectionMatrix() * camera_matrix_;
+		glm::mat4 viewProj = GetCamera()->GetViewPerspectiveMatrix();
+        //glm::mat4 proj = GetApplication()->GetEngine()->getCurrentModelViewProjectionMatrix() * camera_matrix_;
 
         //TODO Is the engine matrix really needed here?
-		glm::mat4 lightspace = GetApplication()->GetEngine()->getCurrentModelViewProjectionMatrix() * shadowMap_->getLightMatrix();
-		
+		//glm::mat4 lightspace = GetApplication()->GetEngine()->getCurrentModelViewProjectionMatrix() * shadowMap_->getLightMatrix();
+		glm::mat4 lightspace = viewProj * shadowMap_->getLightMatrix();
+
 		shadowMap_->DrawToFBO([&]() {
 			meshpool_.renderAllMeshesExcept(lightspace, GridCell::BuildState::OUTER_INFLUENCE, 1);
 		});
 		
         fbo.DrawToFBO([&]() {
-			backgroundMesh_->render(proj, lightspace, shadowMap_->get(), (render_mode_ == RenderMode::DBUG) ? 1 : 0);
+			backgroundMesh_->render(viewProj, lightspace, shadowMap_->get(), (render_mode_ == RenderMode::DBUG) ? 1 : 0);
 			glEnable(GL_BLEND); glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-			meshpool_.renderAllMeshes(proj, 0, (render_mode_ == RenderMode::DBUG) ? 1 : 0);
+			meshpool_.renderAllMeshes(viewProj, 0, (render_mode_ == RenderMode::DBUG) ? 1 : 0);
 			glDisable(GL_BLEND);
         });
     }
