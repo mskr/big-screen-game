@@ -12,13 +12,12 @@ RoomSegmentMesh::InstanceBuffer::InstanceBuffer(size_t pool_allocation_bytes) :
 }
 
 RoomSegmentMesh::RoomSegmentMesh(viscom::Mesh* mesh, viscom::GPUProgram* program, size_t pool_allocation_bytes) :
-	viscom::MeshRenderable(mesh, Vertex::CreateVertexBuffer(mesh), program), // Fill vertex buffer
+	MeshBase(mesh, program),
+	//viscom::MeshRenderable(mesh, Vertex::CreateVertexBuffer(mesh), program), // Fill vertex buffer
 	room_ordered_buffer_(pool_allocation_bytes),
 	unordered_buffer_(pool_allocation_bytes),
 	next_free_offset_(0), last_free_offset_(0)
 {
-	// Create VAO and connect vertex buffer
-	NotifyRecompiledShader<Vertex>(program);
 	// Connect instance buffers
 	glBindVertexArray(vao_);
 	//glBindBuffer(GL_ARRAY_BUFFER, room_ordered_buffer_.id_);
@@ -61,7 +60,7 @@ RoomSegmentMesh::InstanceBufferRange RoomSegmentMesh::addInstanceUnordered(Insta
 		// THIS IS WHAT MAKES REALLOCATION APPROACH ***UGLY***:
 		glDeleteBuffers(1, &unordered_buffer_.id_); // Delete old instance buffer
 		glDeleteVertexArrays(1, &vao_); // Delete old VAO
-		NotifyRecompiledShader<Vertex>(drawProgram_); // Create new VAO and connect old vertex buffer
+		resetShader(); // Create new VAO and connect old vertex buffer
 		// Connect new instance buffer
 		unordered_buffer_.id_ = tmpBuffer;
 		glBindVertexArray(vao_);
@@ -107,46 +106,8 @@ RoomSegmentMesh::InstanceBufferRange RoomSegmentMesh::moveInstancesToRoomOrdered
 
 
 
-void RoomSegmentMesh::renderAllInstances(std::vector<GLint>* uniformLocations) {
-	if (unordered_buffer_.num_instances_ == 0) return; //TODO Seperately draw unordered and ordered buffers
-	const viscom::SceneMeshNode* root = mesh_->GetRootNode();
-	glBindVertexArray(vao_);
-	renderNode(uniformLocations, root);
-}
-
-void RoomSegmentMesh::renderNode(std::vector<GLint>* uniformLocations, const viscom::SceneMeshNode* node, bool overrideBump) {
-	auto localMatrix = node->GetLocalTransform();
-	for (unsigned int i = 0; i < node->GetNumMeshes(); ++i)
-		renderSubMesh(uniformLocations, localMatrix, node->GetMesh(i), overrideBump);
-	for (unsigned int i = 0; i < node->GetNumNodes(); ++i)
-		renderNode(uniformLocations, node->GetChild(i), overrideBump);
-}
-
-void RoomSegmentMesh::renderSubMesh(std::vector<GLint>* uniformLocations, const glm::mat4& localMatrix, const viscom::SubMesh* subMesh, bool overrideBump) {
-	if(uniformLocations->size() > 1)
-		glUniformMatrix4fv(uniformLocations->at(1), 1, GL_FALSE, glm::value_ptr(localMatrix));
-	if(uniformLocations->size() > 2)
-		glUniformMatrix3fv(uniformLocations->at(2), 1, GL_FALSE, glm::value_ptr(glm::inverseTranspose(glm::mat3(localMatrix))));
-	if (subMesh->GetMaterial()->diffuseTex && uniformLocations->size() > 2) {
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, subMesh->GetMaterial()->diffuseTex->getTextureId());
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glUniform1i(uniformLocations_[2], 0);
-	}
-	if (subMesh->GetMaterial()->bumpTex && uniformLocations_.size() > 3) {
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, subMesh->GetMaterial()->bumpTex->getTextureId());
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glUniform1i(uniformLocations_[3], 1);
-		if (!overrideBump) glUniform1f(uniformLocations_[4], subMesh->GetMaterial()->bumpMultiplier);
-	}
+void RoomSegmentMesh::renderAllInstances(std::function<void(void)> uniformSetter, const glm::mat4& view_projection, GLint isDebugMode) {
 	//TODO Seperately draw unordered and ordered buffers
-	glDrawElementsInstanced(GL_TRIANGLES, subMesh->GetNumberOfIndices(), GL_UNSIGNED_INT,
-		(static_cast<char*> (nullptr)) + (subMesh->GetIndexOffset() * sizeof(unsigned int)), unordered_buffer_.num_instances_);
+	if (unordered_buffer_.num_instances_ == 0) return;
+	MeshBase::renderInstanced(uniformSetter, view_projection, unordered_buffer_.num_instances_, isDebugMode);
 }

@@ -4,7 +4,7 @@ layout(location = 0) in vec3 position;
 layout(location = 1) in vec3 normal;
 layout(location = 2) in vec2 texCoords;
 
-uniform mat4 modelMatrix;
+uniform mat4 subMeshLocalMatrix;
 uniform mat3 normalMatrix;
 uniform mat4 viewProjectionMatrix;
 uniform mat4 lightSpaceMatrix;
@@ -15,7 +15,7 @@ out vec2 vTexCoords;
 out vec4 vPosLightSpace;
 
 void main() {
-	vec4 posV4 = modelMatrix * vec4(position.x, -position.z, position.y, 1);
+	vec4 posV4 = subMeshLocalMatrix * vec4(position.x, -position.z, position.y, 1);
 	vPosition = vec3(posV4);
 	vNormal = normalize(normalMatrix * normal);
 	vTexCoords = texCoords;

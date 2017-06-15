@@ -1,7 +1,7 @@
 #include "GameMesh.h"
 
 ShadowReceivingMesh::ShadowReceivingMesh(std::shared_ptr<viscom::Mesh> mesh, std::shared_ptr<viscom::GPUProgram> shader) :
-	GameMesh(mesh, shader)
+	SimpleGameMesh(mesh, shader)
 {
 	uloc_lightspace_matrix_ = shader->getUniformLocation("lightSpaceMatrix");
 	uloc_shadow_map_ = shader->getUniformLocation("shadowMap");
@@ -21,5 +21,5 @@ void ShadowReceivingMesh::render(glm::mat4& vp, glm::mat4& lightspace, GLuint sh
 	float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 	glUniform1i(uloc_shadow_map_, 2);
-	GameMesh::render(vp, isDebugMode);
+	SimpleGameMesh::render(vp, isDebugMode);
 }

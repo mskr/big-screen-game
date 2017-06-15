@@ -82,32 +82,26 @@ RoomSegmentMesh* RoomSegmentMeshPool::getMeshOfType(GridCell::BuildState type) {
 }
 
 void RoomSegmentMeshPool::renderAllMeshes(glm::mat4& view_projection, GLint isDepthPass, GLint isDebugMode) {
-	glUseProgram(shader_->getProgramId());
-	glUniformMatrix4fv(matrix_uniform_locations_[0], 1, GL_FALSE, glm::value_ptr(view_projection));
-	for (unsigned int i = 0; i < uniform_locations_.size(); i++) uniform_callbacks_[i](uniform_locations_[i]);
-	glUniform1i(depth_pass_flag_uniform_location_, isDepthPass);
-	if (isDebugMode == 1) glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	else glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	glUniform1i(debug_mode_flag_uniform_location_, isDebugMode);
 	for (GridCell::BuildState i : render_list_) {
 		for (RoomSegmentMesh* mesh : meshes_[i]) {
-			mesh->renderAllInstances(&matrix_uniform_locations_);
+			mesh->renderAllInstances([&]() {
+				glUniformMatrix4fv(matrix_uniform_locations_[0], 1, GL_FALSE, glm::value_ptr(view_projection));
+				for (unsigned int i = 0; i < uniform_locations_.size(); i++) uniform_callbacks_[i](uniform_locations_[i]);
+				glUniform1i(depth_pass_flag_uniform_location_, isDepthPass);
+			}, view_projection, isDebugMode);
 		}
 	}
 }
 
 void RoomSegmentMeshPool::renderAllMeshesExcept(glm::mat4& view_projection, GridCell::BuildState type_not_to_render, GLint isDepthPass, GLint isDebugMode) {
-	glUseProgram(shader_->getProgramId());
-	glUniformMatrix4fv(matrix_uniform_locations_[0], 1, GL_FALSE, glm::value_ptr(view_projection));
-	for (unsigned int i = 0; i < uniform_locations_.size(); i++) uniform_callbacks_[i](uniform_locations_[i]);
-	glUniform1i(depth_pass_flag_uniform_location_, isDepthPass);
-	if (isDebugMode == 1) glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	else glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	glUniform1i(debug_mode_flag_uniform_location_, isDebugMode);
 	for (GridCell::BuildState i : render_list_) {
 		if (i == type_not_to_render) continue;
 		for (RoomSegmentMesh* mesh : meshes_[i]) {
-			mesh->renderAllInstances(&matrix_uniform_locations_);
+			mesh->renderAllInstances([&]() {
+				glUniformMatrix4fv(matrix_uniform_locations_[0], 1, GL_FALSE, glm::value_ptr(view_projection));
+				for (unsigned int i = 0; i < uniform_locations_.size(); i++) uniform_callbacks_[i](uniform_locations_[i]);
+				glUniform1i(depth_pass_flag_uniform_location_, isDepthPass);
+			}, view_projection, isDebugMode);
 		}
 	}
 }

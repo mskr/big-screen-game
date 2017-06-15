@@ -3,14 +3,20 @@
 #include "core/gfx/mesh/MeshRenderable.h"
 #include "core/gfx/mesh/SceneMeshNode.h"
 #include "core/gfx/mesh/SubMesh.h"
+
+#include "GameMesh.h"
 #include <glm/gtc/matrix_inverse.hpp>
 #include "core/gfx/Material.h"
 #include "core/gfx/Texture.h"
 #include "../Vertices.h"
 
-class RoomSegmentMesh : public viscom::MeshRenderable {
+/* Class for instanced meshes.
+ * Especially intended for segments of rooms on a grid.
+ * However usable for all instanced meshes so far.
+ * 
+*/
+class RoomSegmentMesh : public MeshBase<viscom::SimpleMeshVertex> {
 public:
-	typedef viscom::SimpleMeshVertex Vertex; // vertex attribs
 	struct InstanceBuffer {
 		GLuint id_;
 		int num_instances_;
@@ -76,7 +82,7 @@ public:
 	InstanceBufferRange addInstanceUnordered(Instance);
 	void removeInstanceUnordered(int offset_instances);
 	InstanceBufferRange moveInstancesToRoomOrderedBuffer(std::initializer_list<int> offsets);
-	void renderAllInstances(std::vector<GLint>* uniformLocations);
+	void renderAllInstances(std::function<void(void)> uniformSetter, const glm::mat4& view_projection, GLint isDebugMode);
 private:
 	void renderNode(std::vector<GLint>* uniformLocations,
 		const viscom::SceneMeshNode* node, bool overrideBump=false);
