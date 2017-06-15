@@ -18,15 +18,15 @@ namespace roomgame {
 		if (timer > max_time && master) {
 			for (std::shared_ptr<IUpdateable> upd : updateables)
 			{
-				upd.get()->Update();
-				upd.get()->UpdateSlow();
+				upd.get()->Update(deltaTime);
+				upd.get()->UpdateSlow(deltaTime);
 			}
 			timer = 0;
 		}
 		else {
 			for (std::shared_ptr<IUpdateable> upd : updateables)
 			{
-				upd.get()->Update();
+				upd.get()->Update(deltaTime);
 			}
 		}
 		if (master) {
