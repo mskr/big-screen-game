@@ -1,13 +1,17 @@
 #ifndef GPUBUFFER_H_
 #define GPUBUFFER_H_
 
-#include <sgct/Engine.h>
+#include <stdexcept>
+#include <initializer_list>
+#include <GL/glew.h>
 
 /*
 * A gpu buffer representation.
 * Can be used as
 * a) Vertex buffer
 * b) Framebuffer
+* c) Uniform buffer
+*    ...
 */
 class GPUBuffer {
 	bool is_fbo_;
