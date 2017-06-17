@@ -165,21 +165,19 @@ protected:
 	std::shared_ptr<viscom::Mesh> mesh_resource_;
 	std::shared_ptr<viscom::GPUProgram> shader_resource_;
 	glm::mat4 model_matrix_;
-	GLint uloc_view_projection_;
-	GLint uloc_debug_mode_flag_;
 public:
 	SimpleGameMesh(std::shared_ptr<viscom::Mesh> mesh, std::shared_ptr<viscom::GPUProgram> shader) :
 		MeshBase(mesh.get(), shader.get()),
 		mesh_resource_(mesh), shader_resource_(shader)
-	{
-		uloc_view_projection_ = shader->getUniformLocation("viewProjectionMatrix");
-		uloc_debug_mode_flag_ = shader->getUniformLocation("isDebugMode");
-	}
+	{}
 	void transform(glm::mat4& t) {
 		model_matrix_ *= t;
 	}
 	virtual void render(glm::mat4& vp, GLint isDebugMode = 0) const {
 		MeshBase::render(vp, isDebugMode, model_matrix_);
+	}
+	virtual void render(std::function<void(void)> outsideUniformSetter, glm::mat4& vp, GLint isDebugMode = 0) const {
+		MeshBase::render(outsideUniformSetter, vp, isDebugMode, model_matrix_);
 	}
 };
 

@@ -29,7 +29,6 @@ class RoomSegmentMeshPool {
 	// The shader used by all meshes
 	std::shared_ptr<viscom::GPUProgram> shader_;
 	// Uniforms
-	std::vector<GLint> matrix_uniform_locations_;
 	std::vector<GLint> uniform_locations_;
 	std::vector<std::function<void(GLint)>> uniform_callbacks_;
 	GLint depth_pass_flag_uniform_location_;

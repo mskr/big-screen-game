@@ -85,7 +85,6 @@ void RoomSegmentMeshPool::renderAllMeshes(glm::mat4& view_projection, GLint isDe
 	for (GridCell::BuildState i : render_list_) {
 		for (RoomSegmentMesh* mesh : meshes_[i]) {
 			mesh->renderAllInstances([&]() {
-				glUniformMatrix4fv(matrix_uniform_locations_[0], 1, GL_FALSE, glm::value_ptr(view_projection));
 				for (unsigned int i = 0; i < uniform_locations_.size(); i++) uniform_callbacks_[i](uniform_locations_[i]);
 				glUniform1i(depth_pass_flag_uniform_location_, isDepthPass);
 			}, view_projection, isDebugMode);
@@ -98,7 +97,6 @@ void RoomSegmentMeshPool::renderAllMeshesExcept(glm::mat4& view_projection, Grid
 		if (i == type_not_to_render) continue;
 		for (RoomSegmentMesh* mesh : meshes_[i]) {
 			mesh->renderAllInstances([&]() {
-				glUniformMatrix4fv(matrix_uniform_locations_[0], 1, GL_FALSE, glm::value_ptr(view_projection));
 				for (unsigned int i = 0; i < uniform_locations_.size(); i++) uniform_callbacks_[i](uniform_locations_[i]);
 				glUniform1i(depth_pass_flag_uniform_location_, isDepthPass);
 			}, view_projection, isDebugMode);
@@ -109,8 +107,6 @@ void RoomSegmentMeshPool::renderAllMeshesExcept(glm::mat4& view_projection, Grid
 void RoomSegmentMeshPool::loadShader(viscom::GPUProgramManager mgr) {
 	shader_ = mgr.GetResource("renderMeshInstance",
 			std::initializer_list<std::string>{ "renderMeshInstance.vert", "renderMeshInstance.frag" });
-	matrix_uniform_locations_ = shader_->getUniformLocations({
-		"viewProjectionMatrix", "subMeshLocalMatrix", "normalMatrix" });
 	depth_pass_flag_uniform_location_ = shader_->getUniformLocation("isDepthPass");
 	debug_mode_flag_uniform_location_ = shader_->getUniformLocation("isDebugMode");
 }
