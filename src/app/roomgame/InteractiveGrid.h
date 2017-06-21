@@ -3,7 +3,7 @@
 
 #include <list>
 #include <memory>
-#include <sgct/Engine.h>
+//#include <sgct/Engine.h>
 #include "core/gfx/GPUProgram.h"
 #include "core/ApplicationNodeBase.h"
 #include "GridInteraction.h"

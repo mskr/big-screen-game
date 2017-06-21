@@ -2,6 +2,7 @@
 #define GAME_MESH_H
 
 #include <memory>
+#include <iostream>
 
 #include "glm\gtc/matrix_inverse.hpp"
 
@@ -55,12 +56,12 @@ protected:
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 		uniformLocations_ = program_->getUniformLocations({
+			"subMeshLocalMatrix",
 			"normalMatrix",
 			"diffuseTexture",
 			"bumpTexture",
 			"bumpMultiplier",
 			"viewProjectionMatrix",
-			"subMeshLocalMatrix",
 			"isDebugMode"
 		});
 	}
@@ -82,11 +83,15 @@ protected:
 		glBindVertexArray(vao_);
 		forEachSubmeshOf(mesh_->GetRootNode(), modelMatrix, [&](const viscom::SubMesh* submesh, const glm::mat4& localTransform) {
 			bindUniformsAndTextures(vpMatrix, localTransform, submesh->GetMaterial()->diffuseTex, submesh->GetMaterial()->bumpTex, submesh->GetMaterial()->bumpMultiplier, overrideBump, isDebugMode);
+//			std::cout << "reached a" << std::endl;
 			outsideUniformSetter();
+//			std::cout << "reached b" << std::endl;
 			if (isDebugMode == 1) glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 			else glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+//			std::cout << "reached c" << std::endl;
 			glDrawElements(GL_TRIANGLES, submesh->GetNumberOfIndices(), GL_UNSIGNED_INT,
 				(static_cast<char*> (nullptr)) + (submesh->GetIndexOffset() * sizeof(unsigned int)));
+//			std::cout << "reached d" << std::endl;
 		});
 	}
 
@@ -120,6 +125,7 @@ private:
 
 	void forEachSubmeshOf(const viscom::SceneMeshNode* subtree, const glm::mat4& transform, std::function<void(const viscom::SubMesh*, const glm::mat4&)> callback) const {
 		auto localTransform = subtree->GetLocalTransform() * transform;
+		unsigned int bla = subtree->GetNumMeshes();
 		for (unsigned int i = 0; i < subtree->GetNumMeshes(); ++i)
 			callback(subtree->GetMesh(i), localTransform);
 		for (unsigned int i = 0; i < subtree->GetNumNodes(); ++i)
@@ -128,7 +134,7 @@ private:
 
 	void bindUniformsAndTextures(const glm::mat4& vpMatrix, const glm::mat4& localMatrix,
 			std::shared_ptr<const viscom::Texture> diffuseTex, std::shared_ptr<const viscom::Texture> bumpTex, GLfloat bumpMultiplier,
-			bool overrideBump = false, GLint isDebugMode = 0, glm::mat4& subMeshLocalMatrix = glm::mat4(1)) const {
+			bool overrideBump = false, GLint isDebugMode = 0) const {
 		glUniformMatrix4fv(uniformLocations_[0], 1, GL_FALSE, glm::value_ptr(localMatrix));
 		glUniformMatrix3fv(uniformLocations_[1], 1, GL_FALSE, glm::value_ptr(glm::inverseTranspose(glm::mat3(localMatrix))));
 		if (diffuseTex && uniformLocations_.size() > 2) {
@@ -151,8 +157,7 @@ private:
 			if (!overrideBump) glUniform1f(uniformLocations_[4], bumpMultiplier);
 		}
 		glUniformMatrix4fv(uniformLocations_[5], 1, GL_FALSE, glm::value_ptr(vpMatrix));
-		glUniformMatrix4fv(uniformLocations_[6], 1, GL_FALSE, glm::value_ptr(subMeshLocalMatrix));
-		glUniform1i(uniformLocations_[7], isDebugMode);
+		glUniform1i(uniformLocations_[6], isDebugMode);
 	}
 };
 

@@ -71,6 +71,7 @@ namespace viscom {
         GetApplication()->GetEngine()->setNearAndFarClippingPlanes(0.1f, 100.0f);
 
 		/*Set Up the camera*/
+		GetCamera()->SetPosition(glm::vec3(0, 0, 0));
 //		GetCamera()->SetOrientation(glm::quat()));
     }
 
@@ -101,6 +102,7 @@ namespace viscom {
         //TODO Is the engine matrix really needed here?
 		//glm::mat4 lightspace = GetApplication()->GetEngine()->getCurrentModelViewProjectionMatrix() * shadowMap_->getLightMatrix();
 		glm::mat4 lightspace = shadowMap_->getLightMatrix();
+
 
 		shadowMap_->DrawToFBO([&]() {
 			meshpool_.renderAllMeshesExcept(lightspace, GridCell::BuildState::OUTER_INFLUENCE, 1);
