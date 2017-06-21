@@ -126,7 +126,10 @@ namespace viscom {
 		//glm::mat4 proj = GetApplication()->GetEngine()->getCurrentModelViewProjectionMatrix() * camera_.getViewProjection();
 
 		grid_.updateProjection(viewProj);
-		if (render_mode_ == RenderMode::DBUG) grid_.onFrame();
+		fbo.DrawToFBO([&] { 
+			if (render_mode_ == RenderMode::DBUG) grid_.onFrame();
+		});
+		
     }
 
     void MasterNode::Draw2D(FrameBuffer& fbo)

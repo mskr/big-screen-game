@@ -24,7 +24,8 @@ namespace viscom {
 		GRID_COLS_(64), GRID_ROWS_(64), GRID_HEIGHT_NDC_(2.0f),
 		meshpool_(GRID_COLS_ * GRID_ROWS_),
 		render_mode_(NORMAL),
-		clock_{0.0}
+		clock_{0.0},
+		camera_matrix_(1.0f)
     {
     }
 
