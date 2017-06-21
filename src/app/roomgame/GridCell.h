@@ -1,7 +1,7 @@
 #ifndef GRID_CELL_H
 #define GRID_CELL_H
 
-#include <sgct/Engine.h>
+//#include <sgct/Engine.h>
 #include "RoomSegmentMesh.h"
 
 class GridCell {
