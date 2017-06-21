@@ -1,7 +1,10 @@
 #ifndef GPUBUFFER_H_
 #define GPUBUFFER_H_
 
-#include <sgct/Engine.h>
+//#include <sgct/Engine.h>
+#include <gl/glew.h>
+#include <initializer_list>
+#include <stdexcept>
 
 /*
 * A gpu buffer representation.

@@ -1,7 +1,10 @@
 #ifndef DRAG_AND_ZOOM_CAMERA_H
 #define DRAG_AND_ZOOM_CAMERA_H
 
-#include <sgct/Engine.h>
+//#include <sgct/Engine.h>
+//#include <glm/glm.hpp>
+//#include <glm/matrix.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 class DragAndZoomCamera {
 	glm::mat4 view_projection_;
