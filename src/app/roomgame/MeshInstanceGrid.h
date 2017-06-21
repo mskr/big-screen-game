@@ -6,6 +6,12 @@
 class RoomSegmentMeshPool;
 #include "RoomSegmentMeshPool.h"
 
+/* Represents a grid with mesh instances at its cells
+ * Has InteractiveGrid as base class.
+ * Adds possibility to add/remove mesh instances through buildAt function.
+ * Uses a meshpool to request instanced meshes.
+ * Calls addInstance on requested meshes.
+ */
 class MeshInstanceGrid : public RoomInteractiveGrid {
 protected:
 	RoomSegmentMeshPool* meshpool_;

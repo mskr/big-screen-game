@@ -4,6 +4,14 @@
 //#include <sgct/Engine.h>
 #include "RoomSegmentMesh.h"
 
+/* Represents one cell of the grid.
+ * Defines the list of build states used by the roomgame.
+ * Supports a debug rendering of grid cells as GL_POINTS.
+ * Holds neighbor cells.
+ * Holds its own position (column, row) in the containing grid.
+ * Holds reference to an instance buffer range, where a mesh instance is stored that is renderd at this cell's position.
+ * Privides a number of helper methods.
+*/
 class GridCell {
 public:
 	enum BuildState {

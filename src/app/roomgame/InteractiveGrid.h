@@ -8,6 +8,11 @@
 #include "core/ApplicationNodeBase.h"
 #include "GridInteraction.h"
 
+/* Renderable and clickable grid.
+ * Container for grid cell objects.
+ * Supports a simple debug visualization (see onFrame function).
+ * Provides a number of helper functions.
+*/
 class InteractiveGrid {
 protected:
 	// Data members

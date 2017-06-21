@@ -4,6 +4,11 @@
 #include "InteractiveGrid.h"
 #include "Room.h"
 
+/* Grid class that manages rooms that span over grid cells.
+ * Has InteractiveGrid as base class.
+ * Adds possibility to create rooms by click and drag.
+ * Holds a list of rooms.
+*/
 class RoomInteractiveGrid : public InteractiveGrid {
 	std::vector<Room*> rooms_;
 public:

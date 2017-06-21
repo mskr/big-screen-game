@@ -15,7 +15,23 @@
 #include "../Vertices.h"
 
 
-
+/* Base class for all meshes rendered by the roomgame.
+ * Construct with a vertex class as template parameter (providing CreateVertexBuffer and SetVertexAttributes functions).
+ * Uses naked pointers to mesh and shader (according resources should be owned by extending classes).
+ * Holds VAO, VBO and the shader locations of common uniform variables.
+ * Common uniforms that are provided:
+	"subMeshLocalMatrix",
+	"normalMatrix",
+	"diffuseTexture",
+	"bumpTexture",
+	"bumpMultiplier",
+	"viewProjectionMatrix",
+	"isDebugMode"
+ * Provides instanced and non-instanced render functions.
+ * Both functions have one overload which takes a callback where custom uniform variables can be set.
+ * Custom uniform locations and updates are managed by extending classes.
+ * Works with meshes containing a hierarchy of scene mesh nodes (as imported by assimp).
+*/
 template <class VERTEX_LAYOUT>
 class MeshBase {
 
@@ -83,15 +99,11 @@ protected:
 		glBindVertexArray(vao_);
 		forEachSubmeshOf(mesh_->GetRootNode(), modelMatrix, [&](const viscom::SubMesh* submesh, const glm::mat4& localTransform) {
 			bindUniformsAndTextures(vpMatrix, localTransform, submesh->GetMaterial()->diffuseTex, submesh->GetMaterial()->bumpTex, submesh->GetMaterial()->bumpMultiplier, overrideBump, isDebugMode);
-//			std::cout << "reached a" << std::endl;
 			outsideUniformSetter();
-//			std::cout << "reached b" << std::endl;
 			if (isDebugMode == 1) glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 			else glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-//			std::cout << "reached c" << std::endl;
 			glDrawElements(GL_TRIANGLES, submesh->GetNumberOfIndices(), GL_UNSIGNED_INT,
 				(static_cast<char*> (nullptr)) + (submesh->GetIndexOffset() * sizeof(unsigned int)));
-//			std::cout << "reached d" << std::endl;
 		});
 	}
 
@@ -164,7 +176,10 @@ private:
 
 
 
-
+/* Simple mesh class extending MeshBase.
+ * Owns mesh and shader resources.
+ * Adds a model matrix for dynamic transformation.
+*/
 class SimpleGameMesh : public MeshBase<viscom::SimpleMeshVertex> {
 protected:
 	std::shared_ptr<viscom::Mesh> mesh_resource_;
@@ -186,6 +201,11 @@ public:
 	}
 };
 
+/* Mesh supporting use of shadow mapping.
+ * Extends MeshBase.
+ * Holds uniform locations of lightspace matrix and shadow map.
+ * Uses custom uniform render function of MeshBase.
+*/
 class ShadowReceivingMesh : public SimpleGameMesh {
 	GLint uloc_lightspace_matrix_;
 	GLint uloc_shadow_map_;

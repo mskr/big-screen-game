@@ -4,9 +4,13 @@
 #include "MeshInstanceGrid.h"
 class GPUCellularAutomaton;
 
+/* Grid class for cellular automatons.
+ * Has InteractiveGrid as base class.
+ * Adds possibility to receive changes from user input and cellular automaton.
+*/
 class AutomatonGrid : public MeshInstanceGrid {
 	GPUCellularAutomaton* automaton_;
-	// Delaying mesh instance updates allows to play animations
+	// Delaying mesh instance updates allows to play smoother animations
 	struct DelayedUpdate {
 		unsigned int wait_count_; // number of transitions to wait
 		GridCell* target_; // cell to update
@@ -21,8 +25,8 @@ public:
 	~AutomatonGrid();
 	void setCellularAutomaton(GPUCellularAutomaton*);
 	void onMeshpoolInitialized() override;
-	void buildAt(size_t col, size_t row, GridCell::BuildState buildState) override;
-	void updateCell(GridCell* c, GridCell::BuildState state, int hp);
+	void buildAt(size_t col, size_t row, GridCell::BuildState buildState) override; // for user changes
+	void updateCell(GridCell* c, GridCell::BuildState state, int hp); // for automaton changes
 	void onTransition();
 	void populateCircleAtLastMousePosition(int radius);
 };
