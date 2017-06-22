@@ -137,7 +137,6 @@ private:
 
 	void forEachSubmeshOf(const viscom::SceneMeshNode* subtree, const glm::mat4& transform, std::function<void(const viscom::SubMesh*, const glm::mat4&)> callback) const {
 		auto localTransform = subtree->GetLocalTransform() * transform;
-		unsigned int bla = subtree->GetNumMeshes();
 		for (unsigned int i = 0; i < subtree->GetNumMeshes(); ++i)
 			callback(subtree->GetMesh(i), localTransform);
 		for (unsigned int i = 0; i < subtree->GetNumNodes(); ++i)

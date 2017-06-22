@@ -31,24 +31,15 @@ namespace viscom {
         static void SetVertexAttributes(const GPUProgram* program)
         {
             auto attribLoc = program->getAttributeLocations({ "position", "normal", "texCoords" });
-			if (attribLoc[0] == -1)
-			//else {
-				glEnableVertexAttribArray(attribLoc[0]);
-				glVertexAttribPointer(attribLoc[0], 3, GL_FLOAT, GL_FALSE, sizeof(SimpleMeshVertex), reinterpret_cast<GLvoid*>(offsetof(SimpleMeshVertex, position_)));
-				glVertexAttribDivisor(attribLoc[0], 0);
-			//}
-			if (attribLoc[1] == -1)
-			//else {
-				glEnableVertexAttribArray(attribLoc[1]);
-				glVertexAttribPointer(attribLoc[1], 3, GL_FLOAT, GL_FALSE, sizeof(SimpleMeshVertex), reinterpret_cast<GLvoid*>(offsetof(SimpleMeshVertex, normal_)));
-				glVertexAttribDivisor(attribLoc[1], 0);
-			//}
-			if (attribLoc[2] == -1)
-			//else {
-				glEnableVertexAttribArray(attribLoc[2]);
-				glVertexAttribPointer(attribLoc[2], 2, GL_FLOAT, GL_FALSE, sizeof(SimpleMeshVertex), reinterpret_cast<GLvoid*>(offsetof(SimpleMeshVertex, texCoords_)));
-				glVertexAttribDivisor(attribLoc[2], 0);
-			//}
+			glEnableVertexAttribArray(attribLoc[0]);
+			glVertexAttribPointer(attribLoc[0], 3, GL_FLOAT, GL_FALSE, sizeof(SimpleMeshVertex), reinterpret_cast<GLvoid*>(offsetof(SimpleMeshVertex, position_)));
+			glVertexAttribDivisor(attribLoc[0], 0);
+			glEnableVertexAttribArray(attribLoc[1]);
+			glVertexAttribPointer(attribLoc[1], 3, GL_FLOAT, GL_FALSE, sizeof(SimpleMeshVertex), reinterpret_cast<GLvoid*>(offsetof(SimpleMeshVertex, normal_)));
+			glVertexAttribDivisor(attribLoc[1], 0);
+			glEnableVertexAttribArray(attribLoc[2]);
+			glVertexAttribPointer(attribLoc[2], 2, GL_FLOAT, GL_FALSE, sizeof(SimpleMeshVertex), reinterpret_cast<GLvoid*>(offsetof(SimpleMeshVertex, texCoords_)));
+			glVertexAttribDivisor(attribLoc[2], 0);
         }
 
         static GLuint CreateVertexBuffer(const Mesh* mesh)
