@@ -17,6 +17,10 @@ namespace roomgame {
 	{
 	}
 
+	void OuterInfluence::SetGridPointer(RoomInteractiveGrid* newGrid) {
+		grid = newGrid;
+	}
+
 	void OuterInfluence::Update(double deltaTime)
 	{
 		actionStatus += 0.01*deltaTime;
@@ -64,7 +68,7 @@ namespace roomgame {
 	}
 
 	void OuterInfluence::Retreat() {
-		//Get back higher and to the edge of the screen
+		//Mark hit cell as source and get back higher and to the edge of the screen
 		targetPosition = glm::vec3(30, 30, 1);
 	}
 }

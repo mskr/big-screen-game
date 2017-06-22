@@ -19,13 +19,15 @@
 
 namespace viscom {
 
-    ApplicationNodeImplementation::ApplicationNodeImplementation(ApplicationNodeInternal* appNode) :
-        ApplicationNodeBase{ appNode },
+	ApplicationNodeImplementation::ApplicationNodeImplementation(ApplicationNodeInternal* appNode) :
+		ApplicationNodeBase{ appNode },
 		GRID_COLS_(64), GRID_ROWS_(64), GRID_HEIGHT_NDC_(2.0f),
 		meshpool_(GRID_COLS_ * GRID_ROWS_),
 		render_mode_(NORMAL),
-		clock_{0.0},
-		camera_matrix_(1.0f)
+		clock_{ 0.0 },
+		camera_matrix_(1.0f),
+		updateManager_(),
+		outerInfluence_()
     {
     }
 
@@ -73,12 +75,16 @@ namespace viscom {
 		/*Set Up the camera*/
 		GetCamera()->SetPosition(glm::vec3(0, 0, 0));
 //		GetCamera()->SetOrientation(glm::quat()));
+
+		updateManager_.AddUpdateable(std::make_shared <roomgame::OuterInfluence> (outerInfluence_));
     }
 
 
     void ApplicationNodeImplementation::UpdateFrame(double currentTime, double elapsedTime)
     {
+		deltaTime = currentTime - oldTime;
 		clock_.t_in_sec = currentTime;
+		oldTime = currentTime;
     }
 
     void ApplicationNodeImplementation::ClearBuffer(FrameBuffer& fbo)
