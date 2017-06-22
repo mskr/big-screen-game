@@ -85,16 +85,20 @@ void GPUCellularAutomaton::copyFromGridToTexture(int pair_index) {
 void GPUCellularAutomaton::copyFromTextureToGrid(int pair_index) {
 	size_t rows = grid_->getNumColumns();
 	size_t cols = grid_->getNumRows();
+	// download texture
 	glBindTexture(GL_TEXTURE_2D, texture_pair_[pair_index].id);
 	glGetTexImage(GL_TEXTURE_2D, 0, texture_pair_[pair_index].format,
 		texture_pair_[pair_index].datatype, tmp_client_buffer_);
+	// iterate over contents
 	for (unsigned int x = 0; x < cols; x++) {
 		for (unsigned int y = 0; y < rows*2 - 1; y+=2) {
-			GLubyte state = tmp_client_buffer_[x*2*rows + y];
-			GLubyte hp = tmp_client_buffer_[x*2*rows + y + 1];
+			int state = (int) tmp_client_buffer_[x*2*rows + y];
+			int hp = (int) tmp_client_buffer_[x*2*rows + y + 1];
 			GridCell* c = grid_->getCellAt(y / 2, x);
-			if (c->getBuildState() == (int)state && c->getHealthPoints() == (int)hp)
+			// something changed?
+			if (c->getBuildState() == state && c->getHealthPoints() == hp)
 				continue;
+			// then update CPU side
 			grid_->updateCell(c, (GridCell::BuildState)state, hp);
 		}
 	}

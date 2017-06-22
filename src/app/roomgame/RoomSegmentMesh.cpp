@@ -13,7 +13,6 @@ RoomSegmentMesh::InstanceBuffer::InstanceBuffer(size_t pool_allocation_bytes) :
 
 RoomSegmentMesh::RoomSegmentMesh(viscom::Mesh* mesh, viscom::GPUProgram* program, size_t pool_allocation_bytes) :
 	MeshBase(mesh, program),
-	//viscom::MeshRenderable(mesh, Vertex::CreateVertexBuffer(mesh), program), // Fill vertex buffer
 	room_ordered_buffer_(pool_allocation_bytes),
 	unordered_buffer_(pool_allocation_bytes),
 	next_free_offset_(0), last_free_offset_(0)
@@ -48,7 +47,6 @@ RoomSegmentMesh::InstanceBufferRange RoomSegmentMesh::addInstanceUnordered(Insta
 		next_free_offset_ = tmp;
 	}
 	if ((next_free_offset + 1) * sizeof(Instance) > unordered_buffer_.pool_allocation_bytes_ * unordered_buffer_.num_reallocations_) {
-	/*if ((unordered_buffer_.num_instances_+1) * sizeof(Instance) > unordered_buffer_.pool_allocation_bytes_ * unordered_buffer_.num_reallocations_) {*/
 		// Realloc and copy
 		glBindBuffer(GL_COPY_READ_BUFFER, unordered_buffer_.id_);
 		GLuint tmpBuffer;
@@ -69,13 +67,11 @@ RoomSegmentMesh::InstanceBufferRange RoomSegmentMesh::addInstanceUnordered(Insta
 	}
 	glBindBuffer(GL_ARRAY_BUFFER, unordered_buffer_.id_);
 	glBufferSubData(GL_ARRAY_BUFFER, next_free_offset * sizeof(Instance), sizeof(Instance), &i);
-	/*glBufferSubData(GL_ARRAY_BUFFER, unordered_buffer_.num_instances_ * sizeof(Instance), sizeof(Instance), &data);*/
 	InstanceBufferRange r;
 	r.buffer_ = &unordered_buffer_;
 	r.mesh_ = this;
 	r.num_instances_ = 1;
 	r.offset_instances_ = next_free_offset;
-	/*r.offset_instances_ = unordered_buffer_.num_instances_;*/
 	if (next_free_offset == unordered_buffer_.num_instances_)
 		unordered_buffer_.num_instances_++;
 	return r;
@@ -94,9 +90,11 @@ void RoomSegmentMesh::removeInstanceUnordered(int offset_instances) {
 		last_free_offset_->el_ = new NextFreeOffsetQueueElem(offset_instances);
 		last_free_offset_ = last_free_offset_->el_;
 	}
+	
 	Instance zeros;
 	glBindBuffer(GL_ARRAY_BUFFER, unordered_buffer_.id_);
 	glBufferSubData(GL_ARRAY_BUFFER, offset_instances * sizeof(Instance), sizeof(Instance), &zeros);
+	
 }
 
 RoomSegmentMesh::InstanceBufferRange RoomSegmentMesh::moveInstancesToRoomOrderedBuffer(std::initializer_list<int> offsets) {
