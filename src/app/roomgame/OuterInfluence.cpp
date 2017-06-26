@@ -18,7 +18,7 @@ namespace roomgame {
 	}
 
 	void OuterInfluence::SetGridPointer(RoomInteractiveGrid* newGrid) {
-		grid = newGrid;
+		grid = *newGrid;
 	}
 
 	void OuterInfluence::Update(double deltaTime)
