@@ -63,9 +63,12 @@ private:
 	size_t col_idx_;
 	size_t row_idx_;
 	RoomSegmentMesh::InstanceBufferRange mesh_instance_;
+	bool isSource_ = false;
 public:
 	GridCell(float x, float y, size_t col_idx, size_t row_idx);
 	~GridCell() = default;
+	void setIsSource(bool state);
+	bool getIsSource();
 	void updateBuildState(GLuint vbo, BuildState s);
 	void updateHealthPoints(GLuint vbo, int hp);
 	void setMeshInstance(RoomSegmentMesh::InstanceBufferRange mesh_instance);

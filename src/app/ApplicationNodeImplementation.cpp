@@ -51,12 +51,14 @@ namespace viscom {
 							GridCell::BuildState::WALL_LEFT },
                             GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/wall.obj"));
 		meshpool_.addMesh({ GridCell::BuildState::OUTER_INFLUENCE },
-                            GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/latticeplane.obj"));
+			GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/latticeplane.obj"));
+//TODO		meshpool_.addMesh({ GridCell::BuildState::OUTER_INFLUENCE },
+//			GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/thingy.obj"));
 
 		meshpool_.updateUniformEveryFrame("t_sec", [this](GLint uloc) {
 			glUniform1f(uloc, (float)clock_.t_in_sec);
 		});
-
+		
 		backgroundMesh_ = new ShadowReceivingMesh(
             GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/textured_4vertexplane/textured_4vertexplane.obj"),
             GetApplication()->GetGPUProgramManager().GetResource("applyTextureAndShadow",
@@ -82,7 +84,7 @@ namespace viscom {
 
     void ApplicationNodeImplementation::UpdateFrame(double currentTime, double elapsedTime)
     {
-		deltaTime = currentTime - oldTime;
+		deltaTime = min(currentTime - oldTime,0.25);
 		clock_.t_in_sec = currentTime;
 		oldTime = currentTime;
     }

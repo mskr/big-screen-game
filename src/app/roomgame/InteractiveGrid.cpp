@@ -50,6 +50,11 @@ glm::vec2 InteractiveGrid::getNDC(glm::vec2 position) {
 	return glm::vec2(pos.x, pos.y) / pos.w;
 }
 
+GridCell* InteractiveGrid::getClosestWallCell(glm::vec2 pos) {
+	//TODO: write
+	return getCellAt(glm::vec2(0,0));
+}
+
 
 void InteractiveGrid::forEachCell(std::function<void(GridCell*)> callback) {
 	for (std::vector<GridCell> &row : cells_) {

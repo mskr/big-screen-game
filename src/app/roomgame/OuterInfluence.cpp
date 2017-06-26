@@ -18,7 +18,7 @@ namespace roomgame {
 	}
 
 	void OuterInfluence::SetGridPointer(RoomInteractiveGrid* newGrid) {
-		grid = *newGrid;
+		grid = newGrid;
 	}
 
 	void OuterInfluence::Update(double deltaTime)
@@ -64,11 +64,13 @@ namespace roomgame {
 
 	void OuterInfluence::Attack() {
 		//Set the closest cell with wall build state as moveTarget (move down and towards it until collison)
-		targetPosition = glm::vec3(0, 0, 4);
+		targetPosition = glm::vec3(grid->getClosestWallCell(glm::vec2(position))->getPosition(),4);
+		//targetPosition = glm::vec3(0, 0, 4);
 	}
 
 	void OuterInfluence::Retreat() {
 		//Mark hit cell as source and get back higher and to the edge of the screen
+		grid->getClosestWallCell(glm::vec2(position))->setIsSource(true);
 		targetPosition = glm::vec3(30, 30, 1);
 	}
 }
