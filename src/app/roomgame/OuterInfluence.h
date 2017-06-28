@@ -15,14 +15,17 @@ namespace roomgame {
 		// Geerbt über IUpdateable
 		virtual void Update(double deltaTime) override;
 		virtual void UpdateSlow(double deltaTime) override;
-		void SetGridPointer(RoomInteractiveGrid* newGrid);
-	private:
+
+
 		SimpleGameMesh* meshComponent;
-		RoomInteractiveGrid * grid = nullptr;
+		RoomInteractiveGrid* grid;
+	private:
 		int mode;
+		double deltaTime;
 		float actionStatus;
-		glm::vec3 position;
+		glm::vec3 oldPosition;
 		glm::vec3 targetPosition;
+		glm::vec3 posDiff;
 		void DecideNextAction();
 		void Patrol();
 		void Attack();

@@ -26,9 +26,9 @@ namespace viscom {
 		render_mode_(NORMAL),
 		clock_{ 0.0 },
 		camera_matrix_(1.0f),
-		updateManager_(),
-		outerInfluence_()
+		updateManager_()
     {
+		outerInfluence_ = std::make_shared<roomgame::OuterInfluence>();
     }
 
     ApplicationNodeImplementation::~ApplicationNodeImplementation() = default;
@@ -55,6 +55,11 @@ namespace viscom {
 //TODO		meshpool_.addMesh({ GridCell::BuildState::OUTER_INFLUENCE },
 //			GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/thingy.obj"));
 
+		SimpleGameMesh* outerInfluenceMeshComp = new SimpleGameMesh(GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/corner.obj"), GetApplication()->GetGPUProgramManager().GetResource("applyTextureAndShadow",
+			std::initializer_list<std::string>{ "applyTextureAndShadow.vert", "applyTextureAndShadow.frag" }));
+		outerInfluence_->meshComponent = outerInfluenceMeshComp;
+
+
 		meshpool_.updateUniformEveryFrame("t_sec", [this](GLint uloc) {
 			glUniform1f(uloc, (float)clock_.t_in_sec);
 		});
@@ -78,7 +83,7 @@ namespace viscom {
 		GetCamera()->SetPosition(glm::vec3(0, 0, 0));
 //		GetCamera()->SetOrientation(glm::quat()));
 
-		updateManager_.AddUpdateable(std::make_shared <roomgame::OuterInfluence> (outerInfluence_));
+		updateManager_.AddUpdateable(outerInfluence_);
     }
 
 
@@ -116,10 +121,12 @@ namespace viscom {
 			meshpool_.renderAllMeshesExcept(lightspace, GridCell::BuildState::OUTER_INFLUENCE, 1);
 		});
 		
+
         fbo.DrawToFBO([&]() {
 			backgroundMesh_->render(viewProj, lightspace, shadowMap_->get(), (render_mode_ == RenderMode::DBUG) ? 1 : 0);
 			glEnable(GL_BLEND); glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			meshpool_.renderAllMeshes(viewProj, 0, (render_mode_ == RenderMode::DBUG) ? 1 : 0);
+			outerInfluence_->meshComponent->render(viewProj);
 			glDisable(GL_BLEND);
         });
     }

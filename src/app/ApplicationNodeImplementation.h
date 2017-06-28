@@ -61,7 +61,7 @@ namespace viscom {
 		const float GRID_HEIGHT_NDC_;
 
 		/**/
-		roomgame::OuterInfluence outerInfluence_;
+		std::shared_ptr<roomgame::OuterInfluence> outerInfluence_;
 
 		/* Mesh pool manages and renders instanced meshes corresponding to build states of grid cells */
 		RoomSegmentMeshPool meshpool_; // hold mesh and shader resources and render on all nodes

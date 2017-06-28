@@ -13,9 +13,9 @@ namespace roomgame {
 		updateables.clear();
 	}
 
-	void UpdateManager::ManageUpdates(double deltaTime, bool master)
+	void UpdateManager::ManageUpdates(double deltaTime)
 	{
-		if (timer > max_time && master) {
+		if (timer > max_time) {
 			for (std::shared_ptr<IUpdateable> upd : updateables)
 			{
 				upd.get()->Update(deltaTime);
@@ -29,9 +29,7 @@ namespace roomgame {
 				upd.get()->Update(deltaTime);
 			}
 		}
-		if (master) {
-			timer += deltaTime;
-		}
+		timer += deltaTime;
 	}
 
 	void UpdateManager::AddUpdateable(std::shared_ptr<IUpdateable> obj)

@@ -85,8 +85,7 @@ namespace viscom {
 			glUniform1f(uloc, grid_.getCellSize());
 		});
 
-
-		outerInfluence_.SetGridPointer(&grid_);
+		outerInfluence_->grid = &grid_;
     }
 
 	/* Sync step 1: Master sets values of shared objects to corresponding non-shared objects */
@@ -125,7 +124,7 @@ namespace viscom {
 		cellular_automaton_.setDamagePerCell(automaton_damage_per_cell);
 		cellular_automaton_.transition(clock_.t_in_sec);
 		
-		updateManager_.ManageUpdates(deltaTime, true);
+		updateManager_.ManageUpdates(deltaTime);
 
 		glm::mat4 viewProj = GetCamera()->GetViewPerspectiveMatrix();
 		//glm::mat4 proj = GetApplication()->GetEngine()->getCurrentModelViewProjectionMatrix() * camera_.getViewProjection();
