@@ -17,6 +17,7 @@ namespace roomgame {
 		virtual void UpdateSlow(double deltaTime) override;
 		void SetGridPointer(RoomInteractiveGrid* newGrid);
 	private:
+		SimpleGameMesh* meshComponent;
 		RoomInteractiveGrid * grid = nullptr;
 		int mode;
 		float actionStatus;

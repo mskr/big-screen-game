@@ -29,6 +29,7 @@ namespace roomgame {
 
 	//Change Position
 	void OuterInfluence::Move() {
+//		meshComponent->transform(glm::translate(glm::mat4(1),)
 		position = position*(1 - actionStatus) + targetPosition*actionStatus;
 	}
 
