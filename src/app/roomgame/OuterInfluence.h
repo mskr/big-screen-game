@@ -17,7 +17,7 @@ namespace roomgame {
 		virtual void UpdateSlow(double deltaTime) override;
 
 
-		SimpleGameMesh* meshComponent;
+		SynchronizedGameMesh* meshComponent;
 		RoomInteractiveGrid* grid;
 	private:
 		int mode;

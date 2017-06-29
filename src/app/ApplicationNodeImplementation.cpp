@@ -55,9 +55,10 @@ namespace viscom {
 //TODO		meshpool_.addMesh({ GridCell::BuildState::OUTER_INFLUENCE },
 //			GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/thingy.obj"));
 
-		SimpleGameMesh* outerInfluenceMeshComp = new SimpleGameMesh(GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/corner.obj"), GetApplication()->GetGPUProgramManager().GetResource("applyTextureAndShadow",
+		SynchronizedGameMesh* outerInfluenceMeshComp = new SynchronizedGameMesh(GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/thingy/thingy.obj"), GetApplication()->GetGPUProgramManager().GetResource("applyTextureAndShadow",
 			std::initializer_list<std::string>{ "applyTextureAndShadow.vert", "applyTextureAndShadow.frag" }));
 		outerInfluence_->meshComponent = outerInfluenceMeshComp;
+		outerInfluence_->meshComponent->transform(glm::scale(glm::mat4(1), glm::vec3(0.1, 0.1, 0.1)));
 
 
 		meshpool_.updateUniformEveryFrame("t_sec", [this](GLint uloc) {

@@ -36,7 +36,8 @@ namespace viscom {
 	// (As soon as matrix is passed to a render method, this render method must run on all slaves)
 	DragAndZoomCamera camera_;
 	sgct::SharedObject<glm::mat4> shared_camera_matrix_; // camera matrix the master shares
-
+	
+	sgct::SharedObject<glm::mat4> sharedOuterInfluenceMatrix_;
 	/* Interaction mode only exists on master node */
 	enum InteractionMode { GRID, CAMERA, GRID_PLACE_OUTER_INFLUENCE } interaction_mode_;
 

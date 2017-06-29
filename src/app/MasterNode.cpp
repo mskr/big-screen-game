@@ -93,6 +93,7 @@ namespace viscom {
     {
         ApplicationNodeImplementation::PreSync();
 		shared_camera_matrix_.setVal(camera_.getViewProjection());
+		outerInfluence_->meshComponent->preSync();
     }
 
 	/* Sync step 2: Master sends shared objects to the central SharedData singleton
@@ -101,6 +102,7 @@ namespace viscom {
 	void MasterNode::EncodeData() {
 		ApplicationNodeImplementation::EncodeData();
 		sgct::SharedData::instance()->writeObj(&shared_camera_matrix_);
+		outerInfluence_->meshComponent->encode();
 	}
 
 	/* Sync step 3: Master updates its copies of cluster-wide variables with data it just synced
@@ -109,6 +111,7 @@ namespace viscom {
 	void MasterNode::UpdateSyncedInfo() {
 		ApplicationNodeImplementation::UpdateSyncedInfo();
 		camera_matrix_ = camera_.getViewProjection();
+		outerInfluence_->meshComponent->updateSyncedMaster();
 	}
 
     void MasterNode::DrawFrame(FrameBuffer& fbo)
