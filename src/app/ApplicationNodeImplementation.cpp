@@ -64,6 +64,7 @@ namespace viscom {
 		meshpool_.updateUniformEveryFrame("t_sec", [this](GLint uloc) {
 			glUniform1f(uloc, (float)clock_.t_in_sec);
 		});
+
 		
 		backgroundMesh_ = new ShadowReceivingMesh(
             GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/textured_4vertexplane/textured_4vertexplane.obj"),
@@ -82,7 +83,6 @@ namespace viscom {
 
 		/*Set Up the camera*/
 		GetCamera()->SetPosition(glm::vec3(0, 0, 0));
-//		GetCamera()->SetOrientation(glm::quat()));
 
 		updateManager_.AddUpdateable(outerInfluence_);
     }
@@ -111,10 +111,8 @@ namespace viscom {
     void ApplicationNodeImplementation::DrawFrame(FrameBuffer& fbo)
     {
 		glm::mat4 viewProj = GetCamera()->GetViewPerspectiveMatrix();
-        //glm::mat4 proj = GetApplication()->GetEngine()->getCurrentModelViewProjectionMatrix() * camera_matrix_;
 
         //TODO Is the engine matrix really needed here?
-		//glm::mat4 lightspace = GetApplication()->GetEngine()->getCurrentModelViewProjectionMatrix() * shadowMap_->getLightMatrix();
 		glm::mat4 lightspace = shadowMap_->getLightMatrix();
 
 
