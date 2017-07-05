@@ -42,10 +42,13 @@ namespace viscom {
         virtual void UpdateFrame(double currentTime, double elapsedTime) override;
         virtual void ClearBuffer(FrameBuffer& fbo) override;
         virtual void DrawFrame(FrameBuffer& fbo) override;
+		virtual void PostDraw() override;
         virtual void CleanUp() override;
 
         virtual bool KeyboardCallback(int key, int scancode, int action, int mods) override;
 
+
+		GLenum last_glerror_; // helps output an error only once
 
 		// ROOMGAME DATA
 		// =============

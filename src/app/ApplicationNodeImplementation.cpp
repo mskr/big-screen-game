@@ -96,13 +96,16 @@ namespace viscom {
 
     void ApplicationNodeImplementation::DrawFrame(FrameBuffer& fbo)
     {
+		//TODO Before the first draw there is already a framebuffer error (but seems to work anyway so far)
+		//GLenum e;
+		//e = glGetError(); printf("%x\n", e);
+
 		glm::mat4 viewProj = GetCamera()->GetViewPerspectiveMatrix();
         //glm::mat4 proj = GetApplication()->GetEngine()->getCurrentModelViewProjectionMatrix() * camera_matrix_;
 
         //TODO Is the engine matrix really needed here?
 		//glm::mat4 lightspace = GetApplication()->GetEngine()->getCurrentModelViewProjectionMatrix() * shadowMap_->getLightMatrix();
 		glm::mat4 lightspace = shadowMap_->getLightMatrix();
-
 
 		shadowMap_->DrawToFBO([&]() {
 			meshpool_.renderAllMeshesExcept(lightspace, GridCell::BuildState::OUTER_INFLUENCE, 1);
@@ -115,6 +118,15 @@ namespace viscom {
 			glDisable(GL_BLEND);
         });
     }
+
+	void ApplicationNodeImplementation::PostDraw() {
+		GLenum e;
+		while ((e = glGetError()) != GL_NO_ERROR) {
+			if (e == last_glerror_) return;
+			last_glerror_ = e;
+			printf("Something went wrong during the last frame (GL error %x).\n", e);
+		}
+	}
 
 
     void ApplicationNodeImplementation::CleanUp()

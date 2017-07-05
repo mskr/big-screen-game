@@ -24,7 +24,10 @@ namespace viscom {
         virtual ~SlaveNode() override;
 		void DecodeData();
 		void UpdateSyncedInfo();
+
+		void UpdateFrame(double, double) override;
         void Draw2D(FrameBuffer& fbo) override;
+		virtual void PostDraw() override;
 
     };
 }

@@ -109,9 +109,8 @@ namespace viscom {
 		camera_matrix_ = camera_.getViewProjection();
 	}
 
-    void MasterNode::DrawFrame(FrameBuffer& fbo)
-    {
-        ApplicationNodeImplementation::DrawFrame(fbo);
+	void MasterNode::UpdateFrame(double t1, double t2) {
+		ApplicationNodeImplementation::UpdateFrame(t1, t2);
 
 		cellular_automaton_.setTransitionTime(automaton_transition_time);
 		cellular_automaton_.setMoveDir(automaton_movedir_[0], automaton_movedir_[1]);
@@ -121,6 +120,12 @@ namespace viscom {
 		cellular_automaton_.setOuterInfluenceNeighborThreshold(automaton_outer_infl_nbors_thd);
 		cellular_automaton_.setDamagePerCell(automaton_damage_per_cell);
 		cellular_automaton_.transition(clock_.t_in_sec);
+	}
+
+    void MasterNode::DrawFrame(FrameBuffer& fbo)
+    {
+        ApplicationNodeImplementation::DrawFrame(fbo);
+
 		updateManager_.ManageUpdates(GetApplication()->GetElapsedTime(), true);
 		glm::mat4 viewProj = GetCamera()->GetViewPerspectiveMatrix();
 		//glm::mat4 proj = GetApplication()->GetEngine()->getCurrentModelViewProjectionMatrix() * camera_.getViewProjection();
@@ -159,6 +164,10 @@ namespace viscom {
 
         ApplicationNodeImplementation::Draw2D(fbo);
     }
+
+	void MasterNode::PostDraw() {
+		ApplicationNodeImplementation::PostDraw();
+	}
 
     void MasterNode::CleanUp()
     {

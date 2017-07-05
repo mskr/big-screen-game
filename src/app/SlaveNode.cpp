@@ -16,6 +16,11 @@ namespace viscom {
     {
     }
 
+
+	void SlaveNode::UpdateFrame(double t1, double t2) {
+		ApplicationNodeImplementation::UpdateFrame(t1, t2);
+	}
+
     void SlaveNode::Draw2D(FrameBuffer& fbo)
     {
 #ifdef VISCOM_CLIENTGUI
@@ -25,6 +30,10 @@ namespace viscom {
         // always do this call last!
         SlaveNodeInternal::Draw2D(fbo);
     }
+
+	void SlaveNode::PostDraw() {
+		ApplicationNodeImplementation::PostDraw();
+	}
 
     SlaveNode::~SlaveNode() = default;
 

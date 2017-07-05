@@ -51,8 +51,12 @@ namespace viscom {
 		void EncodeData() override;
 		void UpdateSyncedInfo() override;
 
+		void UpdateFrame(double, double) override;
+
         void DrawFrame(FrameBuffer& fbo) override;
         void Draw2D(FrameBuffer& fbo) override;
+
+		virtual void PostDraw() override;
 
         void CleanUp() override;
 

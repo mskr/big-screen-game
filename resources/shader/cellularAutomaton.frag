@@ -174,7 +174,7 @@ uint moveCollision(uint st) {
 	return st;
 }
 
-void main() {	
+void main() {
 	uvec2 cell = lookup(inputGrid, pixel);
 	lookupNeighborhood8();
 
