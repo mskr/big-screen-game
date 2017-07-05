@@ -56,7 +56,7 @@ namespace viscom {
         void DrawFrame(FrameBuffer& fbo) override;
         void Draw2D(FrameBuffer& fbo) override;
 
-		virtual void PostDraw() override;
+		void PostDraw() override;
 
         void CleanUp() override;
 

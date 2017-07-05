@@ -121,18 +121,14 @@ namespace viscom {
 		cellular_automaton_.setOuterInfluenceNeighborThreshold(automaton_outer_infl_nbors_thd);
 		cellular_automaton_.setDamagePerCell(automaton_damage_per_cell);
 		cellular_automaton_.transition(clock_.t_in_sec);
-<<<<<<< HEAD
+
+        updateManager_.ManageUpdates(deltaTime);
 	}
 
     void MasterNode::DrawFrame(FrameBuffer& fbo)
     {
         ApplicationNodeImplementation::DrawFrame(fbo);
 
-		updateManager_.ManageUpdates(GetApplication()->GetElapsedTime(), true);
-=======
-		
-		updateManager_.ManageUpdates(deltaTime);
->>>>>>> 9bf64b6700432ea59092fea70d3de39670bcde74
 		glm::mat4 viewProj = GetCamera()->GetViewPerspectiveMatrix();
 
 		grid_.updateProjection(viewProj);

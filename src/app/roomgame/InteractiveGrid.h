@@ -74,15 +74,10 @@ public:
 	virtual void onTouch(int touchID);
 	virtual void onRelease(int touchID);
 	virtual void onMouseMove(int touchID, double newx, double newy);
-<<<<<<< HEAD
-	glm::vec2 getNDC(glm::vec2 position); // converts position of a cell in model-space into position as seen on the screen
-=======
-
     /* Transform original cell position into what the user sees */
 	glm::vec2 getNDC(glm::vec2 position);
 
     /* Remember camera projection for later being able to perform cell selection on user input */
->>>>>>> 9bf64b6700432ea59092fea70d3de39670bcde74
 	void updateProjection(glm::mat4&);
 
 
