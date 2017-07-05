@@ -1,6 +1,6 @@
-#include "OuterInfluenceAutomaton.h"
+#include "InnerInfluence.h"
 
-OuterInfluenceAutomaton::OuterInfluenceAutomaton(AutomatonGrid* grid, double transition_time) :
+InnerInfluence::InnerInfluence(AutomatonGrid* grid, double transition_time) :
 	GPUCellularAutomaton(grid, transition_time),
 	movedir_(1,0),
 	birth_thd_(0.4f),
@@ -12,7 +12,7 @@ OuterInfluenceAutomaton::OuterInfluenceAutomaton(AutomatonGrid* grid, double tra
 
 }
 
-void OuterInfluenceAutomaton::init(viscom::GPUProgramManager mgr) {
+void InnerInfluence::init(viscom::GPUProgramManager mgr) {
 	GPUCellularAutomaton::init(mgr);
 	movedir_uniform_location_ = shader_->getUniformLocation("moveDirection");
 	birth_thd_uloc_ = shader_->getUniformLocation("BIRTH_THRESHOLD");
@@ -23,7 +23,7 @@ void OuterInfluenceAutomaton::init(viscom::GPUProgramManager mgr) {
 }
 
 
-void OuterInfluenceAutomaton::transition(double time) {
+void InnerInfluence::transition(double time) {
 	if (is_initialized_) {
 		glUseProgram(shader_->getProgramId());
 		glUniform2i(movedir_uniform_location_, movedir_.x, movedir_.y);
@@ -36,27 +36,31 @@ void OuterInfluenceAutomaton::transition(double time) {
 	}
 }
 
-void OuterInfluenceAutomaton::setMoveDir(int x, int y) {
+void InnerInfluence::spawnAt(GridCell* c) {
+    grid_->buildAt(c->getCol(), c->getRow(), grid_->SIMULATED_STATE);
+}
+
+void InnerInfluence::setMoveDir(int x, int y) {
 	movedir_.x = x;
 	movedir_.y = y;
 }
 
-void OuterInfluenceAutomaton::setBirthThreshold(GLfloat v) {
+void InnerInfluence::setBirthThreshold(GLfloat v) {
 	birth_thd_ = v;
 }
 
-void OuterInfluenceAutomaton::setDeathThreshold(GLfloat v) {
+void InnerInfluence::setDeathThreshold(GLfloat v) {
 	death_thd_ = v;
 }
 
-void OuterInfluenceAutomaton::setCollisionThreshold(GLfloat v) {
+void InnerInfluence::setCollisionThreshold(GLfloat v) {
 	room_nbors_ahead_thd_ = v;
 }
 
-void OuterInfluenceAutomaton::setOuterInfluenceNeighborThreshold(GLint v) {
+void InnerInfluence::setOuterInfluenceNeighborThreshold(GLint v) {
 	outer_infl_nbors_thd_ = v;
 }
 
-void OuterInfluenceAutomaton::setDamagePerCell(GLint v) {
+void InnerInfluence::setDamagePerCell(GLint v) {
 	damage_per_cell_ = v;
 }

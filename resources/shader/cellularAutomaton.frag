@@ -11,7 +11,8 @@ const uint BSTATE_WALL_RIGHT = 7U;
 const uint BSTATE_WALL_TOP = 8U;
 const uint BSTATE_WALL_BOTTOM = 9U;
 const uint BSTATE_INVALID = 10U;
-const uint BSTATE_OUTER_INFLUENCE = 11U;
+const uint BSTATE_INSIDE_ROOM_INFECTED = 11U;
+const uint BSTATE_OUTER_INFLUENCE = 12U;
 
 uniform vec2 pxsize;
 uniform sampler2D inputGrid;
@@ -94,7 +95,7 @@ void life(uint state, int neighbors) {
 //    - Outer influence cell health decreases by the
 //      value of DAMAGE_PER_CELL for each room neighbor.
 
-uint applyMoveRule(uint st, ivec4 nbors, ivec2 movDir) {
+uint applyMoveRule(uint movingSt, uint st, ivec4 nbors, ivec2 movDir) {
 	int nborsBehind = 0;
 	if(movDir.x!=0) {
 		nborsBehind += (movDir.x>0) ? nbors.z : nbors.x;
@@ -110,14 +111,14 @@ uint applyMoveRule(uint st, ivec4 nbors, ivec2 movDir) {
 		nborsBehindNormalized /= 3.0;
 	}
 	if (st==BSTATE_EMPTY && nborsBehindNormalized>BIRTH_THRESHOLD)
-		return BSTATE_OUTER_INFLUENCE; // birth
-	else if (st==BSTATE_OUTER_INFLUENCE && nborsBehindNormalized<DEATH_THRESHOLD)
+		return movingSt; // birth
+	else if (st==movingSt && nborsBehindNormalized<DEATH_THRESHOLD)
 		return BSTATE_EMPTY; // death
 	else
 		return st; // remain dead/alive
 }
 
-uint applySplitRule(uint st, ivec4 roomNbors, int outerInflNbors, ivec2 movDir) {
+uint applySplitRule(uint splittingSt, uint st, ivec4 roomNbors, int outerInflNbors, ivec2 movDir) {
 	if(st!=BSTATE_EMPTY) return st;
 	int roomNborsAhead = 0;
 	if(movDir.x!=0) {
@@ -130,29 +131,29 @@ uint applySplitRule(uint st, ivec4 roomNbors, int outerInflNbors, ivec2 movDir) 
 	if(movDir.x!=0 && movDir.y!=0) roomNborsAheadNormalized /= 6.0;
 	else roomNborsAheadNormalized /= 3.0;
 	if(roomNborsAheadNormalized>ROOM_NBORS_AHEAD_THRESHOLD
-		&& outerInflNbors>=OUTER_INFL_NBORS_THRESHOLD) return BSTATE_OUTER_INFLUENCE;
+		&& outerInflNbors>=OUTER_INFL_NBORS_THRESHOLD) return splittingSt;
 	else return st;
 }
 
-uint applyDamageRule(uint st, uint hp, int outerInflNbors, int roomNbors) {
+uint applyDamageRule(uint damagingSt, uint st, uint hp, int outerInflNbors, int roomNbors) {
 	int signedHP = int(hp);
 	if(st >= BSTATE_INSIDE_ROOM && st <= BSTATE_WALL_BOTTOM) {
 		return uint(clamp(signedHP - outerInflNbors * DAMAGE_PER_CELL, 0, 100));
 	}
-	else if(st == BSTATE_OUTER_INFLUENCE) {
+	else if(st == damagingSt) {
 		return uint(clamp(signedHP - roomNbors * DAMAGE_PER_CELL, 0, 100));
 	}
 	else return hp;
 }
 
 // ALTERNATIVE RULES (tried to conserve number of cells)
-uint moveCollision(uint st) {
+uint moveCollision(uint movingSt, uint st) {
 	uint stBehind = lookup(inputGrid, pixel - vec2(moveDirection) * pxsize).r;
 	uint stAhead = lookup(inputGrid, pixel + vec2(moveDirection) * pxsize).r;
 	// Movement
-	if(st==BSTATE_EMPTY && stBehind==BSTATE_OUTER_INFLUENCE) // rule
-		return BSTATE_OUTER_INFLUENCE;
-	if(st==BSTATE_OUTER_INFLUENCE && stBehind==BSTATE_EMPTY) // counter-rule
+	if(st==BSTATE_EMPTY && stBehind==movingSt) // rule
+		return movingSt;
+	if(st==movingSt && stBehind==BSTATE_EMPTY) // counter-rule
 		return BSTATE_EMPTY;
 	// Collision
 	if(stAhead>=BSTATE_INSIDE_ROOM && stAhead<=BSTATE_INVALID) {
@@ -160,14 +161,14 @@ uint moveCollision(uint st) {
 		// try to propagate collision information in extra channel
 		uint stLeft = lookup(inputGrid, pixel + vec2(-moveDirection.y,moveDirection.x) * pxsize).r;
 		uint stRight = lookup(inputGrid, pixel + vec2(moveDirection.y,-moveDirection.x) * pxsize).r;
-		if(st==BSTATE_OUTER_INFLUENCE && (stLeft==BSTATE_EMPTY || stRight==BSTATE_EMPTY))
+		if(st==movingSt && (stLeft==BSTATE_EMPTY || stRight==BSTATE_EMPTY))
 			return BSTATE_EMPTY;
-		if(st==BSTATE_EMPTY && (stLeft==BSTATE_OUTER_INFLUENCE || stRight==BSTATE_OUTER_INFLUENCE))
-			return BSTATE_OUTER_INFLUENCE;
-		if(st==BSTATE_EMPTY && (stLeft==BSTATE_OUTER_INFLUENCE && stRight==BSTATE_OUTER_INFLUENCE)) {
+		if(st==BSTATE_EMPTY && (stLeft==movingSt || stRight==movingSt))
+			return movingSt;
+		if(st==BSTATE_EMPTY && (stLeft==movingSt && stRight==movingSt)) {
 			//TODO conflict in empty cell: two outer influence cells want to move here
 			// But can only set one, so we lose one cell (not conservative)
-			return BSTATE_OUTER_INFLUENCE;
+			return movingSt;
 		}
 		return st;
 	}
@@ -181,15 +182,15 @@ void main() {
 	lookupNeighborhood8();
 
 	// Count specific configurations of states
-	ivec4 outerInflNborsDir = countNeighborsWithStateDirected(BSTATE_OUTER_INFLUENCE);
+	ivec4 outerInflNborsDir = countNeighborsWithStateDirected(BSTATE_INSIDE_ROOM_INFECTED);
 	ivec4 roomNborsDir = countNeighborsWithStateBetweenDirected(BSTATE_INSIDE_ROOM, BSTATE_WALL_BOTTOM);
-	int outerInflNbors = countNeighborsWithState(BSTATE_OUTER_INFLUENCE);
+	int outerInflNbors = countNeighborsWithState(BSTATE_INSIDE_ROOM_INFECTED);
 	int roomNbors = countNeighborsWithStateBetween(BSTATE_INSIDE_ROOM, BSTATE_WALL_BOTTOM);
 
 	// Apply the rules
-	uint newState = applyMoveRule(cell.r, outerInflNborsDir, moveDirection);
-	newState = applySplitRule(newState, roomNborsDir, outerInflNbors, moveDirection);
-	uint newHealth = applyDamageRule(cell.r, cell.g, outerInflNbors, roomNbors);
+	uint newState = applyMoveRule(BSTATE_INSIDE_ROOM_INFECTED, cell.r, outerInflNborsDir, moveDirection);
+	newState = applySplitRule(BSTATE_INSIDE_ROOM_INFECTED, newState, roomNborsDir, outerInflNbors, moveDirection);
+	uint newHealth = applyDamageRule(BSTATE_INSIDE_ROOM_INFECTED, cell.r, cell.g, outerInflNbors, roomNbors);
 
 	// If cell died, it is replaced with empty cell
 	if(newHealth == 0U)

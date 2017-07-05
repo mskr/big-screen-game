@@ -25,7 +25,7 @@ void AutomatonGrid::onMeshpoolInitialized() {
 }
 
 void AutomatonGrid::buildAt(size_t col, size_t row, GridCell::BuildState state) {
-	// Called on user input
+	// Called on user input (grid update -> automaton update)
 
 	GridCell* c = getCellAt(col, row);
 	if (!c) return;
@@ -36,9 +36,9 @@ void AutomatonGrid::buildAt(size_t col, size_t row, GridCell::BuildState state) 
 }
 
 void AutomatonGrid::updateCell(GridCell* c, GridCell::BuildState state, int hp) {
-	// Called on automaton transitions for each cell
+	// Called on automaton transitions (automaton update -> grid update)
 
-	if (c->getBuildState() == GridCell::BuildState::OUTER_INFLUENCE && state == GridCell::BuildState::EMPTY) {
+	if (c->getBuildState() == SIMULATED_STATE && state == GridCell::BuildState::EMPTY) {
 		DelayedUpdate* tmp = delayed_update_list_;
 		delayed_update_list_ = new DelayedUpdate(1, c, state);
 		delayed_update_list_->next_ = tmp;
@@ -87,7 +87,7 @@ void AutomatonGrid::populateCircleAtLastMousePosition(int radius) {
 			GridCell* c = getCellAt(startCell->getCol() + x, startCell->getRow() + y);
 			if (!c) continue;
 			if (c->getDistanceTo(startCell) > radius) continue;
-			buildAt(c->getCol(), c->getRow(), GridCell::BuildState::OUTER_INFLUENCE);
+			buildAt(c->getCol(), c->getRow(), SIMULATED_STATE);
 		}
 	}
 }

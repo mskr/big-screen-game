@@ -7,9 +7,9 @@
 /* Represents one cell of the grid.
  * Defines the list of build states used by the roomgame.
  * Supports a debug rendering of grid cells as GL_POINTS.
- * Holds NDC positions, build state and health points.
+ * Holds positions, build state and health points.
  * Holds neighbor cells.
- * Holds its own position (column, row) in the containing grid.
+ * Holds its own column and row in the containing grid.
  * Holds reference to an instance buffer range, where a mesh instance is stored that is renderd at this cell's position.
  * Privides a number of helper methods.
 */
@@ -27,7 +27,8 @@ public:
 		WALL_TOP = 8,
 		WALL_BOTTOM = 9,
 		INVALID = 10,
-		OUTER_INFLUENCE = 11
+        INSIDE_ROOM_INFECTED = 11,
+		OUTER_INFLUENCE = 12
 	};
 	static const int MAX_HEALTH = 100;
 	static const int MIN_HEALTH = 0;

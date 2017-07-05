@@ -21,6 +21,7 @@ class AutomatonGrid : public MeshInstanceGrid {
 	};
 	DelayedUpdate* delayed_update_list_;
 public:
+    static const GridCell::BuildState SIMULATED_STATE = GridCell::BuildState::INSIDE_ROOM_INFECTED;
 	AutomatonGrid(size_t columns, size_t rows, float height, RoomSegmentMeshPool* meshpool);
 	~AutomatonGrid();
 	void setCellularAutomaton(GPUCellularAutomaton*);

@@ -50,7 +50,7 @@ namespace viscom {
 							GridCell::BuildState::WALL_RIGHT,
 							GridCell::BuildState::WALL_LEFT },
                             GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/wall.obj"));
-		meshpool_.addMesh({ GridCell::BuildState::OUTER_INFLUENCE },
+		meshpool_.addMesh({ GridCell::BuildState::INSIDE_ROOM_INFECTED },
 			GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/latticeplane.obj"));
 //TODO		meshpool_.addMesh({ GridCell::BuildState::OUTER_INFLUENCE },
 //			GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/thingy.obj"));

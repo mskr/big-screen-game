@@ -31,6 +31,8 @@ void GridCell::updateHealthPoints(GLuint vbo, int hp) {
 		sizeof(vertex_.health_points),
 		(GLvoid*)&vertex_.health_points);
 	if (vertex_.build_state != EMPTY) {
+        // If the cell is not empty it should have a reference to its mesh instance in an instance buffer
+        // Otherwise there went something WRONG when a MeshInstanceGrid called buildAt on this cell!
 		RoomSegmentMesh::Instance::updateHealth(
 			mesh_instance_.buffer_->id_,
 			mesh_instance_.offset_instances_,

@@ -3,7 +3,11 @@
 
 #include "GPUCellularAutomaton.h"
 
-class OuterInfluenceAutomaton : public GPUCellularAutomaton {
+/* Represents the infection spreading throughout rooms
+ * Uses a cellular automaton running on the GPU.
+ * Infections are initialized by attacking outer influence.
+*/
+class InnerInfluence : public GPUCellularAutomaton {
 	GLint movedir_uniform_location_;
 	glm::ivec2 movedir_;
 	GLint birth_thd_uloc_;
@@ -17,7 +21,7 @@ class OuterInfluenceAutomaton : public GPUCellularAutomaton {
 	GLint damage_per_cell_uloc_;
 	GLint damage_per_cell_;
 public:
-	OuterInfluenceAutomaton(AutomatonGrid* grid, double transition_time);
+    InnerInfluence(AutomatonGrid* grid, double transition_time);
 	void init(viscom::GPUProgramManager mgr);
 	void setMoveDir(int x, int y);
 	void setBirthThreshold(GLfloat v);
@@ -26,6 +30,7 @@ public:
 	void setOuterInfluenceNeighborThreshold(GLint v);
 	void setDamagePerCell(GLint v);
 	void transition(double time);
+    void spawnAt(GridCell* cell);
 };
 
 #endif

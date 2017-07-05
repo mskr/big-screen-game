@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "roomgame\InnerInfluence.h"
+
 #include "../app/ApplicationNodeImplementation.h"
 #include "core\camera\ArcballCamera.h"
 #ifdef WITH_TUIO
@@ -31,7 +33,7 @@ namespace viscom {
 
 	// Automaton only created and running on master node
 	// (As soon as automaton updates MeshInstanceGrid, data is written into buffer, that is synced with slaves)
-	OuterInfluenceAutomaton cellular_automaton_;
+	InnerInfluence cellular_automaton_;
 
 	// Camera is controlled only on master but camera matrix must be synced
 	// (As soon as matrix is passed to a render method, this render method must run on all slaves)
