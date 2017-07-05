@@ -32,8 +32,8 @@ void OuterInfluenceAutomaton::transition(double time) {
 		glUniform1f(room_nbors_ahead_thd_uloc_, room_nbors_ahead_thd_);
 		glUniform1i(outer_infl_nbors_thd_uloc_, outer_infl_nbors_thd_);
 		glUniform1i(damage_per_cell_uloc_, damage_per_cell_);
+        GPUCellularAutomaton::transition(time);
 	}
-	GPUCellularAutomaton::transition(time);
 }
 
 void OuterInfluenceAutomaton::setMoveDir(int x, int y) {
