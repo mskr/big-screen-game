@@ -19,14 +19,16 @@
 
 namespace viscom {
 
-    ApplicationNodeImplementation::ApplicationNodeImplementation(ApplicationNodeInternal* appNode) :
-        ApplicationNodeBase{ appNode },
+	ApplicationNodeImplementation::ApplicationNodeImplementation(ApplicationNodeInternal* appNode) :
+		ApplicationNodeBase{ appNode },
 		GRID_COLS_(64), GRID_ROWS_(64), GRID_HEIGHT_NDC_(2.0f),
 		meshpool_(GRID_COLS_ * GRID_ROWS_),
 		render_mode_(NORMAL),
-		clock_{0.0},
-		camera_matrix_(1.0f)
+		clock_{ 0.0 },
+		camera_matrix_(1.0f),
+		updateManager_()
     {
+		outerInfluence_ = std::make_shared<roomgame::OuterInfluence>();
     }
 
     ApplicationNodeImplementation::~ApplicationNodeImplementation() = default;
@@ -49,12 +51,21 @@ namespace viscom {
 							GridCell::BuildState::WALL_LEFT },
                             GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/wall.obj"));
 		meshpool_.addMesh({ GridCell::BuildState::OUTER_INFLUENCE },
-                            GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/latticeplane.obj"));
+			GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/latticeplane.obj"));
+//TODO		meshpool_.addMesh({ GridCell::BuildState::OUTER_INFLUENCE },
+//			GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/thingy.obj"));
+
+		SynchronizedGameMesh* outerInfluenceMeshComp = new SynchronizedGameMesh(GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/thingy/thingy.obj"), GetApplication()->GetGPUProgramManager().GetResource("applyTextureAndShadow",
+			std::initializer_list<std::string>{ "applyTextureAndShadow.vert", "applyTextureAndShadow.frag" }));
+		outerInfluence_->meshComponent = outerInfluenceMeshComp;
+		outerInfluence_->meshComponent->transform(glm::scale(glm::mat4(1), glm::vec3(0.1, 0.1, 0.1)));
+
 
 		meshpool_.updateUniformEveryFrame("t_sec", [this](GLint uloc) {
 			glUniform1f(uloc, (float)clock_.t_in_sec);
 		});
 
+		
 		backgroundMesh_ = new ShadowReceivingMesh(
             GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/textured_4vertexplane/textured_4vertexplane.obj"),
             GetApplication()->GetGPUProgramManager().GetResource("applyTextureAndShadow",
@@ -72,13 +83,16 @@ namespace viscom {
 
 		/*Set Up the camera*/
 		GetCamera()->SetPosition(glm::vec3(0, 0, 0));
-//		GetCamera()->SetOrientation(glm::quat()));
+
+		updateManager_.AddUpdateable(outerInfluence_);
     }
 
 
     void ApplicationNodeImplementation::UpdateFrame(double currentTime, double elapsedTime)
     {
+		deltaTime = min(currentTime - oldTime,0.25);
 		clock_.t_in_sec = currentTime;
+		oldTime = currentTime;
     }
 
     void ApplicationNodeImplementation::ClearBuffer(FrameBuffer& fbo)
@@ -101,20 +115,20 @@ namespace viscom {
 		//e = glGetError(); printf("%x\n", e);
 
 		glm::mat4 viewProj = GetCamera()->GetViewPerspectiveMatrix();
-        //glm::mat4 proj = GetApplication()->GetEngine()->getCurrentModelViewProjectionMatrix() * camera_matrix_;
 
         //TODO Is the engine matrix really needed here?
-		//glm::mat4 lightspace = GetApplication()->GetEngine()->getCurrentModelViewProjectionMatrix() * shadowMap_->getLightMatrix();
 		glm::mat4 lightspace = shadowMap_->getLightMatrix();
 
 		shadowMap_->DrawToFBO([&]() {
 			meshpool_.renderAllMeshesExcept(lightspace, GridCell::BuildState::OUTER_INFLUENCE, 1);
 		});
 		
+
         fbo.DrawToFBO([&]() {
 			backgroundMesh_->render(viewProj, lightspace, shadowMap_->get(), (render_mode_ == RenderMode::DBUG) ? 1 : 0);
 			glEnable(GL_BLEND); glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			meshpool_.renderAllMeshes(viewProj, 0, (render_mode_ == RenderMode::DBUG) ? 1 : 0);
+			outerInfluence_->meshComponent->render(viewProj);
 			glDisable(GL_BLEND);
         });
     }

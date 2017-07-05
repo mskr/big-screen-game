@@ -9,6 +9,7 @@
 #pragma once
 
 #include "../app/ApplicationNodeImplementation.h"
+#include "core\camera\ArcballCamera.h"
 #ifdef WITH_TUIO
 #include "core/TuioInputWrapper.h"
 #endif
@@ -34,9 +35,8 @@ namespace viscom {
 
 	// Camera is controlled only on master but camera matrix must be synced
 	// (As soon as matrix is passed to a render method, this render method must run on all slaves)
-	DragAndZoomCamera camera_;
-	sgct::SharedObject<glm::mat4> shared_camera_matrix_; // camera matrix the master shares
-
+//	DragAndZoomCamera camera_;
+	
 	/* Interaction mode only exists on master node */
 	enum InteractionMode { GRID, CAMERA, GRID_PLACE_OUTER_INFLUENCE } interaction_mode_;
 

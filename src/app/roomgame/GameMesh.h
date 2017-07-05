@@ -13,7 +13,7 @@
 #include "core/gfx/mesh/SceneMeshNode.h"
 
 #include "../Vertices.h"
-
+#include "sgct.h"
 
 /* Base class for all meshes rendered by the roomgame.
  * Construct with a vertex class as template parameter (providing CreateVertexBuffer and SetVertexAttributes functions).
@@ -176,8 +176,8 @@ private:
 
 
 /* Simple mesh class extending MeshBase.
- * Owns mesh and shader resources.
- * Adds a model matrix for dynamic transformation.
+* Owns mesh and shader resources.
+* Adds a model matrix for dynamic transformation.
 */
 class SimpleGameMesh : public MeshBase<viscom::SimpleMeshVertex> {
 protected:
@@ -191,6 +191,48 @@ public:
 	{}
 	void transform(glm::mat4& t) {
 		model_matrix_ *= t;
+	}
+	virtual void render(glm::mat4& vp, GLint isDebugMode = 0) const {
+		MeshBase::render(vp, isDebugMode, model_matrix_);
+	}
+	virtual void render(std::function<void(void)> outsideUniformSetter, glm::mat4& vp, GLint isDebugMode = 0) const {
+		MeshBase::render(outsideUniformSetter, vp, isDebugMode, model_matrix_);
+	}
+};
+
+
+/* Simple synchronized mesh class extending MeshBase.
+* Owns mesh and shader resources.
+* Adds a model matrix for dynamic transformation.
+*/
+class SynchronizedGameMesh : public MeshBase<viscom::SimpleMeshVertex> {
+protected:
+	std::shared_ptr<viscom::Mesh> mesh_resource_;
+	std::shared_ptr<viscom::GPUProgram> shader_resource_;
+	glm::mat4 model_matrix_;
+	sgct::SharedObject<glm::mat4> sharedModelMatrix_;
+public:
+	SynchronizedGameMesh(std::shared_ptr<viscom::Mesh> mesh, std::shared_ptr<viscom::GPUProgram> shader) :
+		MeshBase(mesh.get(), shader.get()),
+		mesh_resource_(mesh), shader_resource_(shader)
+	{}
+	void transform(glm::mat4& t) {
+		model_matrix_ *= t;
+	}
+	void preSync() {
+		sharedModelMatrix_.setVal(model_matrix_);
+	}
+	void encode() {
+		sgct::SharedData::instance()->writeObj(&sharedModelMatrix_);
+	}
+	void decode() {
+		sgct::SharedData::instance()->readObj(&sharedModelMatrix_);
+	}
+	void updateSyncedSlave() {
+		model_matrix_ = sharedModelMatrix_.getVal();
+	}
+	void updateSyncedMaster() {
+		//Can maybe stay empty
 	}
 	virtual void render(glm::mat4& vp, GLint isDebugMode = 0) const {
 		MeshBase::render(vp, isDebugMode, model_matrix_);

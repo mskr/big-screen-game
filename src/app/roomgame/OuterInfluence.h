@@ -1,5 +1,6 @@
 #pragma once
 #include "app\roomgame\IUpdateable.h"
+#include "app\roomgame\RoomInteractiveGrid.h"
 #include "glm\matrix.hpp"
 #include <random>
 #include <ctime>
@@ -15,11 +16,16 @@ namespace roomgame {
 		virtual void Update(double deltaTime) override;
 		virtual void UpdateSlow(double deltaTime) override;
 
+
+		SynchronizedGameMesh* meshComponent;
+		RoomInteractiveGrid* grid;
 	private:
 		int mode;
+		double deltaTime;
 		float actionStatus;
-		glm::vec3 position;
+		glm::vec3 oldPosition;
 		glm::vec3 targetPosition;
+		glm::vec3 posDiff;
 		void DecideNextAction();
 		void Patrol();
 		void Attack();

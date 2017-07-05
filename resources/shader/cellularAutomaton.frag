@@ -24,7 +24,7 @@ uniform int OUTER_INFL_NBORS_THRESHOLD;// integer from 0 to 8
 uniform int DAMAGE_PER_CELL;// integer from 0 to 100
 
 in vec2 pixel;
-out vec2 outputCell;
+out vec4 outputCell;
 
 #define N 0
 #define NE 1
@@ -50,21 +50,21 @@ uvec2 lookup(sampler2D s, vec2 c) {
 }
 
 void setOutput(uint buildState, uint healthPoints) {
-	outputCell = vec2(float(buildState)/255.0, float(healthPoints)/255.0); // convert uint to UNORM
+	outputCell = vec4(float(buildState)/255.0, float(healthPoints)/255.0, 0, 0); // convert uint to UNORM
 }
 
 void life(uint state, int neighbors) {
 	if(state == BSTATE_EMPTY && neighbors == 3) {
-		outputCell = vec2(float(BSTATE_OUTER_INFLUENCE)/255.0, 100/255.0);
+		setOutput(BSTATE_OUTER_INFLUENCE, 100U);
 	}
 	else if(state == BSTATE_OUTER_INFLUENCE && neighbors < 2) {
-		outputCell = vec2(float(BSTATE_EMPTY)/255.0, 100/255.0);
+		setOutput(BSTATE_EMPTY, 100U);
 	}
 	else if(state == BSTATE_OUTER_INFLUENCE && neighbors > 3) {
-		outputCell = vec2(float(BSTATE_EMPTY)/255.0, 100/255.0);
+		setOutput(BSTATE_EMPTY, 100U);
 	}
 	else {
-		outputCell = vec2(float(state)/255.0, 100/255.0);
+		setOutput(state, 100U);
 	}
 }
 
@@ -175,22 +175,33 @@ uint moveCollision(uint st) {
 }
 
 void main() {
+	
+	// Look up the states of myself and of my neighbors
 	uvec2 cell = lookup(inputGrid, pixel);
 	lookupNeighborhood8();
 
+	// Count specific configurations of states
 	ivec4 outerInflNborsDir = countNeighborsWithStateDirected(BSTATE_OUTER_INFLUENCE);
 	ivec4 roomNborsDir = countNeighborsWithStateBetweenDirected(BSTATE_INSIDE_ROOM, BSTATE_WALL_BOTTOM);
 	int outerInflNbors = countNeighborsWithState(BSTATE_OUTER_INFLUENCE);
 	int roomNbors = countNeighborsWithStateBetween(BSTATE_INSIDE_ROOM, BSTATE_WALL_BOTTOM);
 
+	// Apply the rules
 	uint newState = applyMoveRule(cell.r, outerInflNborsDir, moveDirection);
 	newState = applySplitRule(newState, roomNborsDir, outerInflNbors, moveDirection);
 	uint newHealth = applyDamageRule(cell.r, cell.g, outerInflNbors, roomNbors);
 
-	if(newHealth == 0U) newState = BSTATE_EMPTY;
-	if(newState == BSTATE_EMPTY) newHealth = 100U; //TODO Dynamic cells die too slow. Better track cells and their health
-	setOutput(newState, newHealth);
+	// If cell died, it is replaced with empty cell
+	if(newHealth == 0U)
+		newState = BSTATE_EMPTY;
+
+	// Ensure that new and old empty cells always have 100 HP
+	if(newState == BSTATE_EMPTY)
+		newHealth = 100U; //TODO Dynamic cells die too slow. Better track cells and their health
 	
+	setOutput(newState, newHealth);
+
+	// Can also play conways game of life :)
 	// life(cell.r, outerInflNbors);
 }
 

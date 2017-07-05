@@ -15,8 +15,6 @@ namespace viscom {
     class SlaveNode final : public SlaveNodeInternal
     {
 
-		/* camera matrix is shared by master node */
-		sgct::SharedObject<glm::mat4> shared_camera_matrix_;
 
     public:
 

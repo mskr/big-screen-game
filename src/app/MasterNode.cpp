@@ -24,8 +24,7 @@ namespace viscom {
         ApplicationNodeImplementation{ appNode },
 		grid_(GRID_COLS_, GRID_ROWS_, GRID_HEIGHT_NDC_, &meshpool_),
 		cellular_automaton_(&grid_, automaton_transition_time),
-		interaction_mode_(GRID_PLACE_OUTER_INFLUENCE),
-		camera_(glm::mat4(1))
+		interaction_mode_(GRID_PLACE_OUTER_INFLUENCE)
     {
     }
 
@@ -84,13 +83,15 @@ namespace viscom {
 		meshpool_.updateUniformEveryFrame("gridCellSize", [&](GLint uloc) {
 			glUniform1f(uloc, grid_.getCellSize());
 		});
+
+		outerInfluence_->grid = &grid_;
     }
 
 	/* Sync step 1: Master sets values of shared objects to corresponding non-shared objects */
     void MasterNode::PreSync()
     {
         ApplicationNodeImplementation::PreSync();
-		shared_camera_matrix_.setVal(camera_.getViewProjection());
+		outerInfluence_->meshComponent->preSync();
     }
 
 	/* Sync step 2: Master sends shared objects to the central SharedData singleton
@@ -98,7 +99,7 @@ namespace viscom {
 	*/
 	void MasterNode::EncodeData() {
 		ApplicationNodeImplementation::EncodeData();
-		sgct::SharedData::instance()->writeObj(&shared_camera_matrix_);
+		outerInfluence_->meshComponent->encode();
 	}
 
 	/* Sync step 3: Master updates its copies of cluster-wide variables with data it just synced
@@ -106,7 +107,7 @@ namespace viscom {
 	*/
 	void MasterNode::UpdateSyncedInfo() {
 		ApplicationNodeImplementation::UpdateSyncedInfo();
-		camera_matrix_ = camera_.getViewProjection();
+		outerInfluence_->meshComponent->updateSyncedMaster();
 	}
 
 	void MasterNode::UpdateFrame(double t1, double t2) {
@@ -120,6 +121,7 @@ namespace viscom {
 		cellular_automaton_.setOuterInfluenceNeighborThreshold(automaton_outer_infl_nbors_thd);
 		cellular_automaton_.setDamagePerCell(automaton_damage_per_cell);
 		cellular_automaton_.transition(clock_.t_in_sec);
+<<<<<<< HEAD
 	}
 
     void MasterNode::DrawFrame(FrameBuffer& fbo)
@@ -127,8 +129,11 @@ namespace viscom {
         ApplicationNodeImplementation::DrawFrame(fbo);
 
 		updateManager_.ManageUpdates(GetApplication()->GetElapsedTime(), true);
+=======
+		
+		updateManager_.ManageUpdates(deltaTime);
+>>>>>>> 9bf64b6700432ea59092fea70d3de39670bcde74
 		glm::mat4 viewProj = GetCamera()->GetViewPerspectiveMatrix();
-		//glm::mat4 proj = GetApplication()->GetEngine()->getCurrentModelViewProjectionMatrix() * camera_.getViewProjection();
 
 		grid_.updateProjection(viewProj);
 		fbo.DrawToFBO([&] { 
@@ -196,7 +201,7 @@ namespace viscom {
 			}
 		}
 		else if (key == GLFW_KEY_V && action == GLFW_PRESS) {
-			camera_.setXRotation(-glm::quarter_pi<float>());
+			GetCamera()->SetOrientation(GetCamera()->GetOrientation()*glm::quat(glm::vec3(glm::radians<float>(-5),0,0)));
 		}
 		else if (key == GLFW_KEY_S && action == GLFW_PRESS) {
 			if (interaction_mode_ == GRID_PLACE_OUTER_INFLUENCE) {
@@ -246,8 +251,8 @@ namespace viscom {
 				if (action == GLFW_PRESS) grid_.populateCircleAtLastMousePosition(5);
 			}
 			else if (interaction_mode_ == InteractionMode::CAMERA) {
-				if (action == GLFW_PRESS) camera_.onTouch();
-				else if (action == GLFW_RELEASE) camera_.onRelease();
+//				if (action == GLFW_PRESS) camera_.onTouch();
+//				else if (action == GLFW_RELEASE) camera_.onRelease();
 			}
 		}
 #ifndef VISCOM_CLIENTGUI
@@ -266,7 +271,7 @@ namespace viscom {
 			grid_.onMouseMove(-1, x, y);
 		else
 			grid_.onMouseMove(-2, x, y);
-		camera_.onMouseMove((float)x, (float)y);
+		//camera_.onMouseMove((float)x, (float)y);
 #ifndef VISCOM_CLIENTGUI
         ImGui_ImplGlfwGL3_MousePositionCallback(x, y);
 #endif
@@ -276,7 +281,11 @@ namespace viscom {
 	/* Mouse scroll events are used to zoom, when in camera mode */
     bool MasterNode::MouseScrollCallback(double xoffset, double yoffset)
     {
-		if (interaction_mode_ == InteractionMode::CAMERA) camera_.onScroll((float)yoffset);
+		if (interaction_mode_ == InteractionMode::CAMERA) {
+//			camera_.onScroll((float)yoffset);
+//			camera_->HandleMouse(0,0,)
+			GetCamera()->SetPosition(GetCamera()->GetPosition() + glm::vec3(0, 0, (float)yoffset*0.1f));
+		}
 #ifndef VISCOM_CLIENTGUI
         ImGui_ImplGlfwGL3_ScrollCallback(xoffset, yoffset);
 #endif

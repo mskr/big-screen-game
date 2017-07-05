@@ -48,12 +48,12 @@ void GPUCellularAutomaton::init(viscom::GPUProgramManager mgr) {
 	glBindVertexArray(vao_);
 	GLfloat quad[] = {
 		// (x, y)      // (u, v)
-		-1.0f,  1.0f,  0.0f, 1.0f, // top left
+        -1.0f,  1.0f,  0.0f, 1.0f, // top left
+        -1.0f, -1.0f,  0.0f, 0.0f, // bottom left
 		1.0f, -1.0f,  1.0f, 0.0f, // bottom right
-		-1.0f, -1.0f,  0.0f, 0.0f, // bottom left
 		-1.0f,  1.0f,  0.0f, 1.0f, // top left
-		1.0f,  1.0f,  1.0f, 1.0f, // top right
-		1.0f, -1.0f,  1.0f, 0.0f // bottom right
+        1.0f, -1.0f,  1.0f, 0.0f, // bottom right
+		1.0f,  1.0f,  1.0f, 1.0f // top right
 	};
 	GLuint vbo;
 	glGenBuffers(1, &vbo);
@@ -113,8 +113,6 @@ void GPUCellularAutomaton::updateCell(GridCell* c, GLint buildState, GLint hp) {
 }
 
 void GPUCellularAutomaton::transition(double time) {
-	// Test if simulation can begin
-	if (!is_initialized_) return;
 	// Test if it is time for the next generation
 	delta_time_ = time - last_time_;
 	if (delta_time_ >= transition_time_) {

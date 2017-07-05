@@ -17,6 +17,8 @@
 #include "app/roomgame/GameMesh.h"
 #include "app/roomgame/ShadowMap.h"
 #include "app/roomgame/UpdateManager.h"
+#include "app\roomgame\OuterInfluence.h"
+
 
 
 namespace viscom {
@@ -61,6 +63,9 @@ namespace viscom {
 		const int GRID_ROWS_;
 		const float GRID_HEIGHT_NDC_;
 
+		/**/
+		std::shared_ptr<roomgame::OuterInfluence> outerInfluence_;
+
 		/* Mesh pool manages and renders instanced meshes corresponding to build states of grid cells */
 		RoomSegmentMeshPool meshpool_; // hold mesh and shader resources and render on all nodes
 
@@ -80,6 +85,12 @@ namespace viscom {
 		struct Clock {
 			double t_in_sec;
 		} clock_;
+
+		/* Time since the last frame*/
+		double deltaTime = 0;
+
+		/* Time at the last frame*/
+		double oldTime = 0;
 
         bool mouseTest = false;
 

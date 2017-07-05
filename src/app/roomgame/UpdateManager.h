@@ -10,7 +10,7 @@ namespace roomgame {
 	public:
 		UpdateManager();
 		~UpdateManager();
-		void ManageUpdates(double deltaTime, bool master);
+		void ManageUpdates(double deltaTime);
 		void AddUpdateable(std::shared_ptr<IUpdateable> obj);
 		void RemoveUpdateable(std::shared_ptr<IUpdateable> obj);
 	private:

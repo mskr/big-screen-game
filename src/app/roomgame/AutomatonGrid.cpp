@@ -37,8 +37,7 @@ void AutomatonGrid::buildAt(size_t col, size_t row, GridCell::BuildState state) 
 
 void AutomatonGrid::updateCell(GridCell* c, GridCell::BuildState state, int hp) {
 	// Called on automaton transitions for each cell
-	
-	/* //TODO FIX THIS: automaton overrides grid with outdated states
+
 	if (c->getBuildState() == GridCell::BuildState::OUTER_INFLUENCE && state == GridCell::BuildState::EMPTY) {
 		DelayedUpdate* tmp = delayed_update_list_;
 		delayed_update_list_ = new DelayedUpdate(1, c, state);
@@ -48,7 +47,6 @@ void AutomatonGrid::updateCell(GridCell* c, GridCell::BuildState state, int hp) 
 	MeshInstanceGrid::buildAt(c, state);
 	c->updateHealthPoints(vbo_, hp); // thinking of dynamic outer influence...
 	// a fixed-on-cell health is not very practical
-	*/
 }
 
 void AutomatonGrid::onTransition() {
