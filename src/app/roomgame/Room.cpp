@@ -49,7 +49,7 @@ void Room::finish() {
 	// 6) Prevent growing/shrinking/spanning of finished rooms
 	// 7) Clearing a finished room should update build state for each cell but remove only 1 buffer range in the ordered buffer! How to do this?
 	grid_->forEachCellInRange(leftLowerCorner_, rightUpperCorner_, [&](GridCell* cell) {
-		RoomSegmentMesh::InstanceBufferRange bufferRange = cell->getMeshInstance();
+        RoomSegmentMesh::InstanceBufferRange bufferRange = cell->getMeshInstance();
 	});
 }
 

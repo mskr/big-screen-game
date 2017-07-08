@@ -63,7 +63,7 @@ private:
 	GridCell* westNeighbor;
 	size_t col_idx_;
 	size_t row_idx_;
-	RoomSegmentMesh::InstanceBufferRange mesh_instance_;
+    RoomSegmentMesh::InstanceBufferRange mesh_instance_;
 	bool isSource_ = false;
 public:
 	GridCell(float x, float y, size_t col_idx, size_t row_idx);
@@ -100,7 +100,7 @@ public:
 	size_t getColDistanceTo(GridCell* other);
 	size_t getRowDistanceTo(GridCell* other);
 	float getDistanceTo(GridCell* other);
-	RoomSegmentMesh::InstanceBufferRange getMeshInstance();
+    RoomSegmentMesh::InstanceBufferRange getMeshInstance();
 };
 
 #endif

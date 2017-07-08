@@ -12,10 +12,8 @@
 
 namespace viscom {
 
-    class SlaveNode final : public SlaveNodeInternal
-    {
-
-
+    /* Roomgame currently has no data exclusive to slave nodes */
+    class SlaveNode final : public SlaveNodeInternal {
     public:
 
         explicit SlaveNode(ApplicationNodeInternal* appNode);

@@ -272,13 +272,24 @@ public:
 /* Mesh class for synchronized mesh instances on a grid.
  * Has no owned resources because it is managed by a mesh pool.
  * Synchronizes the instance buffer.
+ * The instance buffer is dynamic.
 */
-template <class INSTANCE_LAYOUT>
+template <class PER_INSTANCE_DATA>
 class SynchronizedInstancedMesh : public MeshBase<viscom::SimpleMeshVertex> {
-    std::vector<INSTANCE_LAYOUT> instance_buffer_;
-    sgct::SharedVector<INSTANCE_LAYOUT> shared_instance_buffer_;
+private:
+    sgct::SharedVector<PER_INSTANCE_DATA> shared_instance_buffer_;
+protected:
+    roomgame::InstanceBuffer gpu_instance_buffer_;
+    std::vector<PER_INSTANCE_DATA> instance_buffer_;
 public:
-    SynchronizedInstancedMesh(viscom::Mesh* mesh, viscom::GPUProgram* program) : MeshBase(mesh, program) {}
+    SynchronizedInstancedMesh(viscom::Mesh* mesh, viscom::GPUProgram* program, size_t pool_allocation_bytes)
+        : MeshBase(mesh, program), gpu_instance_buffer_(pool_allocation_bytes)
+    {
+    
+    }
+    ~SynchronizedInstancedMesh() {
+        glDeleteBuffers(1, &gpu_instance_buffer_.id_);
+    }
     void preSync() { // master
         shared_instance_buffer_.setVal(instance_buffer_);
     }
@@ -290,9 +301,39 @@ public:
     }
     void updateSyncedSlave() {
         instance_buffer_ = shared_instance_buffer_.getVal();
+        uploadInstanceBufferToGPU();
     }
     void updateSyncedMaster() {
         //Can maybe stay empty
+        uploadInstanceBufferToGPU();
+    }
+private:
+    void uploadInstanceBufferToGPU() {
+        // instance buffer reached current capacity?
+        if (instance_buffer_.size() * sizeof(PER_INSTANCE_DATA) > gpu_instance_buffer_.pool_allocation_bytes_ * gpu_instance_buffer_.num_reallocations_) {
+            reallocGPUMemory();
+        }
+        glBindBuffer(GL_ARRAY_BUFFER, gpu_instance_buffer_.id_);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, instance_buffer_.size() * sizeof(PER_INSTANCE_DATA), instance_buffer_.data());
+    }
+    void reallocGPUMemory() {
+        // allocate new buffer and and copy data
+        glBindBuffer(GL_COPY_READ_BUFFER, gpu_instance_buffer_.id_);
+        GLuint tmpBuffer;
+        glGenBuffers(1, &tmpBuffer);
+        glBindBuffer(GL_COPY_WRITE_BUFFER, tmpBuffer);
+        gpu_instance_buffer_.num_reallocations_++;
+        glBufferData(GL_COPY_WRITE_BUFFER, gpu_instance_buffer_.pool_allocation_bytes_ * gpu_instance_buffer_.num_reallocations_, 0, GL_STATIC_COPY);
+        glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, gpu_instance_buffer_.num_instances_ * sizeof(PER_INSTANCE_DATA));
+        // THIS IS WHAT MAKES REALLOCATION APPROACH ***UGLY***:
+        glDeleteBuffers(1, &gpu_instance_buffer_.id_); // Delete old instance buffer
+        glDeleteVertexArrays(1, &vao_); // Delete old VAO
+        resetShader(); // Create new VAO and connect old vertex buffer
+                       // Connect new instance buffer
+        gpu_instance_buffer_.id_ = tmpBuffer;
+        glBindVertexArray(vao_);
+        glBindBuffer(GL_ARRAY_BUFFER, gpu_instance_buffer_.id_);
+        PER_INSTANCE_DATA::setAttribPointer();
     }
 };
 

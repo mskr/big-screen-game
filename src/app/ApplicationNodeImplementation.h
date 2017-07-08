@@ -10,15 +10,14 @@
 
 #include "core/ApplicationNodeInternal.h"
 #include "core/ApplicationNodeBase.h"
+
 #include "app/roomgame/AutomatonGrid.h"
 #include "app/roomgame/RoomSegmentMeshPool.h"
 #include "app/roomgame/DragAndZoomCamera.h"
 #include "app/roomgame/GameMesh.h"
 #include "app/roomgame/ShadowMap.h"
 #include "app/roomgame/UpdateManager.h"
-#include "app\roomgame\OuterInfluence.h"
-
-
+#include "app/roomgame/OuterInfluence.h"
 
 namespace viscom {
 

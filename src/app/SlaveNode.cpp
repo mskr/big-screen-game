@@ -43,12 +43,14 @@ namespace viscom {
 	void SlaveNode::DecodeData() {
 		SlaveNodeInternal::DecodeData();
 		outerInfluence_->meshComponent->decode();
+        meshpool_.decode();
 	}
 
 	/* Sync step 2: Slaves set their copies of cluster-wide variables to values received from master */
 	void SlaveNode::UpdateSyncedInfo() {
 		SlaveNodeInternal::UpdateSyncedInfo();
 		outerInfluence_->meshComponent->updateSyncedSlave();
+        meshpool_.updateSyncedSlave();
 	}
 
 }

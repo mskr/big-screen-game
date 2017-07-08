@@ -30,7 +30,7 @@ void MeshInstanceGrid::addInstanceAt(GridCell* c, GridCell::BuildState st) {
     Same scheme as with addInstanceAt, see above
 */
 void MeshInstanceGrid::removeInstanceAt(GridCell* c) {
-	RoomSegmentMesh::InstanceBufferRange bufferRange = c->getMeshInstance();
+    RoomSegmentMesh::InstanceBufferRange bufferRange = c->getMeshInstance();
 	if (bufferRange.mesh_)
 		bufferRange.mesh_->removeInstanceUnordered(bufferRange.offset_instances_);
 }
