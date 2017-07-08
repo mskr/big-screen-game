@@ -133,7 +133,7 @@ namespace viscom {
 
 		grid_.updateProjection(viewProj);
 		fbo.DrawToFBO([&] { 
-			if (render_mode_ == RenderMode::DBUG) grid_.onFrame();
+			if (render_mode_ == RenderMode::DBG) grid_.onFrame();
 		});
 		
     }
@@ -210,7 +210,7 @@ namespace viscom {
 		}
 		else if (key == GLFW_KEY_D) {
 			if (action == GLFW_PRESS) {
-				render_mode_ = RenderMode::DBUG;
+				render_mode_ = RenderMode::DBG;
 			}
 			else if (action == GLFW_RELEASE) {
 				render_mode_ = RenderMode::NORMAL;
