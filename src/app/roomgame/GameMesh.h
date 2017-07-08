@@ -214,6 +214,18 @@ public:
     void render(glm::mat4& vp, glm::mat4& lightspace, GLuint shadowMap, GLint isDebugMode = 0) const;
 };
 
+class PostProcessingMesh : public SimpleGameMesh {
+	GLint uloc_lightspace_matrix_;
+	GLint uloc_shadow_map_;
+	GLint uloc_time_;
+	GLdouble time_;
+public:
+	PostProcessingMesh(std::shared_ptr<viscom::Mesh> mesh, std::shared_ptr<viscom::GPUProgram> shader);
+	void setTime(double time) {
+		time_ = time;
+	}
+	void render(glm::mat4& vp, glm::mat4& lightspace, GLuint shadowMap, GLint isDebugMode = 0) const;
+};
 
 /* Simple synchronized mesh class extending MeshBase.
  * Owns mesh and shader resources.
