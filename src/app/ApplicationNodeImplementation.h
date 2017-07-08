@@ -75,7 +75,7 @@ namespace viscom {
 		ShadowReceivingMesh* backgroundMesh_; // hold static mesh on all nodes
 
 		/* Switch for debug rendering */
-		enum RenderMode { NORMAL, DBUG } render_mode_; // hold on all nodes but able to change only on master
+		enum RenderMode { NORMAL, DBG } render_mode_; // hold on all nodes but able to change only on master
 
 		/* Synchronized camera matrix (see MasterNode.cpp and SlaveNode.cpp for sync process) */
 		glm::mat4 camera_matrix_;

@@ -125,9 +125,9 @@ namespace viscom {
 		
 
         fbo.DrawToFBO([&]() {
-			backgroundMesh_->render(viewProj, lightspace, shadowMap_->get(), (render_mode_ == RenderMode::DBUG) ? 1 : 0);
+			backgroundMesh_->render(viewProj, lightspace, shadowMap_->get(), (render_mode_ == RenderMode::DBG) ? 1 : 0);
 			glEnable(GL_BLEND); glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-			meshpool_.renderAllMeshes(viewProj, 0, (render_mode_ == RenderMode::DBUG) ? 1 : 0);
+			meshpool_.renderAllMeshes(viewProj, 0, (render_mode_ == RenderMode::DBG) ? 1 : 0);
 			outerInfluence_->meshComponent->render(viewProj);
 			glDisable(GL_BLEND);
         });
