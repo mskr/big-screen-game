@@ -12,23 +12,26 @@
 
 /* Class for instanced meshes.
  * Especially intended for segments of rooms on a grid.
- * However usable for all instanced meshes so far.
+ * However usable for all instanced meshes on the grid so far.
  * 
 */
 class RoomSegmentMesh : public MeshBase<viscom::SimpleMeshVertex> {
 public:
+    /* Representation of an instance buffer supporting dynamic reallocations */
 	struct InstanceBuffer {
-		GLuint id_;
-		int num_instances_;
-		const size_t pool_allocation_bytes_;
-		size_t num_reallocations_;
-		InstanceBuffer(size_t pool_allocation_bytes);
+		GLuint id_; // GL handle
+		int num_instances_; // current size
+		const size_t pool_allocation_bytes_; // chunk size for reallocations
+		size_t num_reallocations_; // current number of reallocations
+		InstanceBuffer(size_t pool_allocation_bytes); // constructor
 	};
-	struct Instance { // instance attribs
-		glm::vec3 translation = glm::vec3(0);
-		GLfloat scale = 0.0f;
-		GLint buildState = 0;
-		GLint health = 0;
+    /* Representation of a room segment mesh instance */
+	struct Instance {
+        // instance attributes (accessable from vertex shader)
+		glm::vec3 translation = glm::vec3(0); // local translation
+		GLfloat scale = 0.0f; // scale
+		GLint buildState = 0; // build state (a value from GridCell::BuildState enum)
+		GLint health = 0; // health points in [0, 100]
 		static const void updateHealth(GLuint buffer, int offset_instances, int h) {
 			glBindBuffer(GL_ARRAY_BUFFER, buffer);
 			glBufferSubData(GL_ARRAY_BUFFER,
@@ -59,23 +62,24 @@ public:
 			glVertexAttribDivisor(healthLoc, 1);
 		}
 	};
+    /* Representation of a range in an instance buffer */
 	struct InstanceBufferRange {
-		RoomSegmentMesh* mesh_ = 0;
-		InstanceBuffer* buffer_ = 0;
-		int offset_instances_ = -1;
-		int num_instances_ = -1;
+		RoomSegmentMesh* mesh_ = 0; // instanced mesh reference
+		InstanceBuffer* buffer_ = 0; // buffer reference
+		int offset_instances_ = -1; // offset in buffer in units of instances
+		int num_instances_ = -1; // instances in the range
 	};
+    /* Queue data structure for managing holes in buffers */
 	struct NextFreeOffsetQueueElem {
-		int offset_;
-		NextFreeOffsetQueueElem* el_;
-		NextFreeOffsetQueueElem(int off) :
-			offset_(off), el_(0) {}
+		int offset_; // offset of the hole
+		NextFreeOffsetQueueElem* el_; // next queue element
+		NextFreeOffsetQueueElem(int off) : offset_(off), el_(0) {} // constructor
 	};
 private:
-	InstanceBuffer room_ordered_buffer_;
-	InstanceBuffer unordered_buffer_;
-	NextFreeOffsetQueueElem* next_free_offset_;
-	NextFreeOffsetQueueElem* last_free_offset_;
+	InstanceBuffer room_ordered_buffer_; // instance buffer for finished room segments
+	InstanceBuffer unordered_buffer_; // instance buffer for room segments in the building process
+	NextFreeOffsetQueueElem* next_free_offset_; // beginning of the hole offset queue
+	NextFreeOffsetQueueElem* last_free_offset_; // end of the hole offset queue
 public:
 	RoomSegmentMesh(viscom::Mesh* mesh, viscom::GPUProgram* program, size_t pool_allocation_bytes);
 	~RoomSegmentMesh();
@@ -83,11 +87,6 @@ public:
 	void removeInstanceUnordered(int offset_instances);
 	InstanceBufferRange moveInstancesToRoomOrderedBuffer(std::initializer_list<int> offsets);
 	void renderAllInstances(std::function<void(void)> uniformSetter, const glm::mat4& view_projection, GLint isDebugMode);
-private:
-	void renderNode(std::vector<GLint>* uniformLocations,
-		const viscom::SceneMeshNode* node, bool overrideBump=false);
-	void renderSubMesh(std::vector<GLint>* uniformLocations,
-		const glm::mat4& modelMatrix, const viscom::SubMesh* subMesh, bool overrideBump=false);
 };
 
 #endif

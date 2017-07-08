@@ -78,22 +78,24 @@ RoomSegmentMesh::InstanceBufferRange RoomSegmentMesh::addInstanceUnordered(Insta
 }
 
 void RoomSegmentMesh::removeInstanceUnordered(int offset_instances) {
+    // removing last offset in buffer is done by simply decrementing instance count
 	if (offset_instances == unordered_buffer_.num_instances_ - 1) {
 		unordered_buffer_.num_instances_--;
 		return;
 	}
-	if (!next_free_offset_) {
+    // removing instance from the middle of the buffer creates a hole
+	if (!next_free_offset_) { // create the first hole
 		next_free_offset_ = new NextFreeOffsetQueueElem(offset_instances);
 		last_free_offset_ = next_free_offset_;
 	}
-	else {
+	else { // append a hole to the queue
 		last_free_offset_->el_ = new NextFreeOffsetQueueElem(offset_instances);
 		last_free_offset_ = last_free_offset_->el_;
 	}
-	
-	Instance zeros;
+	// cannot prevent GL from rendering holes too: insert a zero scaled instance into the hole (bad hack)
+	Instance zeroScaledInstance;
 	glBindBuffer(GL_ARRAY_BUFFER, unordered_buffer_.id_);
-	glBufferSubData(GL_ARRAY_BUFFER, offset_instances * sizeof(Instance), sizeof(Instance), &zeros);
+	glBufferSubData(GL_ARRAY_BUFFER, offset_instances * sizeof(Instance), sizeof(Instance), &zeroScaledInstance);
 	
 }
 
