@@ -209,10 +209,10 @@ class SynchronizedGameMesh : public MeshBase<viscom::SimpleMeshVertex> {
 protected:
 	std::shared_ptr<viscom::Mesh> mesh_resource_;
 	std::shared_ptr<viscom::GPUProgram> shader_resource_;
-	glm::mat4 model_matrix_;
 	sgct::SharedObject<glm::mat4> sharedModelMatrix_;
 public:
-	SynchronizedGameMesh(std::shared_ptr<viscom::Mesh> mesh, std::shared_ptr<viscom::GPUProgram> shader) :
+    glm::mat4 model_matrix_;
+    SynchronizedGameMesh(std::shared_ptr<viscom::Mesh> mesh, std::shared_ptr<viscom::GPUProgram> shader) :
 		MeshBase(mesh.get(), shader.get()),
 		mesh_resource_(mesh), shader_resource_(shader)
 	{}
