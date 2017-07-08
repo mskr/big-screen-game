@@ -201,9 +201,24 @@ public:
 };
 
 
+/* Mesh supporting use of shadow mapping.
+* Extends MeshBase.
+* Holds uniform locations of lightspace matrix and shadow map.
+* Uses custom uniform render function of MeshBase.
+*/
+class ShadowReceivingMesh : public SimpleGameMesh {
+    GLint uloc_lightspace_matrix_;
+    GLint uloc_shadow_map_;
+public:
+    ShadowReceivingMesh(std::shared_ptr<viscom::Mesh> mesh, std::shared_ptr<viscom::GPUProgram> shader);
+    void render(glm::mat4& vp, glm::mat4& lightspace, GLuint shadowMap, GLint isDebugMode = 0) const;
+};
+
+
 /* Simple synchronized mesh class extending MeshBase.
-* Owns mesh and shader resources.
-* Adds a model matrix for dynamic transformation.
+ * Owns mesh and shader resources.
+ * Adds a model matrix for dynamic transformation.
+ * Synchronizes the model matrix with SGCT nodes.
 */
 class SynchronizedGameMesh : public MeshBase<viscom::SimpleMeshVertex> {
 protected:
@@ -219,13 +234,13 @@ public:
 	void transform(glm::mat4& t) {
 		model_matrix_ *= t;
 	}
-	void preSync() {
+	void preSync() { // master
 		sharedModelMatrix_.setVal(model_matrix_);
 	}
-	void encode() {
+	void encode() { // master
 		sgct::SharedData::instance()->writeObj(&sharedModelMatrix_);
 	}
-	void decode() {
+	void decode() { // slave
 		sgct::SharedData::instance()->readObj(&sharedModelMatrix_);
 	}
 	void updateSyncedSlave() {
@@ -242,17 +257,31 @@ public:
 	}
 };
 
-/* Mesh supporting use of shadow mapping.
- * Extends MeshBase.
- * Holds uniform locations of lightspace matrix and shadow map.
- * Uses custom uniform render function of MeshBase.
+/* Mesh class for synchronized mesh instances on a grid.
+ * Has no owned resources because it is managed by a mesh pool.
+ * Synchronizes the instance buffer.
 */
-class ShadowReceivingMesh : public SimpleGameMesh {
-	GLint uloc_lightspace_matrix_;
-	GLint uloc_shadow_map_;
+template <class INSTANCE_LAYOUT>
+class SynchronizedInstancedMesh : public MeshBase<viscom::SimpleMeshVertex> {
+    std::vector<INSTANCE_LAYOUT> instance_buffer_;
+    sgct::SharedVector<INSTANCE_LAYOUT> shared_instance_buffer_;
 public:
-	ShadowReceivingMesh(std::shared_ptr<viscom::Mesh> mesh, std::shared_ptr<viscom::GPUProgram> shader);
-	void render(glm::mat4& vp, glm::mat4& lightspace, GLuint shadowMap, GLint isDebugMode = 0) const;
+    SynchronizedInstancedMesh(viscom::Mesh* mesh, viscom::GPUProgram* program) : MeshBase(mesh, program) {}
+    void preSync() { // master
+        shared_instance_buffer_.setVal(instance_buffer_);
+    }
+    void encode() { // master
+        sgct::SharedData::instance()->writeVector(&shared_instance_buffer_);
+    }
+    void decode() { // slave
+        sgct::SharedData::instance()->readVector(&shared_instance_buffer_);
+    }
+    void updateSyncedSlave() {
+        instance_buffer_ = shared_instance_buffer_.getVal();
+    }
+    void updateSyncedMaster() {
+        //Can maybe stay empty
+    }
 };
 
 #endif
