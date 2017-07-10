@@ -13,6 +13,7 @@ out vec3 vPosition;
 out vec3 vNormal;
 out vec2 vTexCoords;
 out vec4 vPosLightSpace;
+out vec2 fragCoords;
 
 void main() {
 	vec4 posV4 = subMeshLocalMatrix * vec4(position.x, -position.z, position.y, 1);
@@ -20,6 +21,8 @@ void main() {
 	vNormal = normalize(normalMatrix * normal);
 	vTexCoords = texCoords;
 	vPosLightSpace = lightSpaceMatrix * posV4;
+
+	fragCoords = position.xy;
 
 	gl_Position = viewProjectionMatrix * posV4;
 }

@@ -218,7 +218,7 @@ class PostProcessingMesh : public SimpleGameMesh {
 	GLint uloc_lightspace_matrix_;
 	GLint uloc_shadow_map_;
 	GLint uloc_time_;
-	GLdouble time_;
+	GLfloat time_;
 public:
 	PostProcessingMesh(std::shared_ptr<viscom::Mesh> mesh, std::shared_ptr<viscom::GPUProgram> shader);
 	void setTime(double time) {
