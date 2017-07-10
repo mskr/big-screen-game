@@ -92,6 +92,7 @@ namespace viscom {
     {
         ApplicationNodeImplementation::PreSync();
 		outerInfluence_->meshComponent->preSync();
+        meshpool_.preSync();
     }
 
 	/* Sync step 2: Master sends shared objects to the central SharedData singleton
@@ -100,6 +101,7 @@ namespace viscom {
 	void MasterNode::EncodeData() {
 		ApplicationNodeImplementation::EncodeData();
 		outerInfluence_->meshComponent->encode();
+        meshpool_.encode();
 	}
 
 	/* Sync step 3: Master updates its copies of cluster-wide variables with data it just synced
@@ -108,6 +110,7 @@ namespace viscom {
 	void MasterNode::UpdateSyncedInfo() {
 		ApplicationNodeImplementation::UpdateSyncedInfo();
 		outerInfluence_->meshComponent->updateSyncedMaster();
+        meshpool_.updateSyncedMaster();
 	}
 
 	void MasterNode::UpdateFrame(double t1, double t2) {

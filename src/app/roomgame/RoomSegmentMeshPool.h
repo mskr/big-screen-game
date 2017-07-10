@@ -9,12 +9,15 @@
 #include "InteractiveGrid.h"
 #include "RoomSegmentMesh.h"
 
-/* Management class for RoomSegmentMeshes and associated shader
- * Maps build states to meshes
- * Exists on all nodes
+/* Management class for room segment meshes and mesh instance shader
+ * Mesh instances of one type can be arbitrary distributed across a grid.
+ * There can be several types of meshes (room walls, corners, inner influence etc.).
+ * The mesh pool uses build states to identifly mesh types and maps build states to meshes.
+ * An interactive grid that received a build call uses the pool to get an appropriate mesh for a build state.
+ * Mesh pool exists on all SGCT nodes
  * Used by nodes to create meshes (each including vertex and instance buffer)
  * Used by MeshInstanceGrid to get appropriate mesh for build state
- * Used by nodes to render all meshes
+ * Used by nodes to render all meshes by a single call
 */
 class RoomSegmentMeshPool {
 	// Map build state to multiple mesh variations
@@ -36,18 +39,24 @@ class RoomSegmentMeshPool {
 public:
 	RoomSegmentMeshPool(const size_t MAX_INSTANCES);
 	~RoomSegmentMeshPool();
-	// Init functions
+	// Functions for initialization
 	void loadShader(viscom::GPUProgramManager mgr);
 	void addMesh(std::vector<GridCell::BuildState> types, std::shared_ptr<viscom::Mesh> mesh);
 	void addMeshVariations(std::vector<GridCell::BuildState> types, std::vector<std::shared_ptr<viscom::Mesh>> mesh_variations);
-	// Building function (request mesh for given build state)
+    // Function for uniform shader data
+    void updateUniformEveryFrame(std::string uniform_name, std::function<void(GLint)> update_func);
+	// Function for mesh requests
 	RoomSegmentMesh* getMeshOfType(GridCell::BuildState type);
-	// Render function (renders each mesh once by using render list)
+	// Functions for rendering
 	void renderAllMeshes(glm::mat4& view_projection, GLint isDepthPass = 0, GLint isDebugMode = 0);
 	void renderAllMeshesExcept(glm::mat4& view_projection, GridCell::BuildState type_not_to_render, GLint isDepthPass = 0, GLint isDebugMode = 0);
 	void cleanup();
-	// Set a uniform with a update function for the mesh pool shader
-	void updateUniformEveryFrame(std::string uniform_name, std::function<void(GLint)> update_func);
+    // Functions for SGCT synchronization
+    void preSync(); // master
+    void encode(); // master
+    void decode(); // slave
+    void updateSyncedSlave();
+    void updateSyncedMaster();
 	// Getter
 	GLint getUniformLocation(size_t index);
 	GLuint getShaderID();
