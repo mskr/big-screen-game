@@ -65,7 +65,8 @@ void main() {
 	vec2 waterTexCoords = fragCoords + distortOffset; 	
 
 
-	color = texture(diffuseTexture, waterTexCoords);
+	//color = texture(diffuseTexture, waterTexCoords);
+	color = texture(diffuseTexture, vTexCoords);
 	// color *= visibility(thisFragment);
 	if(texture(shadowMap, thisFragment.xy).r < (thisFragment.z - DEPTH_BIAS))
 		color *= 0.5;
