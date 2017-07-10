@@ -73,6 +73,9 @@ namespace viscom {
         /* Shadow receiving meshes are (non-instanced) meshes with a shader receiving a shadow map */
 		ShadowReceivingMesh* backgroundMesh_; // hold static mesh on all nodes
 
+		/* Same as ShadowReceivingMesh but with water features */
+		PostProcessingMesh* waterMesh_;
+
 		/* Switch for debug rendering */
 		enum RenderMode { NORMAL, DBG } render_mode_; // hold on all nodes but able to change only on master
 

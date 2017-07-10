@@ -47,5 +47,6 @@ void PostProcessingMesh::render(glm::mat4& vp, glm::mat4& lightspace, GLuint sha
 		float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 		glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 		glUniform1i(uloc_shadow_map_, 2);
+		glUniform1f(uloc_time_, time_);
 	}, vp, isDebugMode);
 }

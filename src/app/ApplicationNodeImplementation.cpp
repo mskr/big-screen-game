@@ -71,11 +71,17 @@ namespace viscom {
 		});
 
 		
-		backgroundMesh_ = new ShadowReceivingMesh(
-            GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/textured_4vertexplane/textured_4vertexplane.obj"),
-            GetApplication()->GetGPUProgramManager().GetResource("applyTextureAndShadow",
+		//backgroundMesh_ = new ShadowReceivingMesh(
+        //    GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/textured_4vertexplane/textured_4vertexplane.obj"),
+        //    GetApplication()->GetGPUProgramManager().GetResource("applyTextureAndShadow",
+		//		std::initializer_list<std::string>{ "applyTextureAndShadow.vert", "applyTextureAndShadow.frag" }));
+		waterMesh_ = new PostProcessingMesh(
+			GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/textured_4vertexplane/textured_4vertexplane.obj"),
+			GetApplication()->GetGPUProgramManager().GetResource("applyTextureAndShadow",
 				std::initializer_list<std::string>{ "applyTextureAndShadow.vert", "applyTextureAndShadow.frag" }));
-		backgroundMesh_->transform(glm::scale(glm::translate(glm::mat4(1), 
+		
+		//backgroundMesh_->transform(glm::scale(glm::translate(glm::mat4(1), 
+		waterMesh_->transform(glm::scale(glm::translate(glm::mat4(1),
 			glm::vec3(
 				0,
 				-(GRID_HEIGHT_NDC_/GRID_ROWS_), /* position background mesh exactly under grid */
@@ -98,6 +104,7 @@ namespace viscom {
 		deltaTime = min(currentTime - oldTime,0.25);
 		clock_.t_in_sec = currentTime;
 		oldTime = currentTime;
+		waterMesh_->setTime(currentTime);
     }
 
     void ApplicationNodeImplementation::ClearBuffer(FrameBuffer& fbo)
@@ -130,7 +137,8 @@ namespace viscom {
 		
 
         fbo.DrawToFBO([&]() {
-			backgroundMesh_->render(viewProj, lightspace, shadowMap_->get(), (render_mode_ == RenderMode::DBG) ? 1 : 0);
+			//backgroundMesh_->render(viewProj, lightspace, shadowMap_->get(), (render_mode_ == RenderMode::DBG) ? 1 : 0);
+			waterMesh_->render(viewProj, lightspace, shadowMap_->get(), (render_mode_ == RenderMode::DBG) ? 1 : 0);
 			glEnable(GL_BLEND); glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			meshpool_.renderAllMeshes(viewProj, 0, (render_mode_ == RenderMode::DBG) ? 1 : 0);
 			outerInfluence_->meshComponent->render(viewProj);
@@ -152,7 +160,8 @@ namespace viscom {
     {
 		meshpool_.cleanup();
 		delete shadowMap_;
-		delete backgroundMesh_;
+		//delete backgroundMesh_;
+		delete waterMesh_;
     }
 
     bool ApplicationNodeImplementation::KeyboardCallback(int key, int scancode, int action, int mods)
