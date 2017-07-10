@@ -278,6 +278,7 @@ template <class PER_INSTANCE_DATA>
 class SynchronizedInstancedMesh : public MeshBase<viscom::SimpleMeshVertex> {
 private:
     sgct::SharedVector<PER_INSTANCE_DATA> shared_instance_buffer_;
+    sgct::SharedObject<roomgame::InstanceBuffer> shared_gpu_instance_buffer_;
 protected:
     roomgame::InstanceBuffer gpu_instance_buffer_;
     std::vector<PER_INSTANCE_DATA> instance_buffer_;
@@ -292,15 +293,19 @@ public:
     }
     void preSync() { // master
         shared_instance_buffer_.setVal(instance_buffer_);
+        shared_gpu_instance_buffer_.setVal(gpu_instance_buffer_);
     }
     void encode() { // master
         sgct::SharedData::instance()->writeVector(&shared_instance_buffer_);
+        sgct::SharedData::instance()->writeObj(&shared_gpu_instance_buffer_);
     }
     void decode() { // slave
         sgct::SharedData::instance()->readVector(&shared_instance_buffer_);
+        sgct::SharedData::instance()->readObj(&shared_gpu_instance_buffer_);
     }
     void updateSyncedSlave() {
         instance_buffer_ = shared_instance_buffer_.getVal();
+        gpu_instance_buffer_ = shared_gpu_instance_buffer_.getVal();
         uploadInstanceBufferToGPU();
     }
     void updateSyncedMaster() {

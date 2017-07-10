@@ -58,7 +58,12 @@ namespace viscom {
 		SynchronizedGameMesh* outerInfluenceMeshComp = new SynchronizedGameMesh(GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/thingy/thingy.obj"), GetApplication()->GetGPUProgramManager().GetResource("applyTextureAndShadow",
 			std::initializer_list<std::string>{ "applyTextureAndShadow.vert", "applyTextureAndShadow.frag" }));
 		outerInfluence_->meshComponent = outerInfluenceMeshComp;
-		outerInfluence_->meshComponent->transform(glm::scale(glm::mat4(1), glm::vec3(0.1, 0.1, 0.1)));
+        glm::mat4 movMat = glm::mat4(1);
+        movMat = glm::scale(movMat, glm::vec3(0.1, 0.1, 0.1));
+        movMat = glm::translate(movMat, glm::vec3(0, 0, -2));
+        //movMat = glm::rotate(movMat, glm::radians(360 * actionStatus), glm::vec3(0, 0, 1));
+        movMat = glm::translate(movMat, glm::vec3(10, 0, 0));
+        outerInfluence_->meshComponent->model_matrix_ = movMat;
 
 
 		meshpool_.updateUniformEveryFrame("t_sec", [this](GLint uloc) {

@@ -51,7 +51,7 @@ public:
 	bool isInsideCell(glm::vec2 positionNDC, GridCell* cell);
 	bool isColumnEmptyBetween(size_t col, size_t startRow, size_t endRow);
 	bool isRowEmptyBetween(size_t row, size_t startCol, size_t endCol);
-
+    glm::vec2 pushNDCinsideGrid(glm::vec2 positionNDC);
 
 	// Getters
 	float getCellSize();

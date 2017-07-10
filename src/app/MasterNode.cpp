@@ -125,6 +125,7 @@ namespace viscom {
 		cellular_automaton_.setDamagePerCell(automaton_damage_per_cell);
 		cellular_automaton_.transition(clock_.t_in_sec);
 
+
         updateManager_.ManageUpdates(deltaTime);
 	}
 
@@ -133,6 +134,7 @@ namespace viscom {
         ApplicationNodeImplementation::DrawFrame(fbo);
 
 		glm::mat4 viewProj = GetCamera()->GetViewPerspectiveMatrix();
+        outerInfluence_->viewPersMat = viewProj;
 
 		grid_.updateProjection(viewProj);
 		fbo.DrawToFBO([&] { 
@@ -266,6 +268,7 @@ namespace viscom {
 	*/
     bool MasterNode::MousePosCallback(double x, double y)
     {
+        x *= 2;
 		if (interaction_mode_ == InteractionMode::GRID)
 			grid_.onMouseMove(-1, x, y);
 		else

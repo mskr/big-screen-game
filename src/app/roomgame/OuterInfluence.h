@@ -1,7 +1,7 @@
 #pragma once
 #include "app\roomgame\IUpdateable.h"
 #include "app\roomgame\RoomInteractiveGrid.h"
-#include "glm\matrix.hpp"
+#include "glm\gtx\transform.hpp"
 #include <random>
 #include <ctime>
 
@@ -16,10 +16,11 @@ namespace roomgame {
 		virtual void Update(double deltaTime) override;
 		virtual void UpdateSlow(double deltaTime) override;
 
-
+        glm::mat4 viewPersMat;
 		SynchronizedGameMesh* meshComponent;
 		RoomInteractiveGrid* grid;
 	private:
+        float speed;
 		int mode;
 		double deltaTime;
 		float actionStatus;

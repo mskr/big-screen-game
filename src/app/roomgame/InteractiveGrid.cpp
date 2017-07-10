@@ -115,6 +115,18 @@ bool InteractiveGrid::isInsideGrid(glm::vec2 positionNDC) {
 	return true;
 }
 
+glm::vec2 InteractiveGrid::pushNDCinsideGrid(glm::vec2 positionNDC) {
+    GridCell& leftUpperCell = cells_[0][cells_[0].size() - 1];
+    glm::vec2 posLeftUpperNDC = getNDC(leftUpperCell.getPosition());
+    GridCell& rightLowerCell = cells_[cells_.size() - 1][0];
+    glm::vec2 posRightLowerNDC = getNDC(glm::vec2(
+        rightLowerCell.getXPosition() + cell_size_, rightLowerCell.getYPosition() - cell_size_));
+
+    positionNDC.x = glm::min<float>(glm::max<float>(posLeftUpperNDC.x, positionNDC.x), posRightLowerNDC.x);
+    positionNDC.y = glm::min<float>(glm::max<float>(posRightLowerNDC.y, positionNDC.y), posLeftUpperNDC.y);
+    return positionNDC;
+}
+
 
 bool InteractiveGrid::isInsideCell(glm::vec2 positionNDC, GridCell* cell) {
 	glm::vec2 cellLeftUpperNDC = getNDC(cell->getPosition());

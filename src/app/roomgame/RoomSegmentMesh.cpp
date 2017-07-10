@@ -37,7 +37,12 @@ RoomSegmentMesh::InstanceBufferRange RoomSegmentMesh::addInstanceUnordered(Insta
     // insert instance into a hole or to the end of the buffer
     // data remains on CPU side
     // upload to GPU is deferred until SGCT does a synch (see base class SynchronizedInstancedMesh)
-    instance_buffer_[offset] = i;
+    if (offset >= instance_buffer_.size()) {
+        instance_buffer_.push_back(i);
+    }
+    else {
+        instance_buffer_[offset] = i;
+    }
     RoomSegmentMesh::InstanceBufferRange range;
     range.buffer_ = &gpu_instance_buffer_;
     range.mesh_ = this;
