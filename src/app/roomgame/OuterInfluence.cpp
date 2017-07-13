@@ -35,8 +35,9 @@ namespace roomgame {
             meshComponent->transform(glm::rotate(glm::radians(speed), glm::vec3(0, 0, 1)));
             meshComponent->transform(glm::translate(glm::vec3(10, 0, 0)));
         }
-        else {
- //           meshComponent->transform(glm::translate(posDiff*(speed*(float)deltaTime)));
+        else{
+//            meshComponent->transform(meshComponent->model_matrix_ * glm::translate((posDiff)*(10.0f*speed*(float)deltaTime)) * glm::inverse(meshComponent->model_matrix_));
+            meshComponent->transform(glm::inverse(meshComponent->model_matrix_) * glm::translate(glm::vec3(-0.1f, 0, 0)) * meshComponent->model_matrix_);
         }
 	}
 
@@ -46,10 +47,9 @@ namespace roomgame {
 	{
         
 		//Change Behaviour, Change Target
-        if (mode==PATROL || glm::distance(targetPosition, glm::vec3(meshComponent->model_matrix_[3][0], meshComponent->model_matrix_[3][1], meshComponent->model_matrix_[3][2]))<5) {
-            oldPosition = glm::vec3(meshComponent->model_matrix_[3][0], meshComponent->model_matrix_[3][1], meshComponent->model_matrix_[3][2]);
-            DecideNextAction();
-        }
+        DecideNextAction();
+        
+
     }
 
 	void OuterInfluence::DecideNextAction() {
@@ -64,36 +64,33 @@ namespace roomgame {
 			Retreat();
 			break;
 		}
-        //mode = (mode + 1) % 3;
-        
-        
-        if (mode < ATTACK) {
-			mode = max(((rand() % 6) - 4), 0);
-		}
-		else {
-			mode = (mode + 1) % 3;
-		}
+
 	}
 
 	void OuterInfluence::Patrol() {
-
 		//Move around randomly (a bit above ground)
-		//std::srand((unsigned int)std::time(0));
+		std::srand((unsigned int)std::time(0));
+        int randNumber = rand() % 100;
+        if (randNumber > 80) {
+            oldPosition = glm::vec3(meshComponent->model_matrix_[3][0], meshComponent->model_matrix_[3][1], meshComponent->model_matrix_[3][2]);
+            ChooseTarget();
+            mode = ATTACK;
+        }
 		//float randX = ((float)(rand() % 100)) / 10.0f;
 		//float randY = ((float)(rand() % 100)) / 10.0f;
 		//targetPosition = glm::vec3(randX, randY, -1);
 		//posDiff = glm::normalize(targetPosition - oldPosition);
 	}
 
-	void OuterInfluence::Attack() {
-		//Set the closest cell with wall build state as moveTarget (move down and towards it until collison)
-		//targetPosition = glm::vec3(grid->getClosestWallCell(glm::vec2(oldPosition))->getPosition(),-3);
-		//posDiff = targetPosition - oldPosition;
+    void OuterInfluence::ChooseTarget() {
+        //Set the closest cell with wall build state as moveTarget (move down and towards it until collison)
+        //targetPosition = glm::vec3(grid->getClosestWallCell(glm::vec2(oldPosition))->getPosition(),-3);
+        //posDiff = targetPosition - oldPosition;
         glm::vec4 ndcCoords = glm::vec4(meshComponent->model_matrix_[3][0], meshComponent->model_matrix_[3][1], 0.0f, 1.0f);
         //            glm::vec4 ndcCoords = glm::vec4(1,1,0,1);
         ndcCoords = viewPersMat * ndcCoords;
         ndcCoords = ndcCoords / ndcCoords.w;
-        ndcCoords = glm::vec4(grid->pushNDCinsideGrid(glm::vec2(ndcCoords.x,ndcCoords.y)),ndcCoords.z,ndcCoords.w);
+        ndcCoords = glm::vec4(grid->pushNDCinsideGrid(glm::vec2(ndcCoords.x, ndcCoords.y)), ndcCoords.z, ndcCoords.w);
         GridCell* tmp = grid->getCellAt(glm::vec2(ndcCoords.x, ndcCoords.y));
         float distance = 9999.0f;
         GridCell* closestWallCell = nullptr;
@@ -114,24 +111,37 @@ namespace roomgame {
                 closestWallCell = cell;
             }
         });
+        closestWallCell = grid->getCellAt(0, 0);
         if (closestWallCell != nullptr) {
-            targetPosition = glm::vec3(closestWallCell->getXPosition(), closestWallCell->getYPosition(),0);
-            posDiff = targetPosition-glm::vec3(meshComponent->model_matrix_[3][0], meshComponent->model_matrix_[3][1],0.0f);
-            meshComponent->transform(glm::translate(posDiff));
+            targetPosition = glm::vec3(closestWallCell->getXPosition(), closestWallCell->getYPosition(), 0);
+            targetPosition += grid->getTranslation();
+            posDiff = targetPosition - glm::vec3(meshComponent->model_matrix_[3][0], meshComponent->model_matrix_[3][1], 0.0f);
+            //meshComponent->transform(glm::translate(posDiff*10.0f));
+            //meshComponent->transform(glm::translate(glm::vec3(-10,0,0)));
             closestWallCell->setIsSource(true);
         }
         else {
             mode = PATROL;
         }
-		//targetPosition = glm::vec3(0, 0, 4);
+    }
+
+	void OuterInfluence::Attack() {
+        if (glm::distance(targetPosition, glm::vec3(meshComponent->model_matrix_[3][0], meshComponent->model_matrix_[3][1], meshComponent->model_matrix_[3][2]))<0.5f) {
+            glm::vec3 currentPos = glm::vec3(meshComponent->model_matrix_[3][0], meshComponent->model_matrix_[3][1], meshComponent->model_matrix_[3][2]);
+            targetPosition = oldPosition;
+            posDiff = targetPosition - currentPos;
+            //meshComponent->transform(glm::translate(posDiff*10.0f));
+            mode = RETREAT;
+        }
 	}
 
 	void OuterInfluence::Retreat() {
 		//Mark hit cell as source and get back higher and to the edge of the screen
         //grid->getClosestWallCell(glm::vec2(oldPosition))->setIsSource(true);
         
-		targetPosition = glm::vec3(500, 0, 0);
-		posDiff = targetPosition - oldPosition;
         //meshComponent->transform(glm::translate(posDiff));
+        if (glm::distance(targetPosition, glm::vec3(meshComponent->model_matrix_[3][0], meshComponent->model_matrix_[3][1], meshComponent->model_matrix_[3][2])) < 0.5f) {
+            mode = PATROL;
+        }
     }
 }

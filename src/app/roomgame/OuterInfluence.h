@@ -32,5 +32,6 @@ namespace roomgame {
 		void Attack();
 		void Retreat();
 		void Move();
+        void ChooseTarget();
 	};
 }
