@@ -36,8 +36,7 @@ namespace roomgame {
             meshComponent->transform(glm::translate(glm::vec3(10, 0, 0)));
         }
         else{
-//            meshComponent->transform(meshComponent->model_matrix_ * glm::translate((posDiff)*(10.0f*speed*(float)deltaTime)) * glm::inverse(meshComponent->model_matrix_));
-            meshComponent->transform(glm::inverse(meshComponent->model_matrix_) * glm::translate(glm::vec3(-0.1f, 0, 0)) * meshComponent->model_matrix_);
+            meshComponent->transform(glm::inverse(meshComponent->model_matrix_) * glm::translate((posDiff)*(speed*(float)deltaTime)) * meshComponent->model_matrix_);
         }
 	}
 
@@ -73,13 +72,9 @@ namespace roomgame {
         int randNumber = rand() % 100;
         if (randNumber > 80) {
             oldPosition = glm::vec3(meshComponent->model_matrix_[3][0], meshComponent->model_matrix_[3][1], meshComponent->model_matrix_[3][2]);
-            ChooseTarget();
-            mode = ATTACK;
+			mode = ATTACK;
+			ChooseTarget();
         }
-		//float randX = ((float)(rand() % 100)) / 10.0f;
-		//float randY = ((float)(rand() % 100)) / 10.0f;
-		//targetPosition = glm::vec3(randX, randY, -1);
-		//posDiff = glm::normalize(targetPosition - oldPosition);
 	}
 
     void OuterInfluence::ChooseTarget() {
@@ -111,10 +106,11 @@ namespace roomgame {
                 closestWallCell = cell;
             }
         });
-        closestWallCell = grid->getCellAt(0, 0);
+        //closestWallCell = grid->getCellAt(63, 63);
         if (closestWallCell != nullptr) {
             targetPosition = glm::vec3(closestWallCell->getXPosition(), closestWallCell->getYPosition(), 0);
             targetPosition += grid->getTranslation();
+			//glm::mat4 worldMat = meshComponent->model_matrix_
             posDiff = targetPosition - glm::vec3(meshComponent->model_matrix_[3][0], meshComponent->model_matrix_[3][1], 0.0f);
             //meshComponent->transform(glm::translate(posDiff*10.0f));
             //meshComponent->transform(glm::translate(glm::vec3(-10,0,0)));
