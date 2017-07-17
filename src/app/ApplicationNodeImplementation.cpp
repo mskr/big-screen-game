@@ -77,8 +77,8 @@ namespace viscom {
 		//		std::initializer_list<std::string>{ "applyTextureAndShadow.vert", "applyTextureAndShadow.frag" }));
 		waterMesh_ = new PostProcessingMesh(
 			GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/textured_4vertexplane/textured_4vertexplane.obj"),
-			GetApplication()->GetGPUProgramManager().GetResource("applyTextureAndShadow",
-				std::initializer_list<std::string>{ "applyTextureAndShadow.vert", "applyTextureAndShadow.frag" }));
+			GetApplication()->GetGPUProgramManager().GetResource("underwater",
+				std::initializer_list<std::string>{ "underwater.vert", "underwater.frag" }));
 		
 		//backgroundMesh_->transform(glm::scale(glm::translate(glm::mat4(1), 
 		waterMesh_->transform(glm::scale(glm::translate(glm::mat4(1),
