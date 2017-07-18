@@ -78,7 +78,8 @@ protected:
 			"bumpTexture",
 			"bumpMultiplier",
 			"viewProjectionMatrix",
-			"isDebugMode"
+			"isDebugMode",
+            "time"
 		});
 	}
 
@@ -169,6 +170,7 @@ private:
 		}
 		glUniformMatrix4fv(uniformLocations_[5], 1, GL_FALSE, glm::value_ptr(vpMatrix));
 		glUniform1i(uniformLocations_[6], isDebugMode);
+        glUniform1f(uniformLocations_[7], (float)glfwGetTime());
 	}
 };
 

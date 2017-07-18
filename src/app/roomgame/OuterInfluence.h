@@ -19,8 +19,14 @@ namespace roomgame {
         glm::mat4 viewPersMat;
 		SynchronizedGameMesh* meshComponent;
 		RoomInteractiveGrid* grid;
+        std::vector<glm::mat4> positions;
 	private:
         float speed;
+        float distance;
+        int attackChance;
+        int attackChanceGrowth;
+        std::default_random_engine rndGenerator;
+        std::uniform_int_distribution<int> distributor100;
 		int mode;
 		double deltaTime;
 		float actionStatus;
@@ -28,7 +34,7 @@ namespace roomgame {
 		glm::vec3 targetPosition;
 		glm::vec3 posDiff;
 		void DecideNextAction();
-		void calcPositions();
+		void calcPositions(bool init);
 		void Patrol();
 		void Attack();
 		void Retreat();

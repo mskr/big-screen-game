@@ -55,14 +55,15 @@ namespace viscom {
 //TODO		meshpool_.addMesh({ GridCell::BuildState::OUTER_INFLUENCE },
 //			GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/thingy.obj"));
 
-		SynchronizedGameMesh* outerInfluenceMeshComp = new SynchronizedGameMesh(GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/thingy/thingy.obj"), GetApplication()->GetGPUProgramManager().GetResource("applyTextureAndShadow",
-			std::initializer_list<std::string>{ "applyTextureAndShadow.vert", "applyTextureAndShadow.frag" }));
+		SynchronizedGameMesh* outerInfluenceMeshComp = new SynchronizedGameMesh(GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/latticeplane.obj"), GetApplication()->GetGPUProgramManager().GetResource("stuff",
+			std::initializer_list<std::string>{ "applyTextureAndShadow.vert", "OuterInfl.frag" }));
 		outerInfluence_->meshComponent = outerInfluenceMeshComp;
         glm::mat4 movMat = glm::mat4(1);
         movMat = glm::scale(movMat, glm::vec3(0.1, 0.1, 0.1));
-        movMat = glm::translate(movMat, glm::vec3(0, 0, -2));
+        movMat = glm::translate(movMat, glm::vec3(0, 0, 2));
         //movMat = glm::rotate(movMat, glm::radians(360 * actionStatus), glm::vec3(0, 0, 1));
         movMat = glm::translate(movMat, glm::vec3(10, 0, 0));
+        //movMat = glm::scale(movMat, glm::vec3(3));
         outerInfluence_->meshComponent->model_matrix_ = movMat;
 
 
