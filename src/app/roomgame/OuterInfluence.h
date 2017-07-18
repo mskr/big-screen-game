@@ -28,6 +28,7 @@ namespace roomgame {
 		glm::vec3 targetPosition;
 		glm::vec3 posDiff;
 		void DecideNextAction();
+		void calcPositions();
 		void Patrol();
 		void Attack();
 		void Retreat();

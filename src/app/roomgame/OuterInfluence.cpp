@@ -18,14 +18,27 @@ namespace roomgame {
 	}
 
 
+
 	OuterInfluence::~OuterInfluence()
 	{
+	}
+
+	void OuterInfluence::calcPositions() {
+		std::vector<glm::mat4> positions;
+		for (int i = 0; i < 5; i++) {
+			glm::mat4 translation = glm::translate(glm::vec3(sinf(i*(float)glfwGetTime()), 0, 0));
+			if (mode == ATTACK) {
+				translation *= 0.1f;
+			}
+			positions.push_back(meshComponent->model_matrix_*translation);
+		}
 	}
 
 	void OuterInfluence::Update(double deltaTime)
 	{
 		this->deltaTime = deltaTime;
 		Move();
+		calcPositions();
 	}
 
 	//Change Position
