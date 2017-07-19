@@ -294,4 +294,16 @@ namespace viscom {
         return ApplicationNodeImplementation::MouseScrollCallback(xoffset, yoffset);
     }
 
+    /*
+    glm::vec2 MasterNode::FindIntersectionWithPlane(const math::Line3<float>& ray) const
+    {
+        glm::mat3 m{ 0.0f };
+        m[0] = ray[0] - ray[1];
+        m[1] = GetSimPlane().right_ - GetSimPlane().position_;
+        m[2] = GetSimPlane().up_ - GetSimPlane().position_;
+
+        auto intersection = glm::inverse(m) * (ray[0] - GetSimPlane().position_);
+        return glm::vec2(0.5f) + glm::vec2(intersection.y, intersection.z) / 2.0f;
+    }
+    */
 }
