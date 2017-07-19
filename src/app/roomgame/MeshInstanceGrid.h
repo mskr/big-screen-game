@@ -15,12 +15,12 @@ class RoomSegmentMeshPool;
 class MeshInstanceGrid : public RoomInteractiveGrid {
 protected:
 	RoomSegmentMeshPool* meshpool_;
-	void addInstanceAt(GridCell*, GridCell::BuildState);
+	void addInstanceAt(GridCell*, GLuint);
 	void removeInstanceAt(GridCell*);
 public:
 	MeshInstanceGrid(size_t columns, size_t rows, float height, RoomSegmentMeshPool* meshpool);
-	virtual void buildAt(size_t col, size_t row, GridCell::BuildState buildState) override;
-	void buildAt(GridCell*, GridCell::BuildState);
+	virtual void buildAt(size_t col, size_t row, GLuint buildState) override;
+	void buildAt(GridCell*, GLuint);
 	virtual void onMeshpoolInitialized();
 };
 

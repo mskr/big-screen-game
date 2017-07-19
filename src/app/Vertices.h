@@ -19,7 +19,7 @@ namespace roomgame {
     struct PerInstanceData {
         glm::vec3 translation = glm::vec3(0); // local translation
         GLfloat scale = 0.0f; // scale
-        GLint buildState = 0; // build state (a value from GridCell::BuildState enum)
+        GLint buildState = 0; // build state (a value from GLuint buildState)
         GLint health = 0; // health points in [0, 100]
         static const void setAttribPointer() {
             GLint transLoc = 3;

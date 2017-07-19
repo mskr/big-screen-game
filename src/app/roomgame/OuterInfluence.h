@@ -27,6 +27,7 @@ namespace roomgame {
         int attackChanceGrowth;
         std::default_random_engine rndGenerator;
         std::uniform_int_distribution<int> distributor100;
+        GridCell* targetCell;
 		int mode;
 		double deltaTime;
 		float actionStatus;

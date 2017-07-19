@@ -37,23 +37,15 @@ namespace viscom {
     {
 		/* Load resources on all nodes */
 		meshpool_.loadShader(GetApplication()->GetGPUProgramManager());
-		meshpool_.addMesh({ GridCell::BuildState::INSIDE_ROOM },
+		meshpool_.addMesh({ GridCell::INSIDE_ROOM },
                             GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/floor.obj"));
-		meshpool_.addMesh({ GridCell::BuildState::LEFT_LOWER_CORNER,
-							GridCell::BuildState::LEFT_UPPER_CORNER,
-							GridCell::BuildState::RIGHT_LOWER_CORNER,
-							GridCell::BuildState::RIGHT_UPPER_CORNER,
-							GridCell::BuildState::INVALID },
+		meshpool_.addMesh({ GridCell::CORNER,
+							GridCell::INVALID },
                             GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/corner.obj"));
-		meshpool_.addMesh({ GridCell::BuildState::WALL_BOTTOM,
-							GridCell::BuildState::WALL_TOP,
-							GridCell::BuildState::WALL_RIGHT,
-							GridCell::BuildState::WALL_LEFT },
+		meshpool_.addMesh({ GridCell::WALL,},
                             GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/wall.obj"));
-		meshpool_.addMesh({ GridCell::BuildState::INSIDE_ROOM_INFECTED },
+		meshpool_.addMesh({ GridCell::INFECTED },
 			GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/latticeplane.obj"));
-//TODO		meshpool_.addMesh({ GridCell::BuildState::OUTER_INFLUENCE },
-//			GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/thingy.obj"));
 
 		SynchronizedGameMesh* outerInfluenceMeshComp = new SynchronizedGameMesh(GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/latticeplane.obj"), GetApplication()->GetGPUProgramManager().GetResource("stuff",
 			std::initializer_list<std::string>{ "applyTextureAndShadow.vert", "OuterInfl.frag" }));
@@ -61,9 +53,7 @@ namespace viscom {
         glm::mat4 movMat = glm::mat4(1);
         movMat = glm::scale(movMat, glm::vec3(0.1, 0.1, 0.1));
         movMat = glm::translate(movMat, glm::vec3(0, 0, 2));
-        //movMat = glm::rotate(movMat, glm::radians(360 * actionStatus), glm::vec3(0, 0, 1));
         movMat = glm::translate(movMat, glm::vec3(10, 0, 0));
-        //movMat = glm::scale(movMat, glm::vec3(3));
         outerInfluence_->meshComponent->model_matrix_ = movMat;
 
 
@@ -133,7 +123,7 @@ namespace viscom {
 		glm::mat4 lightspace = shadowMap_->getLightMatrix();
 
 		shadowMap_->DrawToFBO([&]() {
-			meshpool_.renderAllMeshesExcept(lightspace, GridCell::BuildState::OUTER_INFLUENCE, 1);
+			meshpool_.renderAllMeshesExcept(lightspace, GridCell::OUTER_INFLUENCE, 1);
 		});
 		
 

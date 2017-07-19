@@ -23,10 +23,10 @@ class RoomSegmentMeshPool {
 	// Map build state to multiple mesh variations
 	// (when there is one mesh for multiple build states,
 	// store the same pointer multiple times)
-	std::unordered_map<GridCell::BuildState, std::vector<RoomSegmentMesh*>> meshes_;
+	std::unordered_map<GLuint, std::vector<RoomSegmentMesh*>> meshes_;
 	// Store build states contiguously for faster rendering
 	// (only store one representative build state for one mesh)
-	std::vector<GridCell::BuildState> render_list_;
+	std::vector<GLuint> render_list_;
 	// Hold pointers to all meshes to control cleanup
 	std::set<std::shared_ptr<viscom::Mesh>> owned_resources_;
 	// The shader used by all meshes
@@ -41,15 +41,15 @@ public:
 	~RoomSegmentMeshPool();
 	// Functions for initialization
 	void loadShader(viscom::GPUProgramManager mgr);
-	void addMesh(std::vector<GridCell::BuildState> types, std::shared_ptr<viscom::Mesh> mesh);
-	void addMeshVariations(std::vector<GridCell::BuildState> types, std::vector<std::shared_ptr<viscom::Mesh>> mesh_variations);
+	void addMesh(std::vector<GLuint> types, std::shared_ptr<viscom::Mesh> mesh);
+	void addMeshVariations(std::vector<GLuint> types, std::vector<std::shared_ptr<viscom::Mesh>> mesh_variations);
     // Function for uniform shader data
     void updateUniformEveryFrame(std::string uniform_name, std::function<void(GLint)> update_func);
 	// Function for mesh requests
-	RoomSegmentMesh* getMeshOfType(GridCell::BuildState type);
+	RoomSegmentMesh* getMeshOfType(GLuint type);
 	// Functions for rendering
 	void renderAllMeshes(glm::mat4& view_projection, GLint isDepthPass = 0, GLint isDebugMode = 0);
-	void renderAllMeshesExcept(glm::mat4& view_projection, GridCell::BuildState type_not_to_render, GLint isDepthPass = 0, GLint isDebugMode = 0);
+	void renderAllMeshesExcept(glm::mat4& view_projection, GLuint type_not_to_render, GLint isDepthPass = 0, GLint isDebugMode = 0);
 	void cleanup();
     // Functions for SGCT synchronization
     void preSync(); // master
@@ -67,7 +67,7 @@ private:
 	const size_t POOL_ALLOC_BYTES_FLOORS;
 	const size_t POOL_ALLOC_BYTES_OUTER_INFLUENCE;
 	const size_t POOL_ALLOC_BYTES_DEFAULT;
-	size_t determinePoolAllocationBytes(GridCell::BuildState type);
+	size_t determinePoolAllocationBytes(GLuint type);
 };
 
 #endif

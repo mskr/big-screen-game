@@ -14,20 +14,20 @@ class AutomatonGrid : public MeshInstanceGrid {
 	struct DelayedUpdate {
 		unsigned int wait_count_; // number of transitions to wait
 		GridCell* target_; // cell to update
-		GridCell::BuildState to_; // build state to set
+		GLuint to_; // build state to set
 		DelayedUpdate* next_; // next list element
-		DelayedUpdate(unsigned int wait_count, GridCell* target, GridCell::BuildState to) :
+		DelayedUpdate(unsigned int wait_count, GridCell* target, GLuint to) :
 			wait_count_(wait_count), target_(target), to_(to), next_(0) {}
 	};
 	DelayedUpdate* delayed_update_list_;
 public:
-    static const GridCell::BuildState SIMULATED_STATE = GridCell::BuildState::INSIDE_ROOM_INFECTED;
+    static const GLuint SIMULATED_STATE = GridCell::INFECTED;
 	AutomatonGrid(size_t columns, size_t rows, float height, RoomSegmentMeshPool* meshpool);
 	~AutomatonGrid();
 	void setCellularAutomaton(GPUCellularAutomaton*);
 	void onMeshpoolInitialized() override;
-	void buildAt(size_t col, size_t row, GridCell::BuildState buildState) override; // for user changes
-	void updateCell(GridCell* c, GridCell::BuildState state, int hp); // for automaton changes
+	void buildAt(size_t col, size_t row, GLuint buildState) override; // for user changes
+	void updateCell(GridCell* c, GLuint state, int hp); // for automaton changes
 	void onTransition();
 	void populateCircleAtLastMousePosition(int radius);
 };

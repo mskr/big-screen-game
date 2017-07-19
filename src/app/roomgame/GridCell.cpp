@@ -3,7 +3,7 @@
 GridCell::GridCell(float x, float y, size_t col_idx, size_t row_idx) {
 	vertex_.x_position = x;
 	vertex_.y_position = y;
-	vertex_.build_state = BuildState::EMPTY;
+	vertex_.build_state = EMPTY;
 	vertex_.health_points = MAX_HEALTH;
 	vertex_buffer_offset_ = 0;
 	northNeighbor = 0, eastNeighbor = 0, southNeighbor = 0, westNeighbor = 0;
@@ -11,14 +11,29 @@ GridCell::GridCell(float x, float y, size_t col_idx, size_t row_idx) {
 	row_idx_ = row_idx;
 }
 
-void GridCell::updateBuildState(GLuint vbo, BuildState s) {
-	vertex_.build_state = s;
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferSubData(GL_ARRAY_BUFFER,
-		vertex_buffer_offset_ + 2 * sizeof(GLfloat),
-		sizeof(vertex_.build_state),
-		(GLvoid*)&vertex_.build_state);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
+void GridCell::removeBuildState(GLuint vbo, GLuint s, bool makeEmpty = false) {
+    if (makeEmpty) {
+        vertex_.build_state = EMPTY;
+    }
+    else {
+        vertex_.build_state = (vertex_.build_state | s) ^ s;
+    }
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferSubData(GL_ARRAY_BUFFER,
+        vertex_buffer_offset_ + 2 * sizeof(GLfloat),
+        sizeof(vertex_.build_state),
+        (GLvoid*)&vertex_.build_state);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+void GridCell::addBuildState(GLuint vbo, GLuint s) {
+    vertex_.build_state |= s;
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferSubData(GL_ARRAY_BUFFER,
+        vertex_buffer_offset_ + 2 * sizeof(GLfloat),
+        sizeof(vertex_.build_state),
+        (GLvoid*)&vertex_.build_state);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void GridCell::updateHealthPoints(GLuint vbo, int hp) {
@@ -97,8 +112,8 @@ float GridCell::getYPosition() {
 	return vertex_.y_position;
 }
 
-int GridCell::getBuildState() {
-	return (int)vertex_.build_state;
+GLuint GridCell::getBuildState() {
+	return vertex_.build_state;
 }
 
 int GridCell::getHealthPoints() {
@@ -160,7 +175,7 @@ float GridCell::getDistanceTo(GridCell* other) {
 }
 
 RoomSegmentMesh::InstanceBufferRange GridCell::getMeshInstance() {
-	if (vertex_.build_state != BuildState::EMPTY)
+	if (vertex_.build_state  != EMPTY)
 		return mesh_instance_;
 	else
 		return RoomSegmentMesh::InstanceBufferRange();

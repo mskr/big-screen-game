@@ -13,7 +13,7 @@ MeshInstanceGrid::MeshInstanceGrid(size_t columns, size_t rows, float height, Ro
         1) Instances on CPU
         2) The after-sync method to upload all instances
 */
-void MeshInstanceGrid::addInstanceAt(GridCell* c, GridCell::BuildState st) {
+void MeshInstanceGrid::addInstanceAt(GridCell* c, GLuint st) {
 	RoomSegmentMesh* mesh = meshpool_->getMeshOfType(st);
 	if (!mesh) return;
 	RoomSegmentMesh::Instance instance;
@@ -35,19 +35,20 @@ void MeshInstanceGrid::removeInstanceAt(GridCell* c) {
 		bufferRange.mesh_->removeInstanceUnordered(bufferRange.offset_instances_);
 }
 
-void MeshInstanceGrid::buildAt(GridCell* c, GridCell::BuildState newSt) {
-	GridCell::BuildState current = (GridCell::BuildState)c->getBuildState();
+void MeshInstanceGrid::buildAt(GridCell* c, GLuint newSt) {
+	GLuint current = c->getBuildState();
 	if (current == newSt) return;
-	else if (current == GridCell::BuildState::EMPTY) addInstanceAt(c, newSt);
-	else if (newSt == GridCell::BuildState::EMPTY) removeInstanceAt(c);
+	else if (current == GridCell::EMPTY) addInstanceAt(c, newSt);
+	else if (newSt == GridCell::EMPTY) removeInstanceAt(c);
 	else {
 		removeInstanceAt(c);
 		addInstanceAt(c, newSt);
 	}
-	c->updateBuildState(vbo_, newSt);
+    c->removeBuildState(vbo_, 0, true);
+    c->addBuildState(vbo_, newSt);
 }
 
-void MeshInstanceGrid::buildAt(size_t col, size_t row, GridCell::BuildState buildState) {
+void MeshInstanceGrid::buildAt(size_t col, size_t row, GLuint buildState) {
 	GridCell* maybeCell = getCellAt(col, row);
 	if (maybeCell) buildAt(maybeCell, buildState);
 }

@@ -24,7 +24,7 @@ void AutomatonGrid::setCellularAutomaton(GPUCellularAutomaton* automaton) {
 void AutomatonGrid::onMeshpoolInitialized() {
 }
 
-void AutomatonGrid::buildAt(size_t col, size_t row, GridCell::BuildState state) {
+void AutomatonGrid::buildAt(size_t col, size_t row, GLuint state) {
 	// Called on user input (grid update -> automaton update)
 
 	GridCell* c = getCellAt(col, row);
@@ -35,10 +35,10 @@ void AutomatonGrid::buildAt(size_t col, size_t row, GridCell::BuildState state) 
 	automaton_->updateCell(c, state, c->getHealthPoints());
 }
 
-void AutomatonGrid::updateCell(GridCell* c, GridCell::BuildState state, int hp) {
+void AutomatonGrid::updateCell(GridCell* c, GLuint state, int hp) {
 	// Called on automaton transitions (automaton update -> grid update)
 
-	if (c->getBuildState() == SIMULATED_STATE && state == GridCell::BuildState::EMPTY) {
+	if (c->getBuildState() == SIMULATED_STATE && state == GridCell::EMPTY) {
 		DelayedUpdate* tmp = delayed_update_list_;
 		delayed_update_list_ = new DelayedUpdate(1, c, state);
 		delayed_update_list_->next_ = tmp;

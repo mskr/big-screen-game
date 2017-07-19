@@ -99,7 +99,7 @@ void GPUCellularAutomaton::copyFromTextureToGrid(int pair_index) {
 			if (c->getBuildState() == state && c->getHealthPoints() == hp)
 				continue;
 			// then update CPU side
-			grid_->updateCell(c, (GridCell::BuildState)state, hp);
+			grid_->updateCell(c, state, hp);
 		}
 	}
 }

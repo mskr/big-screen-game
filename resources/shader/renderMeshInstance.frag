@@ -1,17 +1,17 @@
 #version 330 core
 
-#define BSTATE_EMPTY 0
-#define BSTATE_INSIDE_ROOM 1
-#define BSTATE_LEFT_UPPER_CORNER 2
-#define BSTATE_RIGHT_UPPER_CORNER 3
-#define BSTATE_LEFT_LOWER_CORNER 4
-#define BSTATE_RIGHT_LOWER_CORNER 5
-#define BSTATE_WALL_LEFT 6
-#define BSTATE_WALL_RIGHT 7
-#define BSTATE_WALL_TOP 8
-#define BSTATE_WALL_BOTTOM 9
-#define BSTATE_INVALID 10
-#define BSTATE_OUTER_INFLUENCE 11
+#define EMPTY 0
+#define INSIDE_ROOM 1
+#define CORNER 2
+#define WALL 4
+#define TOP 8
+#define BOTTOM 16
+#define RIGHT 32
+#define LEFT 64
+#define INVALID 128
+#define SOURCE 256
+#define INFECTED 512
+#define OUTER_INFLUENCE 1024
 
 // uniform sampler2D diffuseTexture;
 
@@ -52,11 +52,11 @@ void main() {
 	//TODO What to do with the time delta? Need the texture with the previous state as well?
 	
 	float healthNormalized = float(hp)/100;
-	if(st==BSTATE_OUTER_INFLUENCE) {
+	if((st & OUTER_INFLUENCE)!=0) {
 		float v_prev = texture(gridTex_PrevState, cellCoords).r;
 		float v = texture(gridTex, cellCoords).r;
 		v = mix(v_prev, v, automatonTimeDelta);
-		v *= (255.0 / BSTATE_OUTER_INFLUENCE);
+		v *= (255.0 / OUTER_INFLUENCE);
 		if(v < OUTER_INFLUENCE_DISPLAY_THRESHOLD)
 			discard;
 		if(v > 0.65) // "high-value" threshold

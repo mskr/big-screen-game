@@ -246,21 +246,21 @@ void InteractiveGrid::onMouseMove(int touchID, double newx, double newy) {
 }
 
 
-void InteractiveGrid::buildAt(size_t col, size_t row, GridCell::BuildState buildState) {
+void InteractiveGrid::buildAt(size_t col, size_t row, GLuint buildState) {
 	GridCell* maybeCell = getCellAt(col, row);
 	if (!maybeCell) return;
 	if (maybeCell->getBuildState() == buildState) return;
-	maybeCell->updateBuildState(vbo_, buildState);
+	maybeCell->addBuildState(vbo_, buildState);
 }
 
 
-void InteractiveGrid::buildAtLastMousePosition(GridCell::BuildState buildState) {
+void InteractiveGrid::buildAtLastMousePosition(GLuint buildState) {
 	glm::vec2 touchPositionNDC =
 		glm::vec2(last_mouse_position_.x, 1.0 - last_mouse_position_.y)
 		* glm::vec2(2.0, 2.0) - glm::vec2(1.0, 1.0);
 	GridCell* maybeCell = getCellAt(touchPositionNDC);
 	if (!maybeCell) return;
-	if (maybeCell->getBuildState() != GridCell::BuildState::EMPTY) return;
+	if (maybeCell->getBuildState() != GridCell::EMPTY) return;
 	if (maybeCell->getBuildState() == buildState) return;
 	buildAt(maybeCell->getCol(), maybeCell->getRow(), buildState);
 }
@@ -277,7 +277,7 @@ bool InteractiveGrid::isColumnEmptyBetween(size_t col, size_t startRow, size_t e
 		maybeCell = getCellAt(col, i);
 		if (!maybeCell)
 			return false;
-		if (maybeCell->getBuildState() != GridCell::BuildState::EMPTY)
+		if (maybeCell->getBuildState() != GridCell::EMPTY)
 			return false;
 	}
 	return true;
@@ -295,7 +295,7 @@ bool InteractiveGrid::isRowEmptyBetween(size_t row, size_t startCol, size_t endC
 		maybeCell = getCellAt(j, row);
 		if (!maybeCell)
 			return false;
-		if (maybeCell->getBuildState() != GridCell::BuildState::EMPTY)
+		if (maybeCell->getBuildState() != GridCell::EMPTY)
 			return false;
 	}
 	return true;

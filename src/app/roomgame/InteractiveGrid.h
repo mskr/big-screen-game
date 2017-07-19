@@ -82,8 +82,8 @@ public:
 
 
 	// Functions for grid modification
-	virtual void buildAt(size_t col, size_t row, GridCell::BuildState buildState);
-	void buildAtLastMousePosition(GridCell::BuildState buildState);
+	virtual void buildAt(size_t col, size_t row, GLuint buildState);
+	void buildAtLastMousePosition(GLuint buildState);
 };
 
 #endif

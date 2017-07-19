@@ -15,6 +15,7 @@
 */
 class GridCell {
 public:
+    /*
 	enum BuildState {
 		EMPTY = 0,
 		INSIDE_ROOM = 1,
@@ -29,14 +30,28 @@ public:
 		INVALID = 10,
         INSIDE_ROOM_INFECTED = 11,
 		OUTER_INFLUENCE = 12
-	};
+	};*/
+
+    static const GLuint EMPTY = 0;
+    static const GLuint INSIDE_ROOM = 1;
+    static const GLuint CORNER = 2;
+    static const GLuint WALL = 4;
+    static const GLuint TOP = 8;
+    static const GLuint BOTTOM = 16;
+    static const GLuint RIGHT = 32;
+    static const GLuint LEFT = 64;
+    static const GLuint INVALID = 128;
+    static const GLuint SOURCE = 256;
+    static const GLuint INFECTED = 512;
+    static const GLuint OUTER_INFLUENCE = 1024;
+
 	static const int MAX_HEALTH = 100;
 	static const int MIN_HEALTH = 0;
 private:
 	struct Vertex {
 		GLfloat x_position;
 		GLfloat y_position;
-		GLint build_state;
+		GLuint build_state;
 		GLint health_points;
 		static const void setAttribPointer() {
 			const GLint posAttrLoc = 0;
@@ -50,7 +65,7 @@ private:
 				(GLvoid*)(2 * sizeof(float)));
 			glVertexAttribIPointer(healthAttrLoc, 1, GL_INT,
 				sizeof(Vertex),
-				(GLvoid*)(2 * sizeof(float) + sizeof(BuildState)));
+				(GLvoid*)(2 * sizeof(float) + sizeof(GLuint)));
 			glEnableVertexAttribArray(posAttrLoc);
 			glEnableVertexAttribArray(buildStateAttrLoc);
 			glEnableVertexAttribArray(healthAttrLoc);
@@ -70,8 +85,9 @@ public:
 	~GridCell() = default;
 	void setIsSource(bool state);
 	bool getIsSource();
-	void updateBuildState(GLuint vbo, BuildState s);
-	void updateHealthPoints(GLuint vbo, int hp);
+    void removeBuildState(GLuint vbo, GLuint s, bool makeEmpty);
+    void addBuildState(GLuint vbo, GLuint s);
+    void updateHealthPoints(GLuint vbo, int hp);
 	void setMeshInstance(RoomSegmentMesh::InstanceBufferRange mesh_instance);
 	static void setVertexAttribPointer();
 	void setVertexBufferOffset(GLintptr o);
@@ -86,7 +102,7 @@ public:
 	glm::vec2 getPosition();
 	float getXPosition();
 	float getYPosition();
-	int getBuildState();
+	GLuint getBuildState();
 	int getHealthPoints();
 	GLintptr getVertexBufferOffset();
 	static size_t getVertexBytes();

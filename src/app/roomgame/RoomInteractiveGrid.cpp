@@ -17,11 +17,11 @@ void RoomInteractiveGrid::onTouch(int touchID) {
 		* glm::vec2(2.0, 2.0) - glm::vec2(1.0, 1.0);
 	GridCell* maybeCell = getCellAt(touchPositionNDC);
 	if (!maybeCell) return;
-	if (maybeCell->getBuildState() != GridCell::BuildState::EMPTY) return;
+	if (maybeCell->getBuildState() != GridCell::EMPTY) return;
 	Room* room = new Room(maybeCell, maybeCell, this);
 	interactions_.push_back(
 		new GridInteraction(touchID, last_mouse_position_, maybeCell, room));
-	buildAt(maybeCell->getCol(), maybeCell->getRow(), GridCell::BuildState::INVALID);
+	buildAt(maybeCell->getCol(), maybeCell->getRow(), GridCell::INVALID);
 }
 
 void RoomInteractiveGrid::onRelease(int touchID) {

@@ -87,17 +87,14 @@ namespace roomgame {
 			Patrol();
 			break;
 		case ATTACK:
-			//Attack();
-			break;
 		case RETREAT:
-			//Retreat();
 			break;
 		}
 
 	}
 
 	void OuterInfluence::Patrol() {
-		//Move around randomly (a bit above ground)
+		//Move around in a circle until the attack decision (chance gets higher over time)
         int randNumber = distributor100(rndGenerator);
         //std::cout << randNumber << "/" << attackChance << std::endl;
         if (randNumber > 100-attackChance) {
@@ -113,11 +110,8 @@ namespace roomgame {
 	}
 
     void OuterInfluence::ChooseTarget() {
-        //Set the closest cell with wall build state as moveTarget (move down and towards it until collison)
-        //targetPosition = glm::vec3(grid->getClosestWallCell(glm::vec2(oldPosition))->getPosition(),-3);
-        //posDiff = targetPosition - oldPosition;
+        //Set the closest cell with wall build state as moveTarget (move towards it until collison)
         glm::vec4 ndcCoords = glm::vec4(meshComponent->model_matrix_[3][0], meshComponent->model_matrix_[3][1], 0.0f, 1.0f);
-        //            glm::vec4 ndcCoords = glm::vec4(1,1,0,1);
         ndcCoords = viewPersMat * ndcCoords;
         ndcCoords = ndcCoords / ndcCoords.w;
         ndcCoords = glm::vec4(grid->pushNDCinsideGrid(glm::vec2(ndcCoords.x, ndcCoords.y)), ndcCoords.z, ndcCoords.w);
@@ -130,13 +124,7 @@ namespace roomgame {
         GridCell* leftLower = grid->getCellAt(minCoords);
         GridCell* rightUpper = grid->getCellAt(maxCoords);
         grid->forEachCellInRange(leftLower, rightUpper, [&](GridCell* cell) {
-            if (
-                (cell->getBuildState() == GridCell::BuildState::WALL_BOTTOM ||
-                    cell->getBuildState() == GridCell::BuildState::WALL_RIGHT ||
-                    cell->getBuildState() == GridCell::BuildState::WALL_LEFT ||
-                    cell->getBuildState() == GridCell::BuildState::WALL_TOP) &&
-                cell->getDistanceTo(tmp) < cellDistance
-                ) {
+            if ((cell->getBuildState() & GridCell::WALL) != 0 && cell->getDistanceTo(tmp) < cellDistance) {
                 cellDistance = cell->getDistanceTo(tmp);
                 closestWallCell = cell;
             }
@@ -145,12 +133,9 @@ namespace roomgame {
         if (closestWallCell != nullptr) {
             targetPosition = glm::vec3(closestWallCell->getXPosition(), closestWallCell->getYPosition(), 0);
             targetPosition += grid->getTranslation();
-			//glm::mat4 worldMat = meshComponent->model_matrix_
             posDiff = targetPosition - glm::vec3(meshComponent->model_matrix_[3][0], meshComponent->model_matrix_[3][1], 0.0f);
             distance = glm::length(posDiff);
-            //meshComponent->transform(glm::translate(posDiff*10.0f));
-            //meshComponent->transform(glm::translate(glm::vec3(-10,0,0)));
-            closestWallCell->setIsSource(true);
+            targetCell = closestWallCell;
         }
         else {
             mode = PATROL;
@@ -159,6 +144,7 @@ namespace roomgame {
     }
 
 	void OuterInfluence::Attack() {
+        //If the target Cell is reached, change to retreat mode and mark the cell as source
         glm::vec3 currentPos = glm::vec3(meshComponent->model_matrix_[3][0], meshComponent->model_matrix_[3][1], meshComponent->model_matrix_[3][2]);
         float dist = glm::distance(oldPosition, currentPos);
         //std::cout << "posdiff: " << posDiff.x << "," << posDiff.y << "," << posDiff.z << ",  " << dist << "/" << distance << std::endl;
@@ -167,17 +153,14 @@ namespace roomgame {
             oldPosition = currentPos;
             posDiff = targetPosition - currentPos;
             distance = glm::length(posDiff);
-            //meshComponent->transform(glm::translate(posDiff*10.0f));
             mode = RETREAT;
+            targetCell->setIsSource(true);
             //std::cout << "Changed mode to retreat" << std::endl;
         }
 	}
 
 	void OuterInfluence::Retreat() {
-		//Mark hit cell as source and get back higher and to the edge of the screen
-        //grid->getClosestWallCell(glm::vec2(oldPosition))->setIsSource(true);
-        
-        //meshComponent->transform(glm::translate(posDiff));
+		//If back at original position, change to patrol mode
         glm::vec3 currentPos = glm::vec3(meshComponent->model_matrix_[3][0], meshComponent->model_matrix_[3][1], meshComponent->model_matrix_[3][2]);
         float dist = glm::distance(oldPosition, currentPos);
         //std::cout << "posdiff: " << posDiff.x << "," << posDiff.y << "," << posDiff.z << ",  " << dist << "/" << distance << std::endl;
