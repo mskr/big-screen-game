@@ -67,6 +67,6 @@ namespace viscom {
         bool MouseButtonCallback(int button, int action) override;
         bool MousePosCallback(double x, double y) override;
         bool MouseScrollCallback(double xoffset, double yoffset) override;
-        //glm::vec2 FindIntersectionWithPlane(const math::Line3<float>& ray) const;
+        glm::vec2 FindIntersectionWithPlane(const math::Line3<float>& ray) const;
     };
 }

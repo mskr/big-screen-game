@@ -268,7 +268,10 @@ namespace viscom {
 	*/
     bool MasterNode::MousePosCallback(double x, double y)
     {
-        x *= 2;
+        //x *= 2;
+        glm::vec2 pos = FindIntersectionWithPlane(GetCamera()->GetPickRay(glm::vec2(x,y)));
+        x = pos.x;
+        y = pos.y;
 		if (interaction_mode_ == InteractionMode::GRID)
 			grid_.onMouseMove(-1, x, y);
 		else
@@ -294,16 +297,21 @@ namespace viscom {
         return ApplicationNodeImplementation::MouseScrollCallback(xoffset, yoffset);
     }
 
-    /*
+    
     glm::vec2 MasterNode::FindIntersectionWithPlane(const math::Line3<float>& ray) const
     {
         glm::mat3 m{ 0.0f };
         m[0] = ray[0] - ray[1];
-        m[1] = GetSimPlane().right_ - GetSimPlane().position_;
-        m[2] = GetSimPlane().up_ - GetSimPlane().position_;
+        glm::vec3 gridPos = glm::vec3(
+            0,
+            -(GRID_HEIGHT_NDC_ / GRID_ROWS_), /* position background mesh exactly under grid */
+            -0.001f/*TODO better remove the z bias and use thicker meshes*/);
+        gridPos = glm::vec3(-1,0,0);
+        m[1] = glm::vec3(1, 0, 0) - gridPos;
+        m[2] = glm::vec3(0, -1, 0) - gridPos;
 
-        auto intersection = glm::inverse(m) * (ray[0] - GetSimPlane().position_);
+        auto intersection = glm::inverse(m) * (ray[0] - gridPos);
         return glm::vec2(0.5f) + glm::vec2(intersection.y, intersection.z) / 2.0f;
     }
-    */
+    
 }
