@@ -18,7 +18,7 @@ float visibilityCalc(vec2 curPos){
     for(int i = 0; i< 5; i++){
         result += exp(-20.*length(pos[i]-curPos));
     }
-    result = exp(-20.*length(pos[4]-curPos));
+    //result = exp(-20.*length(pos[4]-curPos));
     return -log(result)/20.;
 }
 
@@ -33,6 +33,7 @@ vec4 drawSlice( vec2 uv )
 {
     float t = time/2.;
     calcPos(t);
+	uv = vec2(.01,0.);
     float pot = visibilityCalc(uv);
 //    return vec3(smoothstep(0.03,0.01,pot));
 //    return vec4(smoothstep(0.03,0.01,pot),smoothstep(0.03,0.01,pot),smoothstep(0.03,0.01,pot),1-pot);
@@ -42,8 +43,8 @@ vec4 drawSlice( vec2 uv )
 void main() {
 	//color = texture(diffuseTexture, vTexCoords);
 	// draw spots
-	vec2 uv = gl_FragCoord.xy/vec2(1000.);
-	uv = vec2(.01,0.);
+	vec2 uv = vTexCoords;
+	//uv = vec2(.01,0.);
     vec4 spots = drawSlice( uv );
     
     // accumulate
