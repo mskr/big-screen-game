@@ -216,6 +216,10 @@ public:
     void render(glm::mat4& vp, glm::mat4& lightspace, GLuint shadowMap, GLint isDebugMode = 0) const;
 };
 
+/* Generic mesh for post processing effects.
+ * Holds a time for animated effects.
+ * Manages several uniforms needed in post processing shader.
+*/
 class PostProcessingMesh : public SimpleGameMesh {
 	GLint uloc_lightspace_matrix_;
 	GLint uloc_shadow_map_;
@@ -224,7 +228,7 @@ class PostProcessingMesh : public SimpleGameMesh {
 public:
 	PostProcessingMesh(std::shared_ptr<viscom::Mesh> mesh, std::shared_ptr<viscom::GPUProgram> shader);
 	void setTime(double time) {
-		time_ = time;
+		time_ = (GLfloat) time;
 	}
 	void render(glm::mat4& vp, glm::mat4& lightspace, GLuint shadowMap, GLint isDebugMode = 0) const;
 };

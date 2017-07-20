@@ -122,8 +122,8 @@ bool Room::growToWest(size_t dist) {
 		isCollisionAhead = !grid_->isColumnEmptyBetween(leftLowerCorner_->getCol() - 1,
 			leftLowerCorner_->getRow(), rightUpperCorner_->getRow());
 		if (i == dist || isCollisionAhead) {
-			top = GridCell::LEFT | GridCell::TOP || GridCell::CORNER;
-			bottom = GridCell::LEFT | GridCell::BOTTOM || GridCell::CORNER;
+			top = GridCell::LEFT | GridCell::TOP | GridCell::CORNER;
+			bottom = GridCell::LEFT | GridCell::BOTTOM | GridCell::CORNER;
 			middle = GridCell::LEFT | GridCell::WALL;
 		}
 		grid_->buildAt(leftLowerCorner_->getCol(), rightUpperCorner_->getRow(), top);
@@ -157,8 +157,8 @@ void Room::shrinkToEast(size_t dist) {
 	}
 	for (size_t i = 0; i <= dist; i++) {
 		if (i == dist) {
-            top = GridCell::LEFT | GridCell::TOP || GridCell::CORNER;
-            bottom = GridCell::LEFT | GridCell::BOTTOM || GridCell::CORNER;
+            top = GridCell::LEFT | GridCell::TOP | GridCell::CORNER;
+            bottom = GridCell::LEFT | GridCell::BOTTOM | GridCell::CORNER;
             middle = GridCell::LEFT | GridCell::WALL;
         }
 		grid_->buildAt(leftLowerCorner_->getCol(), rightUpperCorner_->getRow(), top);

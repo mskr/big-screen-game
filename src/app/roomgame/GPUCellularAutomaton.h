@@ -10,7 +10,7 @@ protected:
 	GPUBuffer* framebuffer_pair_[2];
 	GPUBuffer::Tex texture_pair_[2];
 	int current_read_index_;
-	GLubyte* tmp_client_buffer_;
+	GLuint* tmp_client_buffer_;
 	GLuint vao_;
 	std::shared_ptr<viscom::GPUProgram> shader_;
 	GLint pixel_size_uniform_location_;
@@ -25,7 +25,7 @@ protected:
 	void copyFromTextureToGrid(int pair_index);
 public:
 	GPUCellularAutomaton(AutomatonGrid* grid, double transition_time);
-	void updateCell(GridCell* c, GLint state, GLint hp);
+	void updateCell(GridCell* c, GLuint state, GLint hp);
 	virtual void init(viscom::GPUProgramManager mgr);
 	virtual void transition(double time);
 	void cleanup();

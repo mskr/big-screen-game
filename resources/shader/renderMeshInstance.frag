@@ -30,9 +30,6 @@ uniform float automatonTimeDelta;
 uniform int isDepthPass;
 uniform int isDebugMode;
 
-// threshold to discard "low-value" outer influence pixels
-const float OUTER_INFLUENCE_DISPLAY_THRESHOLD = 0.6;
-
 out vec4 color;
 
 void main() {
@@ -47,24 +44,14 @@ void main() {
 
 	// float NdotL = clamp(dot(lightDir, normalize(vNormal)), 0.0f, 1.0f);
 	// vec3 texColor = texture(diffuseTexture, vTexCoords).rgb;
-
-	//TODO Why are the edges still not completely black?
-	//TODO What to do with the time delta? Need the texture with the previous state as well?
 	
 	float healthNormalized = float(hp)/100;
-	if((st & OUTER_INFLUENCE)!=0) {
-		float v_prev = texture(gridTex_PrevState, cellCoords).r;
-		float v = texture(gridTex, cellCoords).r;
-		v = mix(v_prev, v, automatonTimeDelta);
-		v *= (255.0 / OUTER_INFLUENCE);
-		if(v < OUTER_INFLUENCE_DISPLAY_THRESHOLD)
-			discard;
-		if(v > 0.65) // "high-value" threshold
-			color = vec4(0, v-0.1, v, 0.5) * healthNormalized;
-		else // edge between high-value and discarded pixels
-			color = vec4(1) * healthNormalized;
+
+	// if current mesh instance is INFECTED, apply some effect
+	if((st & INFECTED) != 0) {
+		color = vec4(1,0,0,.5);
 	}
-	else {
+	else { // else visualize normals
 		color = vec4(vNormal, 1) * healthNormalized;
 	}
 }

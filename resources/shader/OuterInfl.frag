@@ -5,7 +5,7 @@ uniform sampler2D diffuseTexture;
 in vec3 vPosition;
 in vec3 vNormal;
 in vec2 vTexCoords;
-in float time;
+uniform float time;
 in vec4 gl_FragCoord;
 
 out vec4 color;
@@ -49,4 +49,5 @@ void main() {
     
     // accumulate
     color.rgba = spots;
+	color = vec4(.5,0,.2,1);
 }
