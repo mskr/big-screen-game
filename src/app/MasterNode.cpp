@@ -22,7 +22,7 @@ namespace viscom {
 
     MasterNode::MasterNode(ApplicationNodeInternal* appNode) :
         ApplicationNodeImplementation{ appNode },
-		grid_(GRID_COLS_, GRID_ROWS_, GRID_HEIGHT_NDC_, &meshpool_),
+		grid_(GRID_COLS_, GRID_ROWS_, GRID_HEIGHT_, &meshpool_),
 		cellular_automaton_(&grid_, automaton_transition_time),
 		interaction_mode_(GRID_PLACE_OUTER_INFLUENCE)
     {
@@ -269,13 +269,12 @@ namespace viscom {
     bool MasterNode::MousePosCallback(double x, double y)
     {
         //x *= 2;
-        glm::vec2 pos = FindIntersectionWithPlane(GetCamera()->GetPickRay(glm::vec2(x,y)));
-        x = pos.x;
-        y = pos.y;
-		if (interaction_mode_ == InteractionMode::GRID)
-			grid_.onMouseMove(-1, x, y);
-		else
-			grid_.onMouseMove(-2, x, y);
+		//glm::vec2 pos = FindIntersectionWithPlane(GetCamera()->GetPickRay({ x,y }));
+        //x = pos.x;
+        //y = pos.y;
+		viscom::math::Line3<float> ray = GetCamera()->GetPickRay({ x,y });
+		grid_.onMouseMove(-1, ray[0], ray[1]);
+		grid_.onMouseMove(-1, x, y);
 		//camera_.onMouseMove((float)x, (float)y);
 #ifndef VISCOM_CLIENTGUI
         ImGui_ImplGlfwGL3_MousePositionCallback(x, y);
@@ -304,7 +303,7 @@ namespace viscom {
         m[0] = ray[0] - ray[1];
         glm::vec3 gridPos = glm::vec3(
             0,
-            -(GRID_HEIGHT_NDC_ / GRID_ROWS_), /* position background mesh exactly under grid */
+            -(GRID_HEIGHT_ / GRID_ROWS_), /* position background mesh exactly under grid */
             -0.001f/*TODO better remove the z bias and use thicker meshes*/);
         //gridPos = glm::vec3(-1,0,0);
         m[1] = glm::vec3(1, 0, 0) - gridPos;

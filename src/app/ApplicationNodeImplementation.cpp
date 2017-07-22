@@ -21,7 +21,6 @@ namespace viscom {
 
 	ApplicationNodeImplementation::ApplicationNodeImplementation(ApplicationNodeInternal* appNode) :
 		ApplicationNodeBase{ appNode },
-		GRID_COLS_(64), GRID_ROWS_(64), GRID_HEIGHT_NDC_(2.0f),
 		meshpool_(GRID_COLS_ * GRID_ROWS_),
 		render_mode_(NORMAL),
 		clock_{ 0.0 },
@@ -76,7 +75,7 @@ namespace viscom {
 		waterMesh_->transform(glm::scale(glm::translate(glm::mat4(1),
 			glm::vec3(
 				0,
-				-(GRID_HEIGHT_NDC_/GRID_ROWS_), /* position background mesh exactly under grid */
+				-(GRID_HEIGHT_/GRID_ROWS_), /* position background mesh exactly under grid */
 				-0.001f/*TODO better remove the z bias and use thicker meshes*/)), 
 			glm::vec3(1.0f)));
 

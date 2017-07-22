@@ -10,91 +10,71 @@ RoomInteractiveGrid::~RoomInteractiveGrid() {
 	for(Room* r : rooms_) delete r;
 }
 
-void RoomInteractiveGrid::onTouch(int touchID) {
-	// Create interaction
-	glm::vec2 touchPositionNDC =
-		glm::vec2(last_mouse_position_.x, 1.0 - last_mouse_position_.y)
-		* glm::vec2(2.0, 2.0) - glm::vec2(1.0, 1.0);
-	GridCell* maybeCell = getCellAt(touchPositionNDC);
-	if (!maybeCell) return;
-	if (maybeCell->getBuildState() != GridCell::EMPTY) return;
-	Room* room = new Room(maybeCell, maybeCell, this);
-	interactions_.push_back(
-		new GridInteraction(touchID, last_mouse_position_, maybeCell, room));
-	buildAt(maybeCell->getCol(), maybeCell->getRow(), GridCell::INVALID);
+void RoomInteractiveGrid::handleTouchedCell(int touchID, GridCell* touchedCell) {
+	InteractiveGrid::handleTouchedCell(touchID, touchedCell);
+	// is the touched cell still empty?
+	if (touchedCell->getBuildState() != GridCell::EMPTY) return;
+	// ...then start room creation
+	Room* room = new Room(touchedCell, touchedCell, this);
+	interactions_.push_back(new GridInteraction(touchID, last_mouse_position_, touchedCell, room));
+	buildAt(touchedCell->getCol(), touchedCell->getRow(), GridCell::INVALID);
 }
 
-void RoomInteractiveGrid::onRelease(int touchID) {
-	// Find and remove interaction
-	for (GridInteraction* interac : interactions_) {
-		if (interac->getTouchID() == touchID) {
-			interac->update(last_mouse_position_);
-			if (touchID == -1) {
-				// React to mouse interaction (id -1)
-				Room* room = interac->getRoom();
-				if (room->isValid()) {
-					// Finish room
-					room->finish();
-					rooms_.push_back(room);
-				}
-				else {
-					room->clear();
-					delete room;
-				}
-				interactions_.remove(interac);
-				break;
-			}
-			else {
-				//TODO React to touch interaction
-				//TODO wait for possible end of discontinuaty
-			}
+void RoomInteractiveGrid::handleHoveredCell(int touchID, GridCell* hoveredCell, GridInteraction* interac) {
+	InteractiveGrid::handleHoveredCell(touchID, hoveredCell, interac);
+	// continue room creation
+	if (touchID == -1) { // if ID is -1, "touch" was mouse click
+		if (interac->getLastCell() == hoveredCell) return; // return if cursor was still inside last cell
+		// resize room 
+		// - if rooms grow or shrink can be inferred from start-, last- and current cell
+		// - collisions can only occur for growing rooms
+		Room::CollisionType collision = resizeRoomUntilCollision(interac->getRoom(),
+			interac->getStartCell(), interac->getLastCell(), hoveredCell);
+		if (collision == Room::CollisionType::NONE) {
+			interac->setLastCell(hoveredCell);
 		}
+		else if (interac->getLastCollision() == Room::CollisionType::NONE) {
+			interac->setLastCell(hoveredCell);
+		}
+		else if (collision == Room::CollisionType::HORIZONTAL) {
+			if (interac->getLastCollision() == Room::CollisionType::VERTICAL)
+				interac->setLastCell(hoveredCell);
+			else
+				interac->setLastCell(getCellAt(interac->getLastCell()->getCol(), hoveredCell->getRow()));
+		}
+		else if (collision == Room::CollisionType::VERTICAL) {
+			if (interac->getLastCollision() == Room::CollisionType::HORIZONTAL)
+				interac->setLastCell(hoveredCell);
+			else
+				interac->setLastCell(getCellAt(hoveredCell->getCol(), interac->getLastCell()->getRow()));
+		}
+		interac->setLastCollision(collision);
+	}
+	else { // if ID not 1, then this was really a touch interaction
+		   //TODO React to touch interaction
 	}
 }
 
-void RoomInteractiveGrid::onMouseMove(int touchID, double newx, double newy) {
-	InteractiveGrid::onMouseMove(touchID, newx, newy);
-	// Find interaction and continue room building
-	for (GridInteraction* interac : interactions_) {
-		if (interac->getTouchID() == touchID) {
-			interac->update(last_mouse_position_);
-			if (touchID == -1) {
-				// React to mouse interaction (id -1)
-				glm::vec2 touchPositionNDC =
-					glm::vec2(last_mouse_position_.x, 1.0 - last_mouse_position_.y)
-					* glm::vec2(2.0, 2.0) - glm::vec2(1.0, 1.0); // transform window system coords
-				GridCell* maybeCell = getCellAt(touchPositionNDC); // search current cell
-				if (!maybeCell) {
-					return; // cursor was outside grid
-				}
-				if (interac->getLastCell() == maybeCell) return; // cursor was still inside last cell
-				Room::CollisionType collision = resizeRoomUntilCollision(interac->getRoom(), interac->getStartCell(), interac->getLastCell(), maybeCell);
-				if (collision == Room::CollisionType::NONE) {
-					interac->setLastCell(maybeCell);
-				}
-				else if (interac->getLastCollision() == Room::CollisionType::NONE) {
-					interac->setLastCell(maybeCell);
-				}
-				else if (collision == Room::CollisionType::HORIZONTAL) {
-					if (interac->getLastCollision() == Room::CollisionType::VERTICAL)
-						interac->setLastCell(maybeCell);
-					else
-						interac->setLastCell(getCellAt(interac->getLastCell()->getCol(), maybeCell->getRow()));
-				}
-				else if (collision == Room::CollisionType::VERTICAL) {
-					if (interac->getLastCollision() == Room::CollisionType::HORIZONTAL)
-						interac->setLastCell(maybeCell);
-					else
-						interac->setLastCell(getCellAt(maybeCell->getCol(), interac->getLastCell()->getRow()));
-				}
-				interac->setLastCollision(collision);
-				break;
-			}
-			//TODO React to touch interaction
+void RoomInteractiveGrid::handleRelease(int touchID, GridInteraction* interac) {
+	InteractiveGrid::handleRelease(touchID, interac);
+	// check result and remove interaction
+	if (touchID == -1) { // if ID is -1, "touch" was mouse click
+		Room* room = interac->getRoom();
+		if (room->isValid()) { // if room valid, i.e. big enough, then store it
+			room->finish();
+			rooms_.push_back(room);
 		}
+		else { // if room invalid, discard
+			room->clear();
+			delete room;
+		}
+		interactions_.remove(interac);
+	}
+	else { // if ID not 1, then this was really a touch interaction
+		//TODO React to touch interaction
+		//TODO wait for possible end of discontinuaty
 	}
 }
-
 
 Room::CollisionType RoomInteractiveGrid::resizeRoomUntilCollision(Room* room, GridCell* startCell, GridCell* lastCell, GridCell* currentCell) {
 	// Handle DEGENERATED rooms by update each cell (typically low number of cells)

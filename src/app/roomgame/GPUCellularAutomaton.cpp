@@ -32,14 +32,14 @@ void GPUCellularAutomaton::init(viscom::GPUProgramManager mgr) {
 	GLuint cols = (GLuint)grid_->getNumColumns();
 	GLuint rows = (GLuint)grid_->getNumRows();
 	texture_pair_[0].attachmentType = texture_pair_[1].attachmentType = GL_COLOR_ATTACHMENT0;
-	texture_pair_[0].sized_format = texture_pair_[1].sized_format = GL_RG8;
-	texture_pair_[0].format = texture_pair_[1].format = GL_RG;
-	texture_pair_[0].datatype = texture_pair_[1].datatype = GL_UNSIGNED_BYTE;
+	texture_pair_[0].sized_format = texture_pair_[1].sized_format = GL_RG32UI;
+	texture_pair_[0].format = texture_pair_[1].format = GL_RG_INTEGER;
+	texture_pair_[0].datatype = texture_pair_[1].datatype = GL_UNSIGNED_INT;
 	framebuffer_pair_[0] = new GPUBuffer(cols, rows, { &texture_pair_[0] });
 	framebuffer_pair_[1] = new GPUBuffer(cols, rows, { &texture_pair_[1] });
 	// Temporary client buffer to transfer pixels from and to
-	size_t bytes = cols * rows * 2 * sizeof(GLubyte);
-	tmp_client_buffer_ = (GLubyte*)malloc(bytes);
+	size_t bytes = cols * rows * 2 * sizeof(GLuint);
+	tmp_client_buffer_ = (GLuint*)malloc(bytes);
 	if (!tmp_client_buffer_) throw std::runtime_error("");
 	// Get initial state of grid
 	copyFromGridToTexture(0);
@@ -74,7 +74,7 @@ void GPUCellularAutomaton::copyFromGridToTexture(int pair_index) {
 		for (unsigned int y = 0; y < rows*2 - 1; y+=2) {
 			GridCell* c = grid_->getCellAt(y/2, x);
 			tmp_client_buffer_[x*2*rows + y] = c->getBuildState();
-			tmp_client_buffer_[x*2*rows + y + 1] = c->getHealthPoints();
+			tmp_client_buffer_[x*2*rows + y + 1] = (GLuint) c->getHealthPoints();
 		}
 	}
 	glBindTexture(GL_TEXTURE_2D, texture_pair_[pair_index].id);
@@ -92,7 +92,7 @@ void GPUCellularAutomaton::copyFromTextureToGrid(int pair_index) {
 	// iterate over contents
 	for (unsigned int x = 0; x < cols; x++) {
 		for (unsigned int y = 0; y < rows*2 - 1; y+=2) {
-			int state = (int) tmp_client_buffer_[x*2*rows + y];
+			GLuint state = (GLuint) tmp_client_buffer_[x*2*rows + y];
 			int hp = (int) tmp_client_buffer_[x*2*rows + y + 1];
 			GridCell* c = grid_->getCellAt(y / 2, x);
 			// something changed?
@@ -104,9 +104,9 @@ void GPUCellularAutomaton::copyFromTextureToGrid(int pair_index) {
 	}
 }
 
-void GPUCellularAutomaton::updateCell(GridCell* c, GLint buildState, GLint hp) {
+void GPUCellularAutomaton::updateCell(GridCell* c, GLuint buildState, GLint hp) {
 	if (!is_initialized_) return;
-	GLubyte data[2] = { (GLubyte)buildState, (GLubyte)hp };
+	GLuint data[2] = { buildState, (GLuint)hp };
 	glBindTexture(GL_TEXTURE_2D, texture_pair_[current_read_index_].id);
 	glTexSubImage2D(GL_TEXTURE_2D, 0, (GLint)c->getCol(), (GLint)c->getRow(), 1, 1,
 		texture_pair_[0].format, texture_pair_[0].datatype, data);

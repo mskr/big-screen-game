@@ -57,9 +57,9 @@ namespace viscom {
 		roomgame::UpdateManager updateManager_;
 
 		/* Grid parameters (constant on all nodes) */
-		const int GRID_COLS_;
-		const int GRID_ROWS_;
-		const float GRID_HEIGHT_NDC_;
+		const int GRID_COLS_ = 64;
+		const int GRID_ROWS_ = 64;
+		const float GRID_HEIGHT_ = 2.0f;
 
 		/**/
 		std::shared_ptr<roomgame::OuterInfluence> outerInfluence_;

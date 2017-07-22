@@ -11,12 +11,12 @@
 */
 class RoomInteractiveGrid : public InteractiveGrid {
 	std::vector<Room*> rooms_;
+	void handleTouchedCell(int touchID, GridCell*) override;
+	void handleHoveredCell(int touchID, GridCell*, GridInteraction*) override;
+	void handleRelease(int touchID, GridInteraction*) override;
 public:
 	RoomInteractiveGrid(size_t columns, size_t rows, float height);
 	~RoomInteractiveGrid();
-	void onTouch(int touchID) override;
-	void onRelease(int touchID) override;
-	void onMouseMove(int touchID, double newx, double newy) override;
 	Room::CollisionType resizeRoomUntilCollision(Room* room, GridCell* startCell, GridCell* lastCell, GridCell* currentCell);
 };
 

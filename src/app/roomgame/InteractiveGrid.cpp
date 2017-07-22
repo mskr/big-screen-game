@@ -4,6 +4,7 @@
 InteractiveGrid::InteractiveGrid(size_t columns, size_t rows, float height) {
 	height_units_ = height;
 	cell_size_ = height_units_ / float(rows);
+	grid_center_ = glm::vec3(-1.0f + cell_size_ * columns / 2.0f, -1.0f + height_units_ / 2.0f, 0.0f);
 	for (int x = 0; x < columns; x++) {
 		std::vector<GridCell> column;
 		for (int y = 0; y < rows; y++) {
@@ -33,7 +34,8 @@ InteractiveGrid::~InteractiveGrid() {
 
 
 void InteractiveGrid::translate(float dx, float dy, float dz) {
-	translation_ = glm::vec3(dx, dy, dz);
+	translation_ += glm::vec3(dx, dy, dz);
+	grid_center_ += translation_;
 }
 
 
@@ -42,12 +44,16 @@ void InteractiveGrid::updateProjection(glm::mat4& p) {
 }
 
 
-glm::vec2 InteractiveGrid::getNDC(glm::vec2 position) {
+glm::vec2 InteractiveGrid::getNDC(glm::vec2 cellPosition) {
 	// Apply grid translation
-	glm::vec4 pos(position.x + translation_.x, position.y + translation_.y, 0.0f, 1.0f);
+	glm::vec4 pos(cellPosition.x + translation_.x, cellPosition.y + translation_.y, 0.0f, 1.0f);
 	// Apply camera projection
 	pos = last_view_projection_ * pos;
 	return glm::vec2(pos.x, pos.y) / pos.w;
+}
+
+glm::vec3 InteractiveGrid::getWorldCoordinates(glm::vec2 cellPosition) {
+	return glm::vec3(cellPosition, 0.0f) + translation_;
 }
 
 GridCell* InteractiveGrid::getClosestWallCell(glm::vec2 pos) {
@@ -147,6 +153,7 @@ GridCell* InteractiveGrid::getCellAt(glm::vec2 positionNDC) {
 	size_t jLeftUpper = cells_[0].size() - 1;
 	size_t iRightLower = cells_.size() - 1;
 	size_t jRightLower = 0;
+	// dividing grid until searched cell is in a very small subgrid...
 	while (iRightLower - iLeftUpper > 2 || jLeftUpper - jRightLower > 2) {
 		size_t iMiddle = iLeftUpper + (iRightLower - iLeftUpper) / 2;
 		size_t jMiddle = jRightLower + (jLeftUpper - jRightLower) / 2;
@@ -160,6 +167,7 @@ GridCell* InteractiveGrid::getCellAt(glm::vec2 positionNDC) {
 		else
 			jRightLower = jMiddle;
 	}
+	// ...then brute force search the subgrid
 	for (size_t i = iLeftUpper; i <= iRightLower; i++) {
 		for (size_t j = jRightLower; j <= jLeftUpper; j++) {
 			if (isInsideCell(positionNDC, &cells_[i][j]))
@@ -172,6 +180,24 @@ GridCell* InteractiveGrid::getCellAt(glm::vec2 positionNDC) {
 
 GridCell* InteractiveGrid::getCellAt(size_t col, size_t row) {
 	if (col >= cells_.size() || row >= cells_[0].size()) return 0;
+	return &cells_[col][row];
+}
+
+GridCell* InteractiveGrid::pickCell(glm::vec3 rayStartPoint, glm::vec3 rayIntermediatePoint) {
+	// intersecting ray with grid plane
+	glm::mat3 m{ 0.0f };
+	m[0] = rayStartPoint - rayIntermediatePoint;
+	glm::vec3 center = grid_center_;
+	glm::vec3 gridRight = glm::vec3(translation_.x + cell_size_ * getNumColumns() / 2.0f, 0, center.z);
+	glm::vec3 gridTop = glm::vec3(0.0f, translation_.y + height_units_ / 2.0f, center.z);
+	m[1] = gridRight - center;
+	m[2] = gridTop - center;
+
+	glm::vec3 intersection = glm::inverse(m) * (rayStartPoint - center);
+	size_t row = (size_t) glm::round((intersection.z / 2.0f + 0.5f) * getNumRows());
+	size_t col = (size_t) glm::round((intersection.y / 2.0f + 0.5f) * getNumColumns());
+
+	if (row > getNumRows() || col > getNumColumns()) return 0;
 	return &cells_[col][row];
 }
 
@@ -232,17 +258,66 @@ void InteractiveGrid::cleanup() {
 
 
 void InteractiveGrid::onTouch(int touchID) {
-
+	/* this only worked in single window mode
+	glm::vec2 touchPositionNDC =
+		glm::vec2(last_mouse_position_.x, 1.0 - last_mouse_position_.y)
+		* glm::vec2(2.0, 2.0) - glm::vec2(1.0, 1.0);
+	GridCell* maybeCell = getCellAt(touchPositionNDC);*/
+	// now use picking
+	GridCell* maybeCell = pickCell(last_ray_start_point_, last_ray_intermediate_point_);
+	if (!maybeCell) return;
+	handleTouchedCell(touchID, maybeCell);
 }
 
 
 void InteractiveGrid::onRelease(int touchID) {
-
+	for (GridInteraction* interac : interactions_) {
+		if (interac->getTouchID() == touchID) {
+			handleRelease(touchID, interac);
+			break;
+		}
+	}
 }
 
 
 void InteractiveGrid::onMouseMove(int touchID, double newx, double newy) {
 	last_mouse_position_ = glm::dvec2(newx, newy);
+	for (GridInteraction* interac : interactions_) {
+		if (interac->getTouchID() == touchID) {
+			interac->update(last_mouse_position_);
+			/* this only worked in single window mode
+			glm::vec2 touchPositionNDC =
+				glm::vec2(last_mouse_position_.x, 1.0 - last_mouse_position_.y)
+				* glm::vec2(2.0, 2.0) - glm::vec2(1.0, 1.0); // transform window system coords
+			GridCell* maybeCell = getCellAt(touchPositionNDC);*/
+			GridCell* maybeCell = pickCell(last_ray_start_point_, last_ray_intermediate_point_);
+			if (!maybeCell)	return; // cursor was outside grid
+			handleHoveredCell(touchID, maybeCell, interac);
+			break;
+		}
+	}
+}
+
+
+void InteractiveGrid::onMouseMove(int touchID, glm::vec3 rayStartPoint, glm::vec3 rayIntermediatePoint) {
+	last_ray_start_point_ = rayStartPoint;
+	last_ray_intermediate_point_ = rayIntermediatePoint;
+	printf("Ray start: %f %f %f, Ray intermediate: %f %f %f\n", rayStartPoint.x, rayStartPoint.y, rayStartPoint.z,
+		rayIntermediatePoint.x, rayIntermediatePoint.y, rayIntermediatePoint.z);
+	for (GridInteraction* interac : interactions_) {
+		if (interac->getTouchID() == touchID) {
+			interac->update(last_mouse_position_);
+			/* this only worked in single window mode
+			glm::vec2 touchPositionNDC =
+			glm::vec2(last_mouse_position_.x, 1.0 - last_mouse_position_.y)
+			* glm::vec2(2.0, 2.0) - glm::vec2(1.0, 1.0); // transform window system coords
+			GridCell* maybeCell = getCellAt(touchPositionNDC);*/
+			GridCell* maybeCell = pickCell(last_ray_start_point_, last_ray_intermediate_point_);
+			if (!maybeCell)	return; // cursor was outside grid
+			handleHoveredCell(touchID, maybeCell, interac);
+			break;
+		}
+	}
 }
 
 
@@ -319,4 +394,17 @@ size_t InteractiveGrid::getNumRows() {
 
 size_t InteractiveGrid::getNumCells() {
 	return cells_.size() * cells_[0].size();
+}
+
+
+void InteractiveGrid::handleTouchedCell(int touchID, GridCell*) {
+
+}
+
+void InteractiveGrid::handleRelease(int touchID, GridInteraction*) {
+
+}
+
+void InteractiveGrid::handleHoveredCell(int touchID, GridCell*, GridInteraction*) {
+
 }

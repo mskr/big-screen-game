@@ -19,6 +19,7 @@ protected:
 	float height_units_;
 	float cell_size_;
 	std::vector<std::vector<GridCell>> cells_;
+	glm::vec3 grid_center_;
 	// Render-related members
 	GLuint vao_, vbo_;
 	std::shared_ptr<viscom::GPUProgram> shader_;
@@ -29,7 +30,11 @@ protected:
 	// Input-related members
 	glm::dvec2 last_mouse_position_;
 	std::list<GridInteraction*> interactions_;
-
+	glm::vec3 last_ray_start_point_;
+	glm::vec3 last_ray_intermediate_point_;
+	virtual void handleTouchedCell(int touchID, GridCell*);
+	virtual void handleHoveredCell(int touchID, GridCell*, GridInteraction*);
+	virtual void handleRelease(int touchID, GridInteraction*);
 public:
 
     /* Computes cell positions by iteratively adding (height/rows, height/rows) to (-1, -1) */
@@ -46,6 +51,9 @@ public:
 
     /* Binary search on cells */
 	GridCell* getCellAt(glm::vec2 positionNDC);
+
+	/* Picking with ray-plane-intersection */
+	GridCell* pickCell(glm::vec3 rayStartPoint, glm::vec3 rayIntermediatePoint);
 
 	bool isInsideGrid(glm::vec2 positionNDC);
 	bool isInsideCell(glm::vec2 positionNDC, GridCell* cell);
@@ -71,11 +79,16 @@ public:
 
 
 	// Input and interaction functions
-	virtual void onTouch(int touchID);
-	virtual void onRelease(int touchID);
-	virtual void onMouseMove(int touchID, double newx, double newy);
+	void onTouch(int touchID);
+	void onRelease(int touchID);
+	void onMouseMove(int touchID, double newx, double newy);
+	void onMouseMove(int touchID, glm::vec3 rayStartPoint, glm::vec3 rayIntermediatePoint);
+
     /* Transform original cell position into what the user sees */
-	glm::vec2 getNDC(glm::vec2 position);
+	glm::vec2 getNDC(glm::vec2 cellPosition);
+
+	/* Transform cell position into absolute world coordinates */
+	glm::vec3 getWorldCoordinates(glm::vec2 cellPosition);
 
     /* Remember camera projection for later being able to perform cell selection on user input */
 	void updateProjection(glm::mat4&);
