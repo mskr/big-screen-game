@@ -19,7 +19,6 @@ namespace roomgame {
         glm::mat4 viewPersMat;
 		SynchronizedGameMesh* meshComponent;
 		RoomInteractiveGrid* grid;
-        std::vector<glm::mat4> positions;
 	private:
         float speed;
         float distance;

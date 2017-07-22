@@ -55,6 +55,7 @@ namespace viscom {
         movMat = glm::translate(movMat, glm::vec3(0, 0, 2));
         movMat = glm::translate(movMat, glm::vec3(10, 0, 0));
         outerInfluence_->meshComponent->model_matrix_ = movMat;
+		outerInfluence_->meshComponent->scale = 0.1f;
 
 
 		meshpool_.updateUniformEveryFrame("t_sec", [this](GLint uloc) {
@@ -132,7 +133,12 @@ namespace viscom {
 			waterMesh_->render(viewProj, lightspace, shadowMap_->get(), (render_mode_ == RenderMode::DBG) ? 1 : 0);
 			glEnable(GL_BLEND); glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			meshpool_.renderAllMeshes(viewProj, 0, (render_mode_ == RenderMode::DBG) ? 1 : 0);
-			outerInfluence_->meshComponent->render(viewProj);
+			glm::mat4 influPos = outerInfluence_->meshComponent->model_matrix_;
+			for (int i = 0; i < outerInfluence_->meshComponent->influencePositions_.size(); i++) {
+				outerInfluence_->meshComponent->model_matrix_ = outerInfluence_->meshComponent->influencePositions_[i];
+				outerInfluence_->meshComponent->render(viewProj);
+			}
+			outerInfluence_->meshComponent->model_matrix_ = influPos;
 			glDisable(GL_BLEND);
         });
     }

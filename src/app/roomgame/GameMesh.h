@@ -5,6 +5,7 @@
 #include <iostream>
 
 #include "glm\gtc/matrix_inverse.hpp"
+#include <glm/gtx/transform.hpp>
 
 #include "core/gfx/mesh/Mesh.h"
 #include "core/gfx/GPUProgram.h"
@@ -171,6 +172,7 @@ private:
 		glUniformMatrix4fv(uniformLocations_[5], 1, GL_FALSE, glm::value_ptr(vpMatrix));
 		glUniform1i(uniformLocations_[6], isDebugMode);
         glUniform1f(uniformLocations_[7], (float)glfwGetTime());
+		
 	}
 };
 
@@ -239,34 +241,46 @@ protected:
 	std::shared_ptr<viscom::Mesh> mesh_resource_;
 	std::shared_ptr<viscom::GPUProgram> shader_resource_;
 	sgct::SharedObject<glm::mat4> sharedModelMatrix_;
+	sgct::SharedVector<glm::mat4> sharedInfluencePositions_;
 public:
+	float scale;
     glm::mat4 model_matrix_;
+	std::vector<glm::mat4> influencePositions_;
     SynchronizedGameMesh(std::shared_ptr<viscom::Mesh> mesh, std::shared_ptr<viscom::GPUProgram> shader) :
 		MeshBase(mesh.get(), shader.get()),
 		mesh_resource_(mesh), shader_resource_(shader)
-	{}
+	{
+		influencePositions_ = std::vector<glm::mat4>();
+		scale = 1;
+	}
 	void transform(glm::mat4& t) {
 		model_matrix_ *= t;
 	}
 	void preSync() { // master
 		sharedModelMatrix_.setVal(model_matrix_);
+		sharedInfluencePositions_.setVal(influencePositions_);
 	}
 	void encode() { // master
 		sgct::SharedData::instance()->writeObj(&sharedModelMatrix_);
+		sgct::SharedData::instance()->writeVector(&sharedInfluencePositions_);
 	}
 	void decode() { // slave
 		sgct::SharedData::instance()->readObj(&sharedModelMatrix_);
+		sgct::SharedData::instance()->readVector(&sharedInfluencePositions_);
 	}
 	void updateSyncedSlave() {
 		model_matrix_ = sharedModelMatrix_.getVal();
+		influencePositions_ = sharedInfluencePositions_.getVal();
 	}
 	void updateSyncedMaster() {
 		//Can maybe stay empty
 	}
-	virtual void render(glm::mat4& vp, GLint isDebugMode = 0) const {
+	virtual void render(glm::mat4& vp, GLint isDebugMode = 0) {
+		this->transform(glm::scale(glm::vec3(scale,scale,scale)));
 		MeshBase::render(vp, isDebugMode, model_matrix_);
 	}
-	virtual void render(std::function<void(void)> outsideUniformSetter, glm::mat4& vp, GLint isDebugMode = 0) const {
+	virtual void render(std::function<void(void)> outsideUniformSetter, glm::mat4& vp, GLint isDebugMode = 0) {
+		this->transform(glm::scale(glm::vec3(scale, scale, scale)));
 		MeshBase::render(outsideUniformSetter, vp, isDebugMode, model_matrix_);
 	}
 };

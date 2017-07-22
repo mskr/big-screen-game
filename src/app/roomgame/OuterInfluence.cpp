@@ -21,7 +21,6 @@ namespace roomgame {
         unsigned seed1 = std::chrono::system_clock::now().time_since_epoch().count();
         rndGenerator = std::default_random_engine(seed1);
         distributor100 = std::uniform_int_distribution<int>(0, 100);
-        positions = std::vector<glm::mat4>();
 	}
 
 
@@ -36,11 +35,11 @@ namespace roomgame {
 			if (mode == ATTACK) {
 				translation *= 0.1f;
 			}
-            if (i<positions.size()) {
-                positions[i] = meshComponent->model_matrix_*translation;
+            if (i<meshComponent->influencePositions_.size()) {
+                meshComponent->influencePositions_[i] = meshComponent->model_matrix_*translation;
             }
             else {
-                positions.push_back(meshComponent->model_matrix_*translation);
+				meshComponent->influencePositions_.push_back(meshComponent->model_matrix_*translation);
             }
 		}
 	}

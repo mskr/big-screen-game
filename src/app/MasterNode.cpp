@@ -306,7 +306,7 @@ namespace viscom {
             0,
             -(GRID_HEIGHT_NDC_ / GRID_ROWS_), /* position background mesh exactly under grid */
             -0.001f/*TODO better remove the z bias and use thicker meshes*/);
-        gridPos = glm::vec3(-1,0,0);
+        //gridPos = glm::vec3(-1,0,0);
         m[1] = glm::vec3(1, 0, 0) - gridPos;
         m[2] = glm::vec3(0, -1, 0) - gridPos;
 

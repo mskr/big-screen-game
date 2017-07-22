@@ -1,17 +1,17 @@
 #version 330 core
 
-uniform sampler2D diffuseTexture;
+uniform sampler2D pathTexture;
+uniform float time;
+//uniform vec2 influencesPos[5];
 
 in vec3 vPosition;
 in vec3 vNormal;
 in vec2 vTexCoords;
-in float time;
 in vec4 gl_FragCoord;
 
-out vec4 color;
+layout(location = 0) out vec4 color;
 
 vec2 pos[5];
-
 
 float visibilityCalc(vec2 curPos){
 	float result = 0.;
@@ -45,8 +45,9 @@ void main() {
 	// draw spots
 	vec2 uv = vTexCoords;
 	//uv = vec2(.01,0.);
-    vec4 spots = drawSlice( uv );
+    //vec4 spots = drawSlice( uv );
     
     // accumulate
-    color.rgba = spots;
+    //color.rgba = spots;
+	color.rgba = vec4(1.,0.,0.,1.);
 }
