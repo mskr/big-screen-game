@@ -197,7 +197,7 @@ GridCell* InteractiveGrid::pickCell(glm::vec3 rayStartPoint, glm::vec3 rayInterm
 	size_t row = (size_t) glm::round((intersection.z / 2.0f + 0.5f) * getNumRows());
 	size_t col = (size_t) glm::round((intersection.y / 2.0f + 0.5f) * getNumColumns());
 
-	if (row > getNumRows() || col > getNumColumns()) return 0;
+	if (row >= getNumRows() || col >= getNumColumns()) return 0;
 	return &cells_[col][row];
 }
 

@@ -19,7 +19,7 @@ namespace roomgame {
     struct PerInstanceData {
         glm::vec3 translation = glm::vec3(0); // local translation
         GLfloat scale = 0.0f; // scale
-        GLint buildState = 0; // build state (a value from GLuint buildState)
+        GLuint buildState = 0; // build state (a value from GLuint buildState)
         GLint health = 0; // health points in [0, 100]
         static const void setAttribPointer() {
             GLint transLoc = 3;
@@ -36,7 +36,7 @@ namespace roomgame {
             glVertexAttribPointer(scaleLoc, 1, GL_FLOAT, false, sizeof(PerInstanceData), (GLvoid*)off);
             off += sizeof(GLfloat);
             glVertexAttribIPointer(buildStateLoc, 1, GL_INT, sizeof(PerInstanceData), (GLvoid*)off);
-            off += sizeof(GLint);
+            off += sizeof(GLuint);
             glVertexAttribIPointer(healthLoc, 1, GL_INT, sizeof(PerInstanceData), (GLvoid*)off);
             glVertexAttribDivisor(transLoc, 1);
             glVertexAttribDivisor(scaleLoc, 1);
@@ -49,6 +49,23 @@ namespace roomgame {
                 (offset_instances + 1) * sizeof(PerInstanceData) - sizeof(health),
                 sizeof(health), &h);
             glBindBuffer(GL_ARRAY_BUFFER, 0);
+        }
+
+        //Is this needed?
+        PerInstanceData() :
+            translation(glm::vec3(0)),
+            scale(0.0f),
+            buildState(0),
+            health(0)
+        {}
+
+        //Is this needed?
+        PerInstanceData& operator =(const PerInstanceData& other) {
+            translation = other.translation;
+            scale = other.scale;
+            buildState = other.buildState;
+            health = other.health;
+            return *this;
         }
     };
 
