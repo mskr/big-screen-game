@@ -71,21 +71,10 @@ namespace roomgame {
 
     /* Representation of an instance buffer supporting dynamic reallocations */
     struct InstanceBuffer {
-        GLuint id_; // GL handle
+        GLuint id_; // GL handle (do not sync)
         int num_instances_; // current size
-        size_t pool_allocation_bytes_; // chunk size for reallocations
-        size_t num_reallocations_; // current number of reallocations
-        InstanceBuffer() :
-            pool_allocation_bytes_(0),
-            num_instances_(0),
-            num_reallocations_(1)
-        {
-            // constructor immediately pre-allocates a chunk of gpu memory
-            glGenBuffers(1, &id_);
-            glBindBuffer(GL_ARRAY_BUFFER, id_);
-            glBufferData(GL_ARRAY_BUFFER, pool_allocation_bytes_, (GLvoid*)0, GL_STATIC_DRAW);
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
-        }
+        const size_t pool_allocation_bytes_; // chunk size for reallocations (need not sync since const)
+        int num_reallocations_; // current number of reallocations
         InstanceBuffer(size_t pool_allocation_bytes) :
             pool_allocation_bytes_(pool_allocation_bytes),
             num_instances_(0),
@@ -96,12 +85,6 @@ namespace roomgame {
             glBindBuffer(GL_ARRAY_BUFFER, id_);
             glBufferData(GL_ARRAY_BUFFER, pool_allocation_bytes_, (GLvoid*)0, GL_STATIC_DRAW);
             glBindBuffer(GL_ARRAY_BUFFER, 0);
-        }
-        roomgame::InstanceBuffer& operator =(const roomgame::InstanceBuffer& other) {
-            id_ = other.id_; num_instances_ = other.num_instances_;
-            pool_allocation_bytes_ = other.pool_allocation_bytes_;
-            num_reallocations_ = other.num_reallocations_;
-            return *this;
         }
     };
 
