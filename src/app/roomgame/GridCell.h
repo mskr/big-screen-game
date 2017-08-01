@@ -83,8 +83,6 @@ private:
 public:
 	GridCell(float x, float y, size_t col_idx, size_t row_idx);
 	~GridCell() = default;
-	void setIsSource(bool state);
-	bool getIsSource();
     void removeBuildState(GLuint vbo, GLuint s, bool makeEmpty);
     void addBuildState(GLuint vbo, GLuint s);
     void updateHealthPoints(GLuint vbo, int hp);

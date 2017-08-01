@@ -153,7 +153,7 @@ namespace roomgame {
             posDiff = targetPosition - currentPos;
             distance = glm::length(posDiff);
             mode = RETREAT;
-            targetCell->setIsSource(true);
+            grid->buildAt(targetCell->getCol(),targetCell->getRow(),GridCell::SOURCE);
             //std::cout << "Changed mode to retreat" << std::endl;
         }
 	}

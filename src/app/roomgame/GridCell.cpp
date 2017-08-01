@@ -180,11 +180,3 @@ RoomSegmentMesh::InstanceBufferRange GridCell::getMeshInstance() {
 	else
 		return RoomSegmentMesh::InstanceBufferRange();
 }
-
-bool GridCell::getIsSource() {
-	return isSource_;
-}
-
-void GridCell::setIsSource(bool state) {
-	isSource_ = state;
-}
