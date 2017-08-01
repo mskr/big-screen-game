@@ -1,7 +1,7 @@
 #include "InnerInfluence.h"
 
 InnerInfluence::InnerInfluence(AutomatonGrid* grid, double transition_time) :
-	GPUCellularAutomaton(grid, transition_time),
+    SynchronizedAutomaton(grid, transition_time),
 	movedir_(1,0),
 	birth_thd_(0.4f),
 	death_thd_(0.5f),
@@ -13,7 +13,7 @@ InnerInfluence::InnerInfluence(AutomatonGrid* grid, double transition_time) :
 }
 
 void InnerInfluence::init(viscom::GPUProgramManager mgr) {
-	GPUCellularAutomaton::init(mgr);
+    SynchronizedAutomaton::init(mgr);
 	movedir_uniform_location_ = shader_->getUniformLocation("moveDirection");
 	birth_thd_uloc_ = shader_->getUniformLocation("BIRTH_THRESHOLD");
 	death_thd_uloc_ = shader_->getUniformLocation("DEATH_THRESHOLD");
@@ -24,7 +24,7 @@ void InnerInfluence::init(viscom::GPUProgramManager mgr) {
 
 
 void InnerInfluence::transition(double time) {
-	if (is_initialized_) {
+	if (GPUCellularAutomaton::isInitialized()) {
 		glUseProgram(shader_->getProgramId());
 		glUniform2i(movedir_uniform_location_, movedir_.x, movedir_.y);
 		glUniform1f(birth_thd_uloc_, birth_thd_);
@@ -32,7 +32,7 @@ void InnerInfluence::transition(double time) {
 		glUniform1f(room_nbors_ahead_thd_uloc_, room_nbors_ahead_thd_);
 		glUniform1i(outer_infl_nbors_thd_uloc_, outer_infl_nbors_thd_);
 		glUniform1i(damage_per_cell_uloc_, damage_per_cell_);
-        GPUCellularAutomaton::transition(time);
+        SynchronizedAutomaton::transition(time);
 	}
 }
 

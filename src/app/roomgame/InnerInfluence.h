@@ -7,7 +7,7 @@
  * Uses a cellular automaton running on the GPU.
  * Infections are initialized by attacking outer influence.
 */
-class InnerInfluence : public GPUCellularAutomaton {
+class InnerInfluence : public SynchronizedAutomaton {
 	GLint movedir_uniform_location_;
 	glm::ivec2 movedir_;
 	GLint birth_thd_uloc_;
