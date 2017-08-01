@@ -24,7 +24,6 @@ namespace viscom {
 		meshpool_(GRID_COLS_ * GRID_ROWS_),
 		render_mode_(NORMAL),
 		clock_{ 0.0 },
-		camera_matrix_(1.0f),
 		updateManager_()
     {
 		outerInfluence_ = std::make_shared<roomgame::OuterInfluence>();
@@ -59,6 +58,44 @@ namespace viscom {
 
 		meshpool_.updateUniformEveryFrame("t_sec", [this](GLint uloc) {
 			glUniform1f(uloc, (float)clock_.t_in_sec);
+		});
+		meshpool_.updateUniformEveryFrame("automatonTimeDelta", [&](GLint uloc) {
+			GLfloat time_delta = synchronized_automaton_transition_time_delta_.getVal();
+			glUniform1f(uloc, time_delta);
+		});
+		meshpool_.updateUniformEveryFrame("gridDimensions", [&](GLint uloc) {
+			glUniform2f(uloc, GRID_WIDTH_, GRID_HEIGHT_);
+		});
+		meshpool_.updateUniformEveryFrame("gridTranslation", [&](GLint uloc) {
+			glUniform3f(uloc, 0, 0, 0); // currently, the grid is never translated
+		});
+		meshpool_.updateUniformEveryFrame("gridCellSize", [&](GLint uloc) {
+			glUniform1f(uloc, GRID_CELL_SIZE_);
+		});
+		/* TODO synchronize automaton textures (need both for interpolation?) */
+		meshpool_.updateUniformEveryFrame("gridTex", [&](GLint uloc) {
+			/*if (!cellular_automaton_.isInitialized()) return;
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, cellular_automaton_.getLatestTexture());
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+			float borderColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+			glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+			glUniform1i(uloc, 0);
+		});
+		meshpool_.updateUniformEveryFrame("gridTex_PrevState", [&](GLint uloc) {
+			if (!cellular_automaton_.isInitialized()) return;
+			glActiveTexture(GL_TEXTURE0 + 1);
+			glBindTexture(GL_TEXTURE_2D, cellular_automaton_.getPreviousTexture());
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+			float borderColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+			glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+			glUniform1i(uloc, 1);*/
 		});
 
 		

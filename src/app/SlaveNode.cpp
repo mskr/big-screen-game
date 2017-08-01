@@ -44,6 +44,8 @@ namespace viscom {
 		SlaveNodeInternal::DecodeData();
 		outerInfluence_->meshComponent->decode();
         meshpool_.decode();
+		sgct::SharedData::instance()->readFloat(&synchronized_automaton_transition_time_delta_);
+		//TODO read automaton textures (only if new!)
 	}
 
 	/* Sync step 2: Slaves set their copies of cluster-wide variables to values received from master */
@@ -51,6 +53,7 @@ namespace viscom {
 		SlaveNodeInternal::UpdateSyncedInfo();
 		outerInfluence_->meshComponent->updateSyncedSlave();
         meshpool_.updateSyncedSlave();
+		//TODO update automaton textures uniforms  (only if new!)
 	}
 
 }

@@ -38,52 +38,6 @@ namespace viscom {
 		grid_.loadShader(GetApplication()->GetGPUProgramManager()); // for viewing build states...
 		grid_.uploadVertexData(); // ...for debug purposes
 
-		/* TODO
-		The following code sets data for the meshpool shader (renderMeshInstance.vert/frag).
-		This must be done on all nodes but the data has to be synced first.
-		Concerning the textures of the automaton that are used for interpolation,
-		syncing would require to download them from the master node GPU, then sync
-		and then upload them on slave GPUs.
-		Concerning transition time delta and grid parameters syncing is not necessary,
-		because this is currently constant data.
-		*/
-		meshpool_.updateUniformEveryFrame("automatonTimeDelta", [&](GLint uloc) {
-			glUniform1f(uloc, cellular_automaton_.getTimeDeltaNormalized());
-		});
-		meshpool_.updateUniformEveryFrame("gridTex", [&](GLint uloc) {
-			if (!cellular_automaton_.isInitialized()) return;
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, cellular_automaton_.getLatestTexture());
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-			float borderColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-			glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
-			glUniform1i(uloc, 0);
-		});
-		meshpool_.updateUniformEveryFrame("gridTex_PrevState", [&](GLint uloc) {
-			if (!cellular_automaton_.isInitialized()) return;
-			glActiveTexture(GL_TEXTURE0 + 1);
-			glBindTexture(GL_TEXTURE_2D, cellular_automaton_.getPreviousTexture());
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-			float borderColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-			glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
-			glUniform1i(uloc, 1);
-		});
-		meshpool_.updateUniformEveryFrame("gridDimensions", [&](GLint uloc) {
-			glUniform2f(uloc, grid_.getNumColumns()*grid_.getCellSize(), grid_.getNumRows()*grid_.getCellSize());
-		});
-		meshpool_.updateUniformEveryFrame("gridTranslation", [&](GLint uloc) {
-			glUniform3f(uloc, grid_.getTranslation().x, grid_.getTranslation().y, grid_.getTranslation().z);
-		});
-		meshpool_.updateUniformEveryFrame("gridCellSize", [&](GLint uloc) {
-			glUniform1f(uloc, grid_.getCellSize());
-		});
-
 		outerInfluence_->grid = &grid_;
     }
 
@@ -93,6 +47,8 @@ namespace viscom {
         ApplicationNodeImplementation::PreSync();
 		outerInfluence_->meshComponent->preSync();
         meshpool_.preSync();
+		synchronized_automaton_transition_time_delta_.setVal(cellular_automaton_.getTimeDeltaNormalized());
+		//TODO set automaton textures (only if new!)
     }
 
 	/* Sync step 2: Master sends shared objects to the central SharedData singleton
@@ -102,6 +58,8 @@ namespace viscom {
 		ApplicationNodeImplementation::EncodeData();
 		outerInfluence_->meshComponent->encode();
         meshpool_.encode();
+		sgct::SharedData::instance()->writeFloat(&synchronized_automaton_transition_time_delta_);
+		//TODO write automaton textures (only if new!)
 	}
 
 	/* Sync step 3: Master updates its copies of cluster-wide variables with data it just synced

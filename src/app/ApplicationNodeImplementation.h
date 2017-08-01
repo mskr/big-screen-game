@@ -60,6 +60,8 @@ namespace viscom {
 		const int GRID_COLS_ = 64;
 		const int GRID_ROWS_ = 64;
 		const float GRID_HEIGHT_ = 2.0f;
+		const float GRID_CELL_SIZE_ = GRID_HEIGHT_ / GRID_ROWS_;
+		const float GRID_WIDTH_ = GRID_COLS_ * GRID_CELL_SIZE_;
 
 		/**/
 		std::shared_ptr<roomgame::OuterInfluence> outerInfluence_;
@@ -79,8 +81,7 @@ namespace viscom {
 		/* Switch for debug rendering */
 		enum RenderMode { NORMAL, DBG } render_mode_; // hold on all nodes but able to change only on master
 
-		/* Synchronized camera matrix (see MasterNode.cpp and SlaveNode.cpp for sync process) */
-		glm::mat4 camera_matrix_;
+		sgct::SharedFloat synchronized_automaton_transition_time_delta_;
 
 		/* Clock holding a (hopefully!) synchronized time on all nodes */
 		struct Clock {
