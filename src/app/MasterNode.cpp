@@ -182,7 +182,7 @@ namespace viscom {
         ApplicationNodeImplementation::CleanUp();
     }
 
-	/* Keys switch input modes
+	/* Switch input modes by keyboard on master
 	 * [C] key down: camera control mode
 	 * [V] key hit: tilt camera 45 degrees
 	 * [S] key hit: start automaton and switch between outer influence and room placement
@@ -235,7 +235,7 @@ namespace viscom {
         return ApplicationNodeImplementation::CharCallback(character, mods);
     }
 
-	/* Mouse/touch controles camera and room-/outer influence placement
+	/* Mouse/touch controls camera and room-/outer influence placement
 	 * When in "place outer influence"-mode, click to place outer influence
 	 * When in camera mode, click and drag to move camera
 	 * When in grid mode, click and drag to build room
@@ -294,23 +294,6 @@ namespace viscom {
         ImGui_ImplGlfwGL3_ScrollCallback(xoffset, yoffset);
 #endif
         return ApplicationNodeImplementation::MouseScrollCallback(xoffset, yoffset);
-    }
-
-    
-    glm::vec2 MasterNode::FindIntersectionWithPlane(const math::Line3<float>& ray) const
-    {
-        glm::mat3 m{ 0.0f };
-        m[0] = ray[0] - ray[1];
-        glm::vec3 gridPos = glm::vec3(
-            0,
-            -(GRID_HEIGHT_ / GRID_ROWS_), /* position background mesh exactly under grid */
-            -0.001f/*TODO better remove the z bias and use thicker meshes*/);
-        //gridPos = glm::vec3(-1,0,0);
-        m[1] = glm::vec3(1, 0, 0) - gridPos;
-        m[2] = glm::vec3(0, -1, 0) - gridPos;
-
-        auto intersection = glm::inverse(m) * (ray[0] - gridPos);
-        return glm::vec2(0.5f) + glm::vec2(intersection.y, intersection.z) / 2.0f;
     }
     
 }
