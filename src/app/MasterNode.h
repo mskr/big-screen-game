@@ -27,20 +27,13 @@ namespace viscom {
     class MasterNode final : public ApplicationNodeImplementation
     {
 
-	// Grid runs only on master node
-	// (As soon as grid uses RoomSegmentMeshes to add instances, data is written into buffer, that is synced with slaves)
-	AutomatonGrid grid_;
+		AutomatonGrid grid_; // holds core state of the roomgame
 
-	// Automaton only created and running on master node
-	// (As soon as automaton updates MeshInstanceGrid, data is written into buffer, that is synced with slaves)
-	InnerInfluence cellular_automaton_;
+		InnerInfluence cellular_automaton_; // controls inner influence, i.e. room infection
 
-	// Camera is controlled only on master but camera matrix must be synced
-	// (As soon as matrix is passed to a render method, this render method must run on all slaves)
-//	DragAndZoomCamera camera_;
+		//	DragAndZoomCamera camera_;
 	
-	/* Interaction mode only exists on master node */
-	enum InteractionMode { GRID, CAMERA, GRID_PLACE_OUTER_INFLUENCE } interaction_mode_;
+		enum InteractionMode { GRID, CAMERA, GRID_PLACE_OUTER_INFLUENCE } interaction_mode_;
 
     public:
         explicit MasterNode(ApplicationNodeInternal* appNode);

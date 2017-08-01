@@ -6,7 +6,10 @@
 
 /* Implementation of a parallelized cellular automaton.
  * Construct with grid and time between transitions.
- * Applies rules on GPU (see cellularAutomaton.frag).
+ * Call init() once to setup GPU state.
+ * Call transition(time) as often as pleased with current time.
+ * transition(time) returns immediately if it is not time yet.
+ * Else it applies rules in shader (see cellularAutomaton.frag).
  * After each transition:
  *  1. Notifies grid by calling onTransition().
  *  2. Copies results to grid.
@@ -43,38 +46,6 @@ public:
     GLuint getLatestTexture();
     GLuint getPreviousTexture();
     bool isInitialized();
-};
-
-/* Extension of the cellular automaton, that syncs a minimal set of data across SGCT cluster.
- * Synced data:
- * Transition time for interpolating states.
-*/
-class SynchronizedAutomaton : public GPUCellularAutomaton {
-private:
-    sgct::SharedFloat shared_time_delta_;
-public:
-    SynchronizedAutomaton(AutomatonGrid* grid, double transition_time) :
-        GPUCellularAutomaton(grid, transition_time)
-    {
-
-    }
-    virtual void transition(double time) override {
-        GPUCellularAutomaton::transition(time);
-    }void preSync() { // master
-        shared_time_delta_.setVal(GPUCellularAutomaton::getTimeDeltaNormalized());
-    }
-    void encode() { // master
-        sgct::SharedData::instance()->writeFloat(&shared_time_delta_);
-    }
-    void decode() { // slave
-        sgct::SharedData::instance()->readFloat(&shared_time_delta_);
-    }
-    void updateSyncedSlave() {
-        //TODO
-    }
-    void updateSyncedMaster() {
-        //Can maybe stay empty
-    }
 };
 
 #endif

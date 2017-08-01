@@ -85,15 +85,15 @@ namespace viscom {
 		/* Clock holding a (hopefully!) synchronized time on all nodes */
 		struct Clock {
 			double t_in_sec;
+			double last_t_in_sec;
+			void set(double current_t_in_sec) {
+				last_t_in_sec = t_in_sec;
+				t_in_sec = current_t_in_sec;
+			}
+			double deltat() {
+				return t_in_sec - last_t_in_sec;
+			}
 		} clock_;
-
-		/* Time since the last frame*/
-		double deltaTime = 0;
-
-		/* Time at the last frame*/
-		double oldTime = 0;
-
-        bool mouseTest = false;
 
 		/* Quad for debug-visualizing offscreen textures */
 		struct Quad {

@@ -92,9 +92,7 @@ namespace viscom {
 
     void ApplicationNodeImplementation::UpdateFrame(double currentTime, double elapsedTime)
     {
-		deltaTime = min(currentTime - oldTime,0.25);
-		clock_.t_in_sec = currentTime;
-		oldTime = currentTime;
+		clock_.set(currentTime);
 		waterMesh_->setTime(currentTime);
     }
 

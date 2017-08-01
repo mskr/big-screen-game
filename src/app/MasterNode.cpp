@@ -126,7 +126,7 @@ namespace viscom {
 		cellular_automaton_.transition(clock_.t_in_sec);
 
 
-        updateManager_.ManageUpdates(deltaTime);
+        updateManager_.ManageUpdates(min(clock_.deltat(), 0.25));
 	}
 
     void MasterNode::DrawFrame(FrameBuffer& fbo)
@@ -243,7 +243,6 @@ namespace viscom {
     bool MasterNode::MouseButtonCallback(int button, int action)
     {
 		if (button == GLFW_MOUSE_BUTTON_LEFT) {
-			if (action == GLFW_PRESS) { mouseTest = true; }
 			if (interaction_mode_ == InteractionMode::GRID) {
 				if (action == GLFW_PRESS) grid_.onTouch(-1);
 				else if (action == GLFW_RELEASE) grid_.onRelease(-1);
