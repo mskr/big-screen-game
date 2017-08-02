@@ -74,6 +74,10 @@ void RoomInteractiveGrid::handleRelease(int touchID, GridInteraction* interac) {
 		//TODO React to touch interaction
 		//TODO wait for possible end of discontinuaty
 	}
+    forEachCellInRange(getCellAt(0,0),getCellAt(cells_.size()-1, cells_[0].size()-1), [&](GridCell* cell) {
+        //GridCell* tmp = cell;
+        deleteNeighbouringWalls(cell);
+    });
 }
 
 Room::CollisionType RoomInteractiveGrid::resizeRoomUntilCollision(Room* room, GridCell* startCell, GridCell* lastCell, GridCell* currentCell) {

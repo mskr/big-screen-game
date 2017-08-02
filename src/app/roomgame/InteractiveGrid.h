@@ -96,7 +96,10 @@ public:
 
 	// Functions for grid modification
 	virtual void buildAt(size_t col, size_t row, GLuint buildState);
-	void buildAtLastMousePosition(GLuint buildState);
+    virtual void replaceRoompieceWith(size_t col, size_t row, GLuint buildState);
+    void deleteNeighbouringWalls(GridCell* cell);
+
+    void buildAtLastMousePosition(GLuint buildState);
 };
 
 #endif

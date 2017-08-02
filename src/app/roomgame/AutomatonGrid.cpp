@@ -25,14 +25,25 @@ void AutomatonGrid::onMeshpoolInitialized() {
 }
 
 void AutomatonGrid::buildAt(size_t col, size_t row, GLuint state) {
-	// Called on user input (grid update -> automaton update)
+    // Called on user input (grid update -> automaton update)
 
-	GridCell* c = getCellAt(col, row);
-	if (!c) return;
-	MeshInstanceGrid::buildAt(c, state);
-	c->updateHealthPoints(vbo_, GridCell::MAX_HEALTH);
-	// Route results to automaton
-	automaton_->updateCell(c, state, c->getHealthPoints());
+    GridCell* c = getCellAt(col, row);
+    if (!c) return;
+    MeshInstanceGrid::buildAt(c, state);
+    c->updateHealthPoints(vbo_, GridCell::MAX_HEALTH);
+    // Route results to automaton
+    automaton_->updateCell(c, state, c->getHealthPoints());
+}
+
+void AutomatonGrid::replaceRoompieceWith(size_t col, size_t row, GLuint state) {
+    // Called on user input (grid update -> automaton update)
+
+    GridCell* c = getCellAt(col, row);
+    if (!c) return;
+    MeshInstanceGrid::replaceRoompieceWith(c, state);
+    //c->updateHealthPoints(vbo_, GridCell::MAX_HEALTH);
+    // Route results to automaton
+    automaton_->updateCell(c, state, c->getHealthPoints());
 }
 
 void AutomatonGrid::updateCell(GridCell* c, GLuint state, int hp) {

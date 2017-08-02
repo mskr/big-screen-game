@@ -36,6 +36,16 @@ void GridCell::addBuildState(GLuint vbo, GLuint s) {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
+void GridCell::andBuildStateWith(GLuint vbo, GLuint s) {
+    vertex_.build_state &= s;
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferSubData(GL_ARRAY_BUFFER,
+        vertex_buffer_offset_ + 2 * sizeof(GLfloat),
+        sizeof(vertex_.build_state),
+        (GLvoid*)&vertex_.build_state);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
 void GridCell::updateHealthPoints(GLuint vbo, int hp) {
 	if (hp < MIN_HEALTH) hp = MIN_HEALTH;
 	else if (hp > MAX_HEALTH) hp = MAX_HEALTH;
@@ -55,6 +65,7 @@ void GridCell::updateHealthPoints(GLuint vbo, int hp) {
 	}
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
+
 
 void GridCell::setMeshInstance(RoomSegmentMesh::InstanceBufferRange mesh_instance) {
 	mesh_instance_ = mesh_instance;

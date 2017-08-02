@@ -21,7 +21,9 @@ public:
 	MeshInstanceGrid(size_t columns, size_t rows, float height, RoomSegmentMeshPool* meshpool);
 	virtual void buildAt(size_t col, size_t row, GLuint buildState) override;
 	void buildAt(GridCell*, GLuint);
-	virtual void onMeshpoolInitialized();
+    virtual void replaceRoompieceWith(size_t col, size_t row, GLuint buildState) override;
+    void replaceRoompieceWith(GridCell* c, GLuint newSt);
+    virtual void onMeshpoolInitialized();
 };
 
 #endif
