@@ -85,6 +85,7 @@ public:
 	~GridCell() = default;
     void removeBuildState(GLuint vbo, GLuint s, bool makeEmpty);
     void addBuildState(GLuint vbo, GLuint s);
+    void andBuildStateWith(GLuint vbo, GLuint s);
     void updateHealthPoints(GLuint vbo, int hp);
 	void setMeshInstance(RoomSegmentMesh::InstanceBufferRange mesh_instance);
 	static void setVertexAttribPointer();

@@ -27,7 +27,7 @@ void Room::invalidate() {
 bool Room::isValid() {
 	size_t hsize = rightUpperCorner_->getCol() - leftLowerCorner_->getCol();
 	size_t vsize = rightUpperCorner_->getRow() - leftLowerCorner_->getRow();
-	return (hsize >= MIN_SIZE) && (vsize >= MIN_SIZE);
+	return (hsize >= MIN_SIZE) && (vsize >= MIN_SIZE) && (hsize * vsize <= MAX_SIZE);
 }
 
 size_t Room::getColSize() {
@@ -53,6 +53,8 @@ void Room::finish() {
 	});
 }
 
+
+
 bool Room::growToEast(size_t dist) {
 	GLuint top = GridCell::TOP | GridCell::WALL;
 	GLuint bottom = GridCell::BOTTOM | GridCell::WALL;
@@ -62,8 +64,8 @@ bool Room::growToEast(size_t dist) {
 		isCollisionAhead = !grid_->isColumnEmptyBetween(rightUpperCorner_->getCol() + 1,
 			leftLowerCorner_->getRow(), rightUpperCorner_->getRow());
 		if (i == dist || isCollisionAhead) {
-			top = top | GridCell::RIGHT | GridCell::CORNER;
-			bottom = bottom | GridCell::RIGHT | GridCell::CORNER;
+			top = GridCell::TOP | GridCell::RIGHT | GridCell::CORNER;
+			bottom = GridCell::BOTTOM | GridCell::RIGHT | GridCell::CORNER;
 			middle = GridCell::RIGHT | GridCell::WALL;
 		}
 		grid_->buildAt(rightUpperCorner_->getCol(), rightUpperCorner_->getRow(), top);
@@ -339,9 +341,12 @@ bool Room::spanFromTo(GridCell* startCell, GridCell* endCell) {
 	if (collision) return false;
 	leftLowerCorner_ = leftLowerCorner;
 	rightUpperCorner_ = rightUpperCorner;
+    size_t hsize = rightUpperCorner_->getCol() - leftLowerCorner_->getCol();
+    size_t vsize = rightUpperCorner_->getRow() - leftLowerCorner_->getRow();
 	// Test room min size
-	if (rightUpperCorner->getCol() - leftLowerCorner->getCol() < Room::MIN_SIZE ||
-		rightUpperCorner->getRow() - leftLowerCorner->getRow() < Room::MIN_SIZE) {
+	if (hsize < Room::MIN_SIZE ||
+        vsize < Room::MIN_SIZE ||
+        hsize * vsize > Room::MAX_SIZE) {
 		grid_->forEachCellInRange(leftLowerCorner, rightUpperCorner, [&](GridCell* cell) {
 			grid_->buildAt(cell->getCol(), cell->getRow(), GridCell::INVALID);
 		});
@@ -352,6 +357,7 @@ bool Room::spanFromTo(GridCell* startCell, GridCell* endCell) {
 	grid_->buildAt(rightUpperCorner->getCol(), rightUpperCorner->getRow(), GridCell::RIGHT | GridCell::TOP | GridCell::CORNER);
 	grid_->buildAt(leftUpperCorner->getCol(), leftUpperCorner->getRow(), GridCell::LEFT | GridCell::TOP | GridCell::CORNER);
 	grid_->buildAt(rightLowerCorner->getCol(), rightLowerCorner->getRow(), GridCell::RIGHT | GridCell::BOTTOM | GridCell::CORNER);
+    
 	grid_->forEachCellInRange(leftUpperCorner->getEastNeighbor(), rightUpperCorner->getWestNeighbor(), [&](GridCell* cell) {
 		grid_->buildAt(cell->getCol(), cell->getRow(), GridCell::WALL | GridCell::TOP);
 	});
@@ -364,6 +370,7 @@ bool Room::spanFromTo(GridCell* startCell, GridCell* endCell) {
 	grid_->forEachCellInRange(rightLowerCorner->getNorthNeighbor(), rightUpperCorner->getSouthNeighbor(), [&](GridCell* cell) {
 		grid_->buildAt(cell->getCol(), cell->getRow(), GridCell::WALL | GridCell::RIGHT);
 	});
+
 	GridCell* insideLeftLower = leftLowerCorner->getEastNeighbor()->getNorthNeighbor();
 	GridCell* insideRightUpper = rightUpperCorner->getWestNeighbor()->getSouthNeighbor();
 	grid_->forEachCellInRange(insideLeftLower, insideRightUpper, [&](GridCell* cell) {

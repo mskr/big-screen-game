@@ -44,6 +44,25 @@ void MeshInstanceGrid::buildAt(size_t col, size_t row, GLuint buildState) {
 	if (maybeCell) buildAt(maybeCell, buildState);
 }
 
+void MeshInstanceGrid::replaceRoompieceWith(GridCell* c, GLuint newSt) {
+    GLuint current = c->getBuildState();
+    if (current == newSt) return;
+    else if (current == GridCell::EMPTY) addInstanceAt(c, newSt);
+    else if (newSt == GridCell::EMPTY) removeInstanceAt(c);
+    else {
+        removeInstanceAt(c);
+        addInstanceAt(c, newSt);
+    }
+    c->andBuildStateWith(vbo_, GridCell::EMPTY | GridCell::INVALID | GridCell::SOURCE | GridCell::INFECTED | GridCell::OUTER_INFLUENCE);
+    c->addBuildState(vbo_, newSt);
+}
+
+void MeshInstanceGrid::replaceRoompieceWith(size_t col, size_t row, GLuint buildState) {
+    GridCell* maybeCell = getCellAt(col, row);
+    if (maybeCell) replaceRoompieceWith(maybeCell,buildState);
+}
+
+
 void MeshInstanceGrid::onMeshpoolInitialized() {
 
 }

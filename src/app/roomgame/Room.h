@@ -26,6 +26,7 @@ class Room {
 	std::vector<RoomSegmentMesh::InstanceBufferRange> mesh_instances_;
 public:
 	static const size_t MIN_SIZE = 2;
+    static const size_t MAX_SIZE = 50;
 	Room(GridCell* leftLowerCorner, GridCell* rightUpperCorner, InteractiveGrid* grid);
 	~Room();
 	void clear();

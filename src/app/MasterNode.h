@@ -95,5 +95,9 @@ namespace viscom {
 
         /* Currently not used */
         bool CharCallback(unsigned int character, int mods) override;
+
+        bool AddTuioCursor(TUIO::TuioCursor *tcur) override;
+        bool UpdateTuioCursor(TUIO::TuioCursor *tcur) override;
+        bool RemoveTuioCursor(TUIO::TuioCursor *tcur) override;
     };
 }

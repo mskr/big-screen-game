@@ -328,6 +328,10 @@ void InteractiveGrid::buildAt(size_t col, size_t row, GLuint buildState) {
 	maybeCell->addBuildState(vbo_, buildState);
 }
 
+void InteractiveGrid::replaceRoompieceWith(size_t col, size_t row, GLuint buildState) {
+    std::cout << "Called the wrong replaceRoompieceWith" << std::endl;
+}
+
 
 void InteractiveGrid::buildAtLastMousePosition(GLuint buildState) {
 	glm::vec2 touchPositionNDC =
@@ -338,6 +342,58 @@ void InteractiveGrid::buildAtLastMousePosition(GLuint buildState) {
 	if (maybeCell->getBuildState() != GridCell::EMPTY) return;
 	if (maybeCell->getBuildState() == buildState) return;
 	buildAt(maybeCell->getCol(), maybeCell->getRow(), buildState);
+}
+
+void InteractiveGrid::deleteNeighbouringWalls(GridCell* cell) {
+    GLuint cellState = cell->getBuildState();
+    if ((cellState & GridCell::WALL) != 0) {
+        GridCell* neighbour = nullptr;
+        GLuint neighbourCellState;
+        if ((cellState & GridCell::RIGHT) != 0) {
+            neighbour = cell->getEastNeighbor();
+            if (neighbour == nullptr) {
+                return;
+            }
+            neighbourCellState = neighbour->getBuildState();
+            if ((neighbourCellState & GridCell::WALL) == 0) {
+                neighbour = nullptr;
+            }
+        }
+        else if ((cellState & GridCell::LEFT) != 0) {
+            neighbour = cell->getWestNeighbor();
+            if (neighbour == nullptr) {
+                return;
+            }
+            neighbourCellState = neighbour->getBuildState();
+            if ((neighbourCellState & GridCell::WALL) == 0) {
+                neighbour = nullptr;
+            }
+        }
+        else if ((cellState & GridCell::TOP) != 0) {
+            neighbour = cell->getNorthNeighbor();
+            if (neighbour == nullptr) {
+                return;
+            }
+            neighbourCellState = neighbour->getBuildState();
+            if ((neighbourCellState & GridCell::WALL) == 0) {
+                neighbour = nullptr;
+            }
+        }
+        else if ((cellState & GridCell::BOTTOM) != 0) {
+            neighbour = cell->getSouthNeighbor();
+            if (neighbour == nullptr) {
+                return;
+            }
+            neighbourCellState = neighbour->getBuildState();
+            if ((neighbourCellState & GridCell::WALL) == 0) {
+                neighbour = nullptr;
+            }
+        }
+        if (neighbour != nullptr) {
+            replaceRoompieceWith(cell->getCol(), cell->getRow(), GridCell::INSIDE_ROOM);
+            replaceRoompieceWith(neighbour->getCol(), neighbour->getRow(), GridCell::INSIDE_ROOM);
+        }
+    }
 }
 
 
