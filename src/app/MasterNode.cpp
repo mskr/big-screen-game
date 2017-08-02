@@ -9,6 +9,7 @@
 #include "MasterNode.h"
 #include <imgui.h>
 #include "core/imgui/imgui_impl_glfw_gl3.h"
+#include <iostream>
 
 static float automaton_transition_time = 0.04f;
 static int automaton_movedir_[2] = { 1,0 };
@@ -252,5 +253,21 @@ namespace viscom {
 #endif
         return ApplicationNodeImplementation::MouseScrollCallback(xoffset, yoffset);
     }
-    
+
+#ifdef WITH_TUIO
+	bool MasterNode::AddTuioCursor(TUIO::TuioCursor* tcur)
+	{
+        return false;
+    }
+
+    bool MasterNode::UpdateTuioCursor(TUIO::TuioCursor* tcur)
+    {
+        return false;
+    }
+
+    bool MasterNode::RemoveTuioCursor(TUIO::TuioCursor* tcur)
+    {
+        return false;
+    }
+#endif
 }
