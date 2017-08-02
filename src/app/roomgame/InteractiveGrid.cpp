@@ -273,7 +273,7 @@ void InteractiveGrid::onTouch(int touchID) {
 void InteractiveGrid::onRelease(int touchID) {
 	for (GridInteraction* interac : interactions_) {
 		if (interac->getTouchID() == touchID) {
-			handleRelease(touchID, interac);
+			handleRelease(interac);
 			break;
 		}
 	}
@@ -292,7 +292,7 @@ void InteractiveGrid::onMouseMove(int touchID, double newx, double newy) {
 			GridCell* maybeCell = getCellAt(touchPositionNDC);*/
 			GridCell* maybeCell = pickCell(last_ray_start_point_, last_ray_intermediate_point_);
 			if (!maybeCell)	return; // cursor was outside grid
-			handleHoveredCell(touchID, maybeCell, interac);
+			handleHoveredCell(maybeCell, interac);
 			break;
 		}
 	}
@@ -302,8 +302,8 @@ void InteractiveGrid::onMouseMove(int touchID, double newx, double newy) {
 void InteractiveGrid::onMouseMove(int touchID, glm::vec3 rayStartPoint, glm::vec3 rayIntermediatePoint) {
 	last_ray_start_point_ = rayStartPoint;
 	last_ray_intermediate_point_ = rayIntermediatePoint;
-	printf("Ray start: %f %f %f, Ray intermediate: %f %f %f\n", rayStartPoint.x, rayStartPoint.y, rayStartPoint.z,
-		rayIntermediatePoint.x, rayIntermediatePoint.y, rayIntermediatePoint.z);
+	/*printf("Ray start: %f %f %f, Ray intermediate: %f %f %f\n", rayStartPoint.x, rayStartPoint.y, rayStartPoint.z,
+		rayIntermediatePoint.x, rayIntermediatePoint.y, rayIntermediatePoint.z);*/
 	for (GridInteraction* interac : interactions_) {
 		if (interac->getTouchID() == touchID) {
 			interac->update(last_mouse_position_);
@@ -314,7 +314,7 @@ void InteractiveGrid::onMouseMove(int touchID, glm::vec3 rayStartPoint, glm::vec
 			GridCell* maybeCell = getCellAt(touchPositionNDC);*/
 			GridCell* maybeCell = pickCell(last_ray_start_point_, last_ray_intermediate_point_);
 			if (!maybeCell)	return; // cursor was outside grid
-			handleHoveredCell(touchID, maybeCell, interac);
+			handleHoveredCell(maybeCell, interac);
 			break;
 		}
 	}
@@ -397,14 +397,27 @@ size_t InteractiveGrid::getNumCells() {
 }
 
 
-void InteractiveGrid::handleTouchedCell(int touchID, GridCell*) {
-
+void InteractiveGrid::handleTouchedCell(int touchID, GridCell* c) {
+	// Debug stuff here, extending classes should add logic
+	std::cout << "INTERACTION START " << "id=" << touchID
+		<< "cell=(" << c->getCol() << ", " << c->getRow() << ")" << std::endl;
+	interactions_.push_back(new GridInteraction(-42, last_mouse_position_, c, 0));
 }
 
-void InteractiveGrid::handleRelease(int touchID, GridInteraction*) {
-
+void InteractiveGrid::handleRelease(GridInteraction* in) {
+	// Debug stuff here, extending classes should add logic
+	std::cout << "INTERACTION END " << "id=" << in->getTouchID() << " "
+		<< "start_cell=(" << in->getStartCell()->getCol() << ", " << in->getStartCell()->getRow() << ")"
+		<< "last_cell=(" << in->getLastCell()->getCol() << ", " << in->getLastCell()->getRow() << ")"
+		<< std::endl;
+	if (in->getTouchID() == -42) interactions_.remove(in);
 }
 
-void InteractiveGrid::handleHoveredCell(int touchID, GridCell*, GridInteraction*) {
-
+void InteractiveGrid::handleHoveredCell(GridCell* c, GridInteraction* in) {
+	// Debug stuff here, extending classes should add logic
+	std::cout << "INTERACTION ONGOING " << "id=" << in->getTouchID() << " "
+		<< "start_cell=(" << in->getStartCell()->getCol() << ", " << in->getStartCell()->getRow() << ")"
+		<< "last_cell=(" << in->getLastCell()->getCol() << ", " << in->getLastCell()->getRow() << ")"
+		<< "current_cell=(" << c->getCol() << ", " << c->getRow() << ")"
+		<< std::endl;
 }

@@ -32,14 +32,14 @@ void GPUCellularAutomaton::init(viscom::GPUProgramManager mgr) {
 	GLuint cols = (GLuint)grid_->getNumColumns();
 	GLuint rows = (GLuint)grid_->getNumRows();
 	texture_pair_[0].attachmentType = texture_pair_[1].attachmentType = GL_COLOR_ATTACHMENT0;
-	texture_pair_[0].sized_format = texture_pair_[1].sized_format = GL_RG32UI;
-	texture_pair_[0].format = texture_pair_[1].format = GL_RG_INTEGER;
-	texture_pair_[0].datatype = texture_pair_[1].datatype = GL_UNSIGNED_INT;
+	texture_pair_[0].sized_format = texture_pair_[1].sized_format = roomgame::GRID_STATE_TEXTURE.sized_format;
+	texture_pair_[0].format = texture_pair_[1].format = roomgame::GRID_STATE_TEXTURE.format;
+	texture_pair_[0].datatype = texture_pair_[1].datatype = roomgame::GRID_STATE_TEXTURE.datatype;
 	framebuffer_pair_[0] = new GPUBuffer(cols, rows, { &texture_pair_[0] });
 	framebuffer_pair_[1] = new GPUBuffer(cols, rows, { &texture_pair_[1] });
-	// Temporary client buffer to transfer pixels from and to
-	size_t bytes = cols * rows * 2 * sizeof(GLuint);
-	tmp_client_buffer_ = (GLuint*)malloc(bytes);
+	// Allocate temporary client buffer to transfer pixels from and to
+	sizeof_tmp_client_buffer_ = cols * rows * 2 * sizeof(GLuint); // consider pixel format and datatype
+	tmp_client_buffer_ = (roomgame::GRID_STATE_ELEMENT*)malloc(sizeof_tmp_client_buffer_);
 	if (!tmp_client_buffer_) throw std::runtime_error("");
 	// Get initial state of grid
 	copyFromGridToTexture(0);
@@ -73,8 +73,8 @@ void GPUCellularAutomaton::copyFromGridToTexture(int pair_index) {
 	for (unsigned int x = 0; x < cols; x++) {
 		for (unsigned int y = 0; y < rows*2 - 1; y+=2) {
 			GridCell* c = grid_->getCellAt(y/2, x);
-			tmp_client_buffer_[x*2*rows + y] = c->getBuildState();
-			tmp_client_buffer_[x*2*rows + y + 1] = (GLuint) c->getHealthPoints();
+			tmp_client_buffer_[x*2*rows + y] = (roomgame::GRID_STATE_ELEMENT) c->getBuildState();
+			tmp_client_buffer_[x*2*rows + y + 1] = (roomgame::GRID_STATE_ELEMENT) c->getHealthPoints();
 		}
 	}
 	glBindTexture(GL_TEXTURE_2D, texture_pair_[pair_index].id);
@@ -164,4 +164,12 @@ GLuint GPUCellularAutomaton::getPreviousTexture() {
 
 bool GPUCellularAutomaton::isInitialized() {
 	return is_initialized_;
+}
+
+size_t GPUCellularAutomaton::getGridBufferSize() {
+	return sizeof_tmp_client_buffer_;
+}
+
+roomgame::GRID_STATE_ELEMENT* GPUCellularAutomaton::getGridBuffer() {
+	return tmp_client_buffer_;
 }

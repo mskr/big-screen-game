@@ -31,8 +31,7 @@ namespace viscom {
     MasterNode::~MasterNode() = default;
 
 
-    void MasterNode::InitOpenGL()
-    {
+    void MasterNode::InitOpenGL() {
         ApplicationNodeImplementation::InitOpenGL();
 		
 		grid_.loadShader(GetApplication()->GetGPUProgramManager()); // for viewing build states...
@@ -41,14 +40,16 @@ namespace viscom {
 		outerInfluence_->grid = &grid_;
     }
 
-	/* Sync step 1: Master sets values of shared objects to corresponding non-shared objects */
-    void MasterNode::PreSync()
-    {
+	/* Sync step 1: Master sets values of shared objects to the values of corresponding non-shared objects */
+    void MasterNode::PreSync() {
         ApplicationNodeImplementation::PreSync();
 		outerInfluence_->meshComponent->preSync();
         meshpool_.preSync();
+		synchronized_grid_translation_.setVal(grid_.getTranslation());
 		synchronized_automaton_transition_time_delta_.setVal(cellular_automaton_.getTimeDeltaNormalized());
-		//TODO set automaton textures (only if new!)
+		//TODO grid state sync only when automaton changed it
+		synchronized_grid_state_.setVal(std::vector<roomgame::GRID_STATE_ELEMENT>(cellular_automaton_.getGridBuffer(), 
+			cellular_automaton_.getGridBuffer() + cellular_automaton_.getGridBufferSize()));
     }
 
 	/* Sync step 2: Master sends shared objects to the central SharedData singleton
@@ -58,19 +59,37 @@ namespace viscom {
 		ApplicationNodeImplementation::EncodeData();
 		outerInfluence_->meshComponent->encode();
         meshpool_.encode();
+		sgct::SharedData::instance()->writeObj<glm::vec3>(&synchronized_grid_translation_);
 		sgct::SharedData::instance()->writeFloat(&synchronized_automaton_transition_time_delta_);
-		//TODO write automaton textures (only if new!)
+		sgct::SharedData::instance()->writeVector(&synchronized_grid_state_);
 	}
 
 	/* Sync step 3: Master updates its copies of cluster-wide variables with data it just synced
 	 * (Slaves update their copies with the data they received)
+	 * These copies are good because in contrast to SGCT shared objects they are not mutex locked on each access
+	 * Note, that master does not need this update because its data is always up to date...
+	 * ... but it is currently done to access the same variables with the same code on master and slaves
 	*/
 	void MasterNode::UpdateSyncedInfo() {
 		ApplicationNodeImplementation::UpdateSyncedInfo();
 		outerInfluence_->meshComponent->updateSyncedMaster();
         meshpool_.updateSyncedMaster();
+		// Of course the following variables are redundant on master 
+		// but help to write "unified" code in ApplicationNodeImplementation
+		grid_translation_ = synchronized_grid_translation_.getVal();
+		automaton_transition_time_delta_ = synchronized_automaton_transition_time_delta_.getVal();
+		grid_state_ = synchronized_grid_state_.getVal();
+		// GPU data:
+		glBindTexture(GL_TEXTURE_2D, last_grid_state_texture_.id); // upload old grid state
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, (GLsizei)GRID_COLS_, (GLsizei)GRID_ROWS_,
+			last_grid_state_texture_.format, last_grid_state_texture_.datatype, grid_state_.data());
+		grid_state_ = synchronized_grid_state_.getVal(); // fetch new grid state
+		glBindTexture(GL_TEXTURE_2D, current_grid_state_texture_.id); // upload new grid state
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, (GLsizei)GRID_COLS_, (GLsizei)GRID_ROWS_,
+			current_grid_state_texture_.format, current_grid_state_texture_.datatype, grid_state_.data());
 	}
 
+	/* This SGCT stage is called only once before each frame, regardless of the number of viewports */
 	void MasterNode::UpdateFrame(double t1, double t2) {
 		ApplicationNodeImplementation::UpdateFrame(t1, t2);
 
@@ -87,8 +106,9 @@ namespace viscom {
         updateManager_.ManageUpdates(min(clock_.deltat(), 0.25));
 	}
 
-    void MasterNode::DrawFrame(FrameBuffer& fbo)
-    {
+	/* This SGCT stage draws the scene to the current back buffer (left, right or both).
+	This stage can be called several times per frame if multiple viewports and/or if stereoscopic rendering is active.*/
+    void MasterNode::DrawFrame(FrameBuffer& fbo) {
         ApplicationNodeImplementation::DrawFrame(fbo);
 
 		glm::mat4 viewProj = GetCamera()->GetViewPerspectiveMatrix();
@@ -101,8 +121,7 @@ namespace viscom {
 		
     }
 
-    void MasterNode::Draw2D(FrameBuffer& fbo)
-    {
+    void MasterNode::Draw2D(FrameBuffer& fbo) {
         fbo.DrawToFBO([&]() {
 #ifndef VISCOM_CLIENTGUI
             ImGui::ShowTestWindow();
@@ -133,8 +152,7 @@ namespace viscom {
 		ApplicationNodeImplementation::PostDraw();
 	}
 
-    void MasterNode::CleanUp()
-    {
+    void MasterNode::CleanUp() {
 		grid_.cleanup();
 		cellular_automaton_.cleanup();
         ApplicationNodeImplementation::CleanUp();
@@ -146,8 +164,7 @@ namespace viscom {
 	 * [S] key hit: start automaton and switch between outer influence and room placement
 	 * [D] key down: debug render mode
 	*/
-    bool MasterNode::KeyboardCallback(int key, int scancode, int action, int mods)
-    {
+    bool MasterNode::KeyboardCallback(int key, int scancode, int action, int mods) {
 		// Keys switch input modes
 		static InteractionMode mode_before_switch_to_camera = interaction_mode_;
 		if (key == GLFW_KEY_C) {
@@ -185,21 +202,12 @@ namespace viscom {
         return ApplicationNodeImplementation::KeyboardCallback(key, scancode, action, mods);
     }
 
-    bool MasterNode::CharCallback(unsigned int character, int mods)
-    {
-#ifndef VISCOM_CLIENTGUI
-        ImGui_ImplGlfwGL3_CharCallback(character);
-#endif
-        return ApplicationNodeImplementation::CharCallback(character, mods);
-    }
-
 	/* Mouse/touch controls camera and room-/outer influence placement
 	 * When in "place outer influence"-mode, click to place outer influence
 	 * When in camera mode, click and drag to move camera
 	 * When in grid mode, click and drag to build room
 	*/
-    bool MasterNode::MouseButtonCallback(int button, int action)
-    {
+    bool MasterNode::MouseButtonCallback(int button, int action) {
 		if (button == GLFW_MOUSE_BUTTON_LEFT) {
 			if (interaction_mode_ == InteractionMode::GRID) {
 				if (action == GLFW_PRESS) grid_.onTouch(-1);
@@ -223,8 +231,7 @@ namespace viscom {
 	 * Workaround for missing cursor position in MouseButtonCallback:
 	 * Interaction targets can use their last cursor position
 	*/
-    bool MasterNode::MousePosCallback(double x, double y)
-    {
+    bool MasterNode::MousePosCallback(double x, double y) {
         //x *= 2;
 		//glm::vec2 pos = FindIntersectionWithPlane(GetCamera()->GetPickRay({ x,y }));
         //x = pos.x;
@@ -240,8 +247,7 @@ namespace viscom {
     }
 
 	/* Mouse scroll events are used to zoom, when in camera mode */
-    bool MasterNode::MouseScrollCallback(double xoffset, double yoffset)
-    {
+    bool MasterNode::MouseScrollCallback(double xoffset, double yoffset) {
 		if (interaction_mode_ == InteractionMode::CAMERA) {
 //			camera_.onScroll((float)yoffset);
 //			camera_->HandleMouse(0,0,)
@@ -252,5 +258,12 @@ namespace viscom {
 #endif
         return ApplicationNodeImplementation::MouseScrollCallback(xoffset, yoffset);
     }
+
+	bool MasterNode::CharCallback(unsigned int character, int mods) {
+#ifndef VISCOM_CLIENTGUI
+		ImGui_ImplGlfwGL3_CharCallback(character);
+#endif
+		return ApplicationNodeImplementation::CharCallback(character, mods);
+	}
     
 }

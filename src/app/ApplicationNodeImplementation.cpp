@@ -24,81 +24,110 @@ namespace viscom {
 		meshpool_(GRID_COLS_ * GRID_ROWS_),
 		render_mode_(NORMAL),
 		clock_{ 0.0 },
-		updateManager_()
+		updateManager_(),
+		current_grid_state_texture_(roomgame::GRID_STATE_TEXTURE),
+		last_grid_state_texture_(roomgame::GRID_STATE_TEXTURE)
     {
 		outerInfluence_ = std::make_shared<roomgame::OuterInfluence>();
     }
 
     ApplicationNodeImplementation::~ApplicationNodeImplementation() = default;
 
-    void ApplicationNodeImplementation::InitOpenGL()
-    {
-		/* Load resources on all nodes */
+
+
+    void ApplicationNodeImplementation::InitOpenGL() {
+
+		/* Init mesh pool (mesh and shader resources need to be loaded on all nodes) */
+
 		meshpool_.loadShader(GetApplication()->GetGPUProgramManager());
+
 		meshpool_.addMesh({ GridCell::INSIDE_ROOM },
                             GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/floor.obj"));
+
 		meshpool_.addMesh({ GridCell::CORNER,
 							GridCell::INVALID },
                             GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/corner.obj"));
+
 		meshpool_.addMesh({ GridCell::WALL,},
                             GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/wall.obj"));
+
 		meshpool_.addMesh({ GridCell::INFECTED },
 			GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/latticeplane.obj"));
-
-		SynchronizedGameMesh* outerInfluenceMeshComp = new SynchronizedGameMesh(GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/latticeplane.obj"), GetApplication()->GetGPUProgramManager().GetResource("stuff",
-			std::initializer_list<std::string>{ "applyTextureAndShadow.vert", "OuterInfl.frag" }));
-		outerInfluence_->meshComponent = outerInfluenceMeshComp;
-        glm::mat4 movMat = glm::mat4(1);
-        movMat = glm::scale(movMat, glm::vec3(0.1, 0.1, 0.1));
-        movMat = glm::translate(movMat, glm::vec3(0, 0, 2));
-        movMat = glm::translate(movMat, glm::vec3(10, 0, 0));
-        outerInfluence_->meshComponent->model_matrix_ = movMat;
-		outerInfluence_->meshComponent->scale = 0.1f;
-
 
 		meshpool_.updateUniformEveryFrame("t_sec", [this](GLint uloc) {
 			glUniform1f(uloc, (float)clock_.t_in_sec);
 		});
+
 		meshpool_.updateUniformEveryFrame("automatonTimeDelta", [&](GLint uloc) {
-			GLfloat time_delta = synchronized_automaton_transition_time_delta_.getVal();
+			GLfloat time_delta = automaton_transition_time_delta_;
 			glUniform1f(uloc, time_delta);
 		});
+
 		meshpool_.updateUniformEveryFrame("gridDimensions", [&](GLint uloc) {
 			glUniform2f(uloc, GRID_WIDTH_, GRID_HEIGHT_);
 		});
+
 		meshpool_.updateUniformEveryFrame("gridTranslation", [&](GLint uloc) {
-			glUniform3f(uloc, 0, 0, 0); // currently, the grid is never translated
+			glm::vec3 translation = grid_translation_;
+			glUniform3f(uloc, translation.x, translation.y, translation.z);
 		});
+
 		meshpool_.updateUniformEveryFrame("gridCellSize", [&](GLint uloc) {
 			glUniform1f(uloc, GRID_CELL_SIZE_);
 		});
-		/* TODO synchronize automaton textures (need both for interpolation?) */
+
+		current_grid_state_texture_.id = GPUBuffer::new_texture2D(GRID_COLS_, GRID_ROWS_,
+			current_grid_state_texture_.sized_format,
+			current_grid_state_texture_.format,
+			current_grid_state_texture_.datatype);
+
+		last_grid_state_texture_.id = GPUBuffer::new_texture2D(GRID_COLS_, GRID_ROWS_,
+			current_grid_state_texture_.sized_format,
+			current_grid_state_texture_.format,
+			current_grid_state_texture_.datatype);
+
 		meshpool_.updateUniformEveryFrame("gridTex", [&](GLint uloc) {
-			/*if (!cellular_automaton_.isInitialized()) return;
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, cellular_automaton_.getLatestTexture());
+			GLuint texture_unit = GL_TEXTURE0 + 0;
+			glActiveTexture(texture_unit);
+			glBindTexture(GL_TEXTURE_2D, current_grid_state_texture_.id);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-			float borderColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-			glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+			float border[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+			glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border);
 			glUniform1i(uloc, 0);
 		});
+
 		meshpool_.updateUniformEveryFrame("gridTex_PrevState", [&](GLint uloc) {
-			if (!cellular_automaton_.isInitialized()) return;
-			glActiveTexture(GL_TEXTURE0 + 1);
-			glBindTexture(GL_TEXTURE_2D, cellular_automaton_.getPreviousTexture());
+			GLuint texture_unit = GL_TEXTURE0 + 1;
+			glActiveTexture(texture_unit);
+			glBindTexture(GL_TEXTURE_2D, last_grid_state_texture_.id);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-			float borderColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-			glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
-			glUniform1i(uloc, 1);*/
+			float border[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+			glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border);
+			glUniform1i(uloc, 1);
 		});
 
-		
+		/* Init outer influence */
+
+		SynchronizedGameMesh* outerInfluenceMeshComp = new SynchronizedGameMesh(
+			GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/latticeplane.obj"),
+			GetApplication()->GetGPUProgramManager().GetResource("stuff",
+				std::initializer_list<std::string>{ "applyTextureAndShadow.vert", "OuterInfl.frag" }));
+		outerInfluence_->meshComponent = outerInfluenceMeshComp;
+		glm::mat4 movMat = glm::mat4(1);
+		movMat = glm::scale(movMat, glm::vec3(0.1, 0.1, 0.1));
+		movMat = glm::translate(movMat, glm::vec3(0, 0, 2));
+		movMat = glm::translate(movMat, glm::vec3(10, 0, 0));
+		outerInfluence_->meshComponent->model_matrix_ = movMat;
+		outerInfluence_->meshComponent->scale = 0.1f;
+
+		/* Load other meshes */
+
 		//backgroundMesh_ = new ShadowReceivingMesh(
         //    GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/textured_4vertexplane/textured_4vertexplane.obj"),
         //    GetApplication()->GetGPUProgramManager().GetResource("applyTextureAndShadow",
@@ -120,9 +149,10 @@ namespace viscom {
 		shadowMap_->setLightMatrix(glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0), glm::vec3(0, 1, 0)));
         GetApplication()->GetEngine()->setNearAndFarClippingPlanes(0.1f, 100.0f);
 
-		/*Set Up the camera*/
+		/* Set Up the camera */
 		GetCamera()->SetPosition(glm::vec3(0, 0, 0));
 
+		/* Init update manager */
 		updateManager_.AddUpdateable(outerInfluence_);
     }
 

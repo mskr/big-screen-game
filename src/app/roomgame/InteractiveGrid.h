@@ -33,8 +33,8 @@ protected:
 	glm::vec3 last_ray_start_point_;
 	glm::vec3 last_ray_intermediate_point_;
 	virtual void handleTouchedCell(int touchID, GridCell*);
-	virtual void handleHoveredCell(int touchID, GridCell*, GridInteraction*);
-	virtual void handleRelease(int touchID, GridInteraction*);
+	virtual void handleHoveredCell(GridCell*, GridInteraction*);
+	virtual void handleRelease(GridInteraction*);
 public:
 
     /* Computes cell positions by iteratively adding (height/rows, height/rows) to (-1, -1) */

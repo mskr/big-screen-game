@@ -18,6 +18,8 @@
 #include "app/roomgame/ShadowMap.h"
 #include "app/roomgame/UpdateManager.h"
 #include "app/roomgame/OuterInfluence.h"
+#include "app/roomgame/GPUBuffer.h"
+#include "roomgame\GPUCellularAutomaton.h"
 
 namespace viscom {
 
@@ -63,7 +65,21 @@ namespace viscom {
 		const float GRID_CELL_SIZE_ = GRID_HEIGHT_ / GRID_ROWS_;
 		const float GRID_WIDTH_ = GRID_COLS_ * GRID_CELL_SIZE_;
 
-		/**/
+		/* Grid translation (controlled by master node and synced with slaves) */
+		sgct::SharedObject<glm::vec3> synchronized_grid_translation_;
+		glm::vec3 grid_translation_;
+
+		/* Copy of part of grid state for use by each node's GPU (same as used by automaton) */
+		GPUBuffer::Tex current_grid_state_texture_, last_grid_state_texture_;
+		// use vector although grid state is not dynamic because it can be nicely initialized from array
+		sgct::SharedVector<roomgame::GRID_STATE_ELEMENT> synchronized_grid_state_;
+		std::vector<roomgame::GRID_STATE_ELEMENT> grid_state_;
+
+		/* Some automaton parameters are also needed on slave nodes */
+		sgct::SharedFloat synchronized_automaton_transition_time_delta_;
+		float automaton_transition_time_delta_;
+
+		/* Outer influence object containing AI logic and mesh */
 		std::shared_ptr<roomgame::OuterInfluence> outerInfluence_;
 
 		/* Mesh pool manages and renders instanced meshes corresponding to build states of grid cells */
@@ -72,16 +88,14 @@ namespace viscom {
         /* Shadow map is basically an offscreen framebuffer */
 		ShadowMap* shadowMap_; // hold shadow map framebuffer on all nodes
 
-        /* Shadow receiving meshes are (non-instanced) meshes with a shader receiving a shadow map */
+        /* Shadow receiving meshes are (non-instanced) meshes with a shader reading from shadow maps */
 		ShadowReceivingMesh* backgroundMesh_; // hold static mesh on all nodes
 
-		/* Same as ShadowReceivingMesh but with water features */
+		/* Same as ShadowReceivingMesh but with water features (can also apply arbitrary post-processing) */
 		PostProcessingMesh* waterMesh_;
 
 		/* Switch for debug rendering */
 		enum RenderMode { NORMAL, DBG } render_mode_; // hold on all nodes but able to change only on master
-
-		sgct::SharedFloat synchronized_automaton_transition_time_delta_;
 
 		/* Clock holding a (hopefully!) synchronized time on all nodes */
 		struct Clock {

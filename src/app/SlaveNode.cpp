@@ -44,16 +44,28 @@ namespace viscom {
 		SlaveNodeInternal::DecodeData();
 		outerInfluence_->meshComponent->decode();
         meshpool_.decode();
+		sgct::SharedData::instance()->readObj<glm::vec3>(&synchronized_grid_translation_);
 		sgct::SharedData::instance()->readFloat(&synchronized_automaton_transition_time_delta_);
-		//TODO read automaton textures (only if new!)
+		sgct::SharedData::instance()->readVector(&synchronized_grid_state_);
 	}
 
-	/* Sync step 2: Slaves set their copies of cluster-wide variables to values received from master */
+	/* Sync step 2: Slaves set their copies of cluster-wide variables to values received from master 
+	 * These copies are good because in contrast to SGCT shared objects they are not mutex locked on each access
+	*/
 	void SlaveNode::UpdateSyncedInfo() {
 		SlaveNodeInternal::UpdateSyncedInfo();
 		outerInfluence_->meshComponent->updateSyncedSlave();
         meshpool_.updateSyncedSlave();
-		//TODO update automaton textures uniforms  (only if new!)
+		grid_translation_ = synchronized_grid_translation_.getVal();
+		automaton_transition_time_delta_ = synchronized_automaton_transition_time_delta_.getVal();
+		// GPU data:
+		glBindTexture(GL_TEXTURE_2D, last_grid_state_texture_.id); // upload old grid state
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, (GLsizei)GRID_COLS_, (GLsizei)GRID_ROWS_,
+			last_grid_state_texture_.format, last_grid_state_texture_.datatype, grid_state_.data());
+		grid_state_ = synchronized_grid_state_.getVal(); // fetch new grid state
+		glBindTexture(GL_TEXTURE_2D, current_grid_state_texture_.id); // upload new grid state
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, (GLsizei)GRID_COLS_, (GLsizei)GRID_ROWS_,
+			current_grid_state_texture_.format, current_grid_state_texture_.datatype, grid_state_.data());
 	}
 
 }

@@ -12,8 +12,8 @@
 class RoomInteractiveGrid : public InteractiveGrid {
 	std::vector<Room*> rooms_;
 	void handleTouchedCell(int touchID, GridCell*) override;
-	void handleHoveredCell(int touchID, GridCell*, GridInteraction*) override;
-	void handleRelease(int touchID, GridInteraction*) override;
+	void handleHoveredCell(GridCell*, GridInteraction*) override;
+	void handleRelease(GridInteraction*) override;
 public:
 	RoomInteractiveGrid(size_t columns, size_t rows, float height);
 	~RoomInteractiveGrid();
