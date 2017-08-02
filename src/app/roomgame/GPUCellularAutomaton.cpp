@@ -1,14 +1,18 @@
 #include "GPUCellularAutomaton.h"
 
-GPUCellularAutomaton::GPUCellularAutomaton(AutomatonGrid* grid, double transition_time) {
-	grid_ = grid;
+GPUCellularAutomaton::GPUCellularAutomaton(AutomatonGrid* grid, double transition_time) :
+	grid_(grid),
+	transition_time_(transition_time),
+	pixel_size_(glm::vec2(1.0f / float(grid->getNumColumns()), 1.0f / float(grid->getNumRows()))),
+	last_time_(0.0),
+	delta_time_(0.0),
+	is_initialized_(false),
+	current_read_index_(0),
+	sizeof_tmp_client_buffer_(0),
+	tmp_client_buffer_(0),
+	framebuffer_pair_{0, 0}
+{
 	grid_->setCellularAutomaton(this);
-	pixel_size_ = glm::vec2(1.0f / float(grid->getNumColumns()), 1.0f / float(grid->getNumRows()));
-	transition_time_ = transition_time;
-	last_time_ = 0.0;
-	delta_time_ = 0.0;
-	is_initialized_ = false;
-	current_read_index_ = 0;
 }
 
 void GPUCellularAutomaton::cleanup() {

@@ -11,7 +11,6 @@ RoomInteractiveGrid::~RoomInteractiveGrid() {
 }
 
 void RoomInteractiveGrid::handleTouchedCell(int touchID, GridCell* touchedCell) {
-	InteractiveGrid::handleTouchedCell(touchID, touchedCell);
 	// is the touched cell still empty?
 	if (touchedCell->getBuildState() != GridCell::EMPTY) return;
 	// ...then start room creation
@@ -21,7 +20,6 @@ void RoomInteractiveGrid::handleTouchedCell(int touchID, GridCell* touchedCell) 
 }
 
 void RoomInteractiveGrid::handleHoveredCell(GridCell* hoveredCell, GridInteraction* interac) {
-	InteractiveGrid::handleHoveredCell(hoveredCell, interac);
 	// continue room creation
 	if (interac->getTouchID() == -1) { // if ID is -1, "touch" was mouse click
 		if (interac->getLastCell() == hoveredCell) return; // return if cursor was still inside last cell
@@ -56,7 +54,6 @@ void RoomInteractiveGrid::handleHoveredCell(GridCell* hoveredCell, GridInteracti
 }
 
 void RoomInteractiveGrid::handleRelease(GridInteraction* interac) {
-	InteractiveGrid::handleRelease(interac);
 	// check result and remove interaction
 	if (interac->getTouchID() == -1) { // if ID is -1, "touch" was mouse click
 		Room* room = interac->getRoom();

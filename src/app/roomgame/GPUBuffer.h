@@ -18,11 +18,11 @@ class GPUBuffer {
 	GLuint opengl_id_;
 public:
 	struct Tex {
-		GLuint id;
-		GLenum attachmentType;
-		GLint sized_format;
-		GLenum format;
-		GLenum datatype;
+		GLuint id = 0;
+		GLenum attachmentType = 0;
+		GLint sized_format = 0;
+		GLenum format = 0;
+		GLenum datatype = 0;
 	};
 	// Create multipurpose buffer
 	GPUBuffer();

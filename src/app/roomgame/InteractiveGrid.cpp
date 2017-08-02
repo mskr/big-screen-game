@@ -455,7 +455,7 @@ size_t InteractiveGrid::getNumCells() {
 
 void InteractiveGrid::handleTouchedCell(int touchID, GridCell* c) {
 	// Debug stuff here, extending classes should add logic
-	std::cout << "INTERACTION START " << "id=" << touchID
+	std::cout << "INTERACTION START " << "id=" << touchID << " "
 		<< "cell=(" << c->getCol() << ", " << c->getRow() << ")" << std::endl;
 	interactions_.push_back(new GridInteraction(-42, last_mouse_position_, c, 0));
 }
@@ -463,7 +463,7 @@ void InteractiveGrid::handleTouchedCell(int touchID, GridCell* c) {
 void InteractiveGrid::handleRelease(GridInteraction* in) {
 	// Debug stuff here, extending classes should add logic
 	std::cout << "INTERACTION END " << "id=" << in->getTouchID() << " "
-		<< "start_cell=(" << in->getStartCell()->getCol() << ", " << in->getStartCell()->getRow() << ")"
+		<< "start_cell=(" << in->getStartCell()->getCol() << ", " << in->getStartCell()->getRow() << ") "
 		<< "last_cell=(" << in->getLastCell()->getCol() << ", " << in->getLastCell()->getRow() << ")"
 		<< std::endl;
 	if (in->getTouchID() == -42) interactions_.remove(in);
@@ -472,8 +472,8 @@ void InteractiveGrid::handleRelease(GridInteraction* in) {
 void InteractiveGrid::handleHoveredCell(GridCell* c, GridInteraction* in) {
 	// Debug stuff here, extending classes should add logic
 	std::cout << "INTERACTION ONGOING " << "id=" << in->getTouchID() << " "
-		<< "start_cell=(" << in->getStartCell()->getCol() << ", " << in->getStartCell()->getRow() << ")"
-		<< "last_cell=(" << in->getLastCell()->getCol() << ", " << in->getLastCell()->getRow() << ")"
+		<< "start_cell=(" << in->getStartCell()->getCol() << ", " << in->getStartCell()->getRow() << ") "
+		<< "last_cell=(" << in->getLastCell()->getCol() << ", " << in->getLastCell()->getRow() << ") "
 		<< "current_cell=(" << c->getCol() << ", " << c->getRow() << ")"
 		<< std::endl;
 }
