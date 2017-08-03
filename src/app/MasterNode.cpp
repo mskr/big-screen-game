@@ -25,7 +25,7 @@ namespace viscom {
         ApplicationNodeImplementation{ appNode },
         grid_(GRID_COLS_, GRID_ROWS_, GRID_HEIGHT_, &meshpool_),
         cellular_automaton_(&grid_, automaton_transition_time),
-        interaction_mode_(GRID_PLACE_OUTER_INFLUENCE)
+        interaction_mode_(InteractionMode::GRID)
     {
     }
 
@@ -126,9 +126,6 @@ namespace viscom {
 
     void MasterNode::Draw2D(FrameBuffer& fbo) {
         fbo.DrawToFBO([&]() {
-            #ifndef VISCOM_CLIENTGUI
-                ImGui::ShowTestWindow();
-            #endif
             ImGui::SetNextWindowPos(ImVec2(700, 60), ImGuiSetCond_FirstUseEver);
             ImGui::SetNextWindowSize(ImVec2(550, 680), ImGuiSetCond_FirstUseEver);
             ImGui::GetIO().FontGlobalScale = 1.5f;
@@ -268,16 +265,27 @@ namespace viscom {
     #ifdef WITH_TUIO
         bool MasterNode::AddTuioCursor(TUIO::TuioCursor* tcur)
         {
+            grid_.onTouch(-1);
+            std::cout << "add    cur  " << tcur->getCursorID() << " (" << tcur->getSessionID() << "/" << tcur->getTuioSourceID() << ") " << tcur->getX() << " " << tcur->getY() << std::endl;
             return false;
         }
 
         bool MasterNode::UpdateTuioCursor(TUIO::TuioCursor* tcur)
         {
+            float x = tcur->getX();
+            float y = tcur->getY();
+            viscom::math::Line3<float> ray = GetCamera()->GetPickRay({ x,y });
+            grid_.onMouseMove(-1, ray[0], ray[1]);
+            grid_.onMouseMove(-1, x, y);
+            std::cout << "set    cur  " << tcur->getCursorID() << " (" << tcur->getSessionID() << "/" << tcur->getTuioSourceID() << ") " << tcur->getX() << " " << tcur->getY()
+                << " " << tcur->getMotionSpeed() << " " << tcur->getMotionAccel() << " " << std::endl;
             return false;
         }
 
         bool MasterNode::RemoveTuioCursor(TUIO::TuioCursor* tcur)
         {
+            grid_.onRelease(-1);
+            std::cout << "delete cur  " << tcur->getCursorID() << " (" << tcur->getSessionID() << "/" << tcur->getTuioSourceID() << ")" << std::endl;
             return false;
         }
     #endif

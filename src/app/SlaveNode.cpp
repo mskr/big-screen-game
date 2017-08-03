@@ -23,9 +23,6 @@ namespace viscom {
 
     void SlaveNode::Draw2D(FrameBuffer& fbo)
     {
-#ifdef VISCOM_CLIENTGUI
-        ImGui::ShowTestWindow();
-#endif
 		//updateManager_.ManageUpdates(deltaTime, false);
         // always do this call last!
         SlaveNodeInternal::Draw2D(fbo);
