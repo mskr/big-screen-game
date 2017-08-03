@@ -298,8 +298,8 @@ template <class PER_INSTANCE_DATA>
 class SynchronizedInstancedMesh : public MeshBase<viscom::SimpleMeshVertex> {
 private:
     sgct::SharedVector<PER_INSTANCE_DATA> shared_instance_buffer_;
-	sgct::SharedInt shared_num_instances_;
-	sgct::SharedInt shared_num_reallocations_;
+	sgct::SharedInt64 shared_num_instances_;
+	sgct::SharedInt64 shared_num_reallocations_;
 protected:
     roomgame::InstanceBuffer gpu_instance_buffer_;
     std::vector<PER_INSTANCE_DATA> instance_buffer_;
@@ -319,18 +319,18 @@ public:
     }
     void encode() { // master
         sgct::SharedData::instance()->writeVector(&shared_instance_buffer_);
-		sgct::SharedData::instance()->writeInt(&shared_num_instances_);
-        sgct::SharedData::instance()->writeInt(&shared_num_reallocations_);
+		sgct::SharedData::instance()->writeInt64(&shared_num_instances_);
+        sgct::SharedData::instance()->writeInt64(&shared_num_reallocations_);
     }
     void decode() { // slave
         sgct::SharedData::instance()->readVector(&shared_instance_buffer_);
-		sgct::SharedData::instance()->readInt(&shared_num_instances_);
-		sgct::SharedData::instance()->readInt(&shared_num_reallocations_);
+		sgct::SharedData::instance()->readInt64(&shared_num_instances_);
+		sgct::SharedData::instance()->readInt64(&shared_num_reallocations_);
     }
     void updateSyncedSlave() {
         instance_buffer_ = shared_instance_buffer_.getVal();
-		gpu_instance_buffer_.num_instances_ = shared_num_instances_.getVal();
-		gpu_instance_buffer_.num_reallocations_ = shared_num_reallocations_.getVal();
+		gpu_instance_buffer_.num_instances_ = (int) shared_num_instances_.getVal();
+		gpu_instance_buffer_.num_reallocations_ = (int) shared_num_reallocations_.getVal();
         uploadInstanceBufferToGPU();
     }
     void updateSyncedMaster() {

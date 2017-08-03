@@ -18,7 +18,7 @@ namespace roomgame {
         speed = 0.5f;
         attackChance = ATTACK_CHANCE_BASE;
         attackChanceGrowth = 1;
-        unsigned seed1 = std::chrono::system_clock::now().time_since_epoch().count();
+        unsigned seed1 = (unsigned) std::chrono::system_clock::now().time_since_epoch().count();
         rndGenerator = std::default_random_engine(seed1);
         distributor100 = std::uniform_int_distribution<int>(0, 100);
 	}
