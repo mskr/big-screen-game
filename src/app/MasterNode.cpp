@@ -72,15 +72,18 @@ namespace viscom {
         grid_translation_ = synchronized_grid_translation_.getVal();
         automaton_transition_time_delta_ = synchronized_automaton_transition_time_delta_.getVal();
         grid_state_ = synchronized_grid_state_.getVal();
-        // GPU data:
+        // GPU data upload behind check if GL was initialized
         if (last_grid_state_texture_.id > 0 && current_grid_state_texture_.id > 0) {
+            // Grid state: type UINT has to be converted to UNORM to make use of bilinear interpolation when rendering
+            //TODO investigate why conversion doesnt seem to work, giving GL_INVALID_OPERATION error
+            // see https://www.khronos.org/opengl/wiki/Pixel_Transfer#Format_conversion
             glBindTexture(GL_TEXTURE_2D, last_grid_state_texture_.id); // upload old grid state
-            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, (GLsizei)GRID_COLS_, (GLsizei)GRID_ROWS_,
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RG8, GRID_COLS_, GRID_ROWS_, 0,
                 last_grid_state_texture_.format, last_grid_state_texture_.datatype, grid_state_.data());
             grid_state_ = synchronized_grid_state_.getVal(); // fetch new grid state
             glBindTexture(GL_TEXTURE_2D, current_grid_state_texture_.id); // upload new grid state
-            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, (GLsizei)GRID_COLS_, (GLsizei)GRID_ROWS_,
-                current_grid_state_texture_.format, current_grid_state_texture_.datatype, grid_state_.data());
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RG8, GRID_COLS_, GRID_ROWS_, 0,
+                last_grid_state_texture_.format, last_grid_state_texture_.datatype, grid_state_.data());
         }
     }
 

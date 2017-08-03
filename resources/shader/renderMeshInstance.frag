@@ -1,5 +1,14 @@
 #version 330 core
 
+/* Interpolated vertex attributes */
+in vec3 vPosition;
+in vec3 vNormal;
+in vec2 vTexCoords;
+
+/* Build state and health of this grid cell (not interpolated) */
+flat in uint st;
+flat in uint hp;
+
 /* Build state bits */
 #define EMPTY 0U
 #define INSIDE_ROOM 1U
@@ -24,14 +33,9 @@ uniform sampler2D last_grid_state;
 /* Coordinates of this fragment on the grid (in texture space) */
 in vec2 cellCoords;
 
-/* Build state and health of this grid cell */
-flat in uint st;
-flat in uint hp;
-
-/* Interpolated vertex attributes */
-in vec3 vPosition;
-in vec3 vNormal;
-in vec2 vTexCoords;
+/* Normalization factor for infected state of a fragment
+after spatial and temporal interpolation */
+const float INFECTEDNESS_NORMALIZATION_FACTOR = INFECTED;
 
 uniform float automatonTimeDelta;
 
@@ -64,19 +68,32 @@ void main() {
     // vec3 lightDir = normalize(vPosition - vec3(-10.0f, -10.0f, -10.0f));
     // float NdotL = clamp(dot(lightDir, normalize(vNormal)), 0.0f, 1.0f);
     
+    // Normalized health can be a nice weight for colors/ some damage overlay
     float healthNormalized = float(hp) / float(MAX_HEALTH);
-    vec2 lastCellState = texture(last_grid_state, cellCoords).rg;
-    vec2 currCellState = texture(curr_grid_state, cellCoords).rg;
-    float lastBuildState = lastCellState.r;
-    float lastHealth = lastCellState.g;
-    float currBuildState = currCellState.r;
-    float currHealth = currCellState.g;
 
-    // if current mesh instance is INFECTED, apply some effect
-    if((st & INFECTED) > EMPTY) {
-        color = vec4(1,0,0,.5);
+    // Lookup cell state of this fragment with bilinear interpolation enabled
+    vec2 lastCellStateInterpolatedSpatial = texture(last_grid_state, cellCoords).rg;
+    vec2 currCellStateInterpolatedSpatial = texture(curr_grid_state, cellCoords).rg;
+    float lastCellBuildStateInterpolatedSpatial = lastCellStateInterpolatedSpatial.r;
+    float lastCellHealthInterpolatedSpatial = lastCellStateInterpolatedSpatial.g;
+    float currCellBuildStateInterpolatedSpatial = currCellStateInterpolatedSpatial.r;
+    float currCellHealthInterpolatedSpatial = currCellStateInterpolatedSpatial.g;
+
+    // When a mesh instance is rendered on a cell, it can be:
+    // 1) a room segment (st has WALL, CORNER or INSIDE_ROOM bit set)
+    // 2) an infected room segment (st has INFECTED bit set)
+    // 3) an infection source, most likely in a wall (st has SOURCE bit set)
+    // 4) an invalid room, that is too small or too big (st has INVALID bit set)
+    // ...
+    if(st == INFECTED) {
+        float infectednessInterpolatedSpatialTemporal = mix(
+            lastCellBuildStateInterpolatedSpatial,
+            currCellBuildStateInterpolatedSpatial,
+            automatonTimeDelta);
+        float infectedness = infectednessInterpolatedSpatialTemporal / INFECTEDNESS_NORMALIZATION_FACTOR;
+        color = vec4(1,0,0, 0.2+infectedness);
     }
-    else { // else visualize normals
+    else {
         color = vec4(vNormal, 1) * healthNormalized;
 
         //TODO do phong lighting correctly
