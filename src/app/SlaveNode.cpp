@@ -56,7 +56,7 @@ namespace viscom {
         grid_translation_ = synchronized_grid_translation_.getVal();
         automaton_transition_time_delta_ = synchronized_automaton_transition_time_delta_.getVal();
         // GPU data:
-        if (last_grid_state_texture_.id > 0 && current_grid_state_texture_.id > 0) { //TODO test
+        if (last_grid_state_texture_.id > 0 && current_grid_state_texture_.id > 0) { //TODO convert uint to unorm
             glBindTexture(GL_TEXTURE_2D, last_grid_state_texture_.id); // upload old grid state
             glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, (GLsizei)GRID_COLS_, (GLsizei)GRID_ROWS_,
                 last_grid_state_texture_.format, last_grid_state_texture_.datatype, grid_state_.data());

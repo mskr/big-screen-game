@@ -20,7 +20,7 @@ namespace roomgame {
         glm::vec3 translation = glm::vec3(0); // local translation
         GLfloat scale = 0.0f; // scale
         GLuint buildState = 0; // build state (a value from GLuint buildState)
-        GLint health = 0; // health points in [0, 100]
+        GLuint health = 0; // health points in [0, 100]
         static const void setAttribPointer() {
             GLint transLoc = 3;
             GLint scaleLoc = 4;
@@ -35,19 +35,19 @@ namespace roomgame {
             off += 3 * sizeof(GLfloat);
             glVertexAttribPointer(scaleLoc, 1, GL_FLOAT, false, sizeof(PerInstanceData), (GLvoid*)off);
             off += sizeof(GLfloat);
-            glVertexAttribIPointer(buildStateLoc, 1, GL_INT, sizeof(PerInstanceData), (GLvoid*)off);
+            glVertexAttribIPointer(buildStateLoc, 1, GL_UNSIGNED_INT, sizeof(PerInstanceData), (GLvoid*)off);
             off += sizeof(GLuint);
-            glVertexAttribIPointer(healthLoc, 1, GL_INT, sizeof(PerInstanceData), (GLvoid*)off);
+            glVertexAttribIPointer(healthLoc, 1, GL_UNSIGNED_INT, sizeof(PerInstanceData), (GLvoid*)off);
             glVertexAttribDivisor(transLoc, 1);
             glVertexAttribDivisor(scaleLoc, 1);
             glVertexAttribDivisor(buildStateLoc, 1);
             glVertexAttribDivisor(healthLoc, 1);
         }
-        static const void updateHealth(GLuint buffer, int offset_instances, int h) {
+        static const void updateHealth(GLuint buffer, int offset_instances, GLuint hp) {
             glBindBuffer(GL_ARRAY_BUFFER, buffer);
             glBufferSubData(GL_ARRAY_BUFFER,
                 (offset_instances + 1) * sizeof(PerInstanceData) - sizeof(health),
-                sizeof(health), &h);
+                sizeof(health), &hp);
             glBindBuffer(GL_ARRAY_BUFFER, 0);
         }
 

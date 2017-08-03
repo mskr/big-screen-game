@@ -11,20 +11,12 @@
 #include "core/imgui/imgui_impl_glfw_gl3.h"
 #include <iostream>
 
-static float automaton_transition_time = 0.04f;
-static int automaton_movedir_[2] = { 1,0 };
-static float automaton_birth_thd = 0.4f;
-static float automaton_death_thd = 0.5f;
-static float automaton_collision_thd = 0.2f;
-static int automaton_outer_infl_nbors_thd = 2;
-static int automaton_damage_per_cell = 5;
-
 namespace viscom {
 
     MasterNode::MasterNode(ApplicationNodeInternal* appNode) :
         ApplicationNodeImplementation{ appNode },
         grid_(GRID_COLS_, GRID_ROWS_, GRID_HEIGHT_, &meshpool_),
-        cellular_automaton_(&grid_, automaton_transition_time),
+        cellular_automaton_(&grid_, 0.5),
         interaction_mode_(InteractionMode::GRID)
     {
     }
@@ -96,13 +88,8 @@ namespace viscom {
     void MasterNode::UpdateFrame(double t1, double t2) {
         ApplicationNodeImplementation::UpdateFrame(t1, t2);
 
-        cellular_automaton_.setTransitionTime(automaton_transition_time);
-        cellular_automaton_.setMoveDir(automaton_movedir_[0], automaton_movedir_[1]);
-        cellular_automaton_.setBirthThreshold(automaton_birth_thd);
-        cellular_automaton_.setDeathThreshold(automaton_death_thd);
-        cellular_automaton_.setCollisionThreshold(automaton_collision_thd);
-        cellular_automaton_.setOuterInfluenceNeighborThreshold(automaton_outer_infl_nbors_thd);
-        cellular_automaton_.setDamagePerCell(automaton_damage_per_cell);
+        //cellular_automaton_.setTransitionTime(automaton_transition_time);
+        //cellular_automaton_.setDamagePerCell(automaton_damage_per_cell);
         cellular_automaton_.transition(clock_.t_in_sec);
 
 
@@ -132,15 +119,8 @@ namespace viscom {
             if (ImGui::Begin("Roomgame Controls")) {
                 //ImGui::SetWindowFontScale(2.0f);
                 ImGui::Text("Interaction mode: %s", (interaction_mode_ == GRID) ? "GRID" : 
-                    ((interaction_mode_ == GRID_PLACE_OUTER_INFLUENCE) ? "GRID_PLACE_OUTER_INFLUENCE" : "CAMERA"));
-                ImGui::Text("AUTOMATON");
-                ImGui::SliderFloat("transition time", &automaton_transition_time, 0.017f, 1.0f);
-                ImGui::SliderInt2("move direction", automaton_movedir_, -1, 1);
-                ImGui::SliderFloat("BIRTH_THRESHOLD", &automaton_birth_thd, 0.0f, 1.0f);
-                ImGui::SliderFloat("DEATH_THRESHOLD", &automaton_death_thd, 0.0f, 1.0f);
-                ImGui::SliderFloat("ROOM_NBORS_AHEAD_THRESHOLD", &automaton_collision_thd, 0.0f, 1.0f);
-                ImGui::SliderInt("OUTER_INFL_NBORS_THRESHOLD", &automaton_outer_infl_nbors_thd, 1, 8);
-                ImGui::SliderInt("DAMAGE_PER_CELL", &automaton_damage_per_cell, 1, 100);
+                    ((interaction_mode_ == GRID_PLACE_OUTER_INFLUENCE) ? 
+                        "GRID_PLACE_OUTER_INFLUENCE" : "CAMERA"));
             }
             ImGui::End();
         });
@@ -214,7 +194,7 @@ namespace viscom {
                 else if (action == GLFW_RELEASE) grid_.onRelease(-1);
             }
             else if (interaction_mode_ == InteractionMode::GRID_PLACE_OUTER_INFLUENCE) {
-                if (action == GLFW_PRESS) grid_.populateCircleAtLastMousePosition(5);
+                if (action == GLFW_PRESS) grid_.populateCircleAtLastMousePosition(1);
             }
             else if (interaction_mode_ == InteractionMode::CAMERA) {
             // if (action == GLFW_PRESS) camera_.onTouch();

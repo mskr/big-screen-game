@@ -18,22 +18,23 @@
 
 namespace viscom {
 
-	/* Roomgame controller class for master node
-	 * Holds the grid with all the build states
-	 * Uses cellular automaton to compute dynamic influence
-	 * Can modify the view by using camera
-	 * Handles all user input
-	*/
+    /* Roomgame controller class for master node
+     * Holds the grid with all the build states
+     * Uses cellular automaton to compute dynamic influence
+     * Can modify the view by using camera
+     * Handles all user input
+    */
     class MasterNode final : public ApplicationNodeImplementation
     {
+        /* Holds core state of the roomgame and handles events */
+        AutomatonGrid grid_;
 
-		AutomatonGrid grid_; // holds core state of the roomgame
+        /* Controls inner influence, i.e. room infection */
+        InnerInfluence cellular_automaton_;
 
-		InnerInfluence cellular_automaton_; // controls inner influence, i.e. room infection
-
-		//	DragAndZoomCamera camera_;
-	
-		enum InteractionMode { GRID, CAMERA, GRID_PLACE_OUTER_INFLUENCE } interaction_mode_;
+        //	DragAndZoomCamera camera_;
+    
+        enum InteractionMode { GRID, CAMERA, GRID_PLACE_OUTER_INFLUENCE } interaction_mode_;
 
     public:
         explicit MasterNode(ApplicationNodeInternal* appNode);
@@ -44,7 +45,7 @@ namespace viscom {
         During the other stages the callbacks can be set end re-set anytime. */
         void InitOpenGL() override;
 
-		/* Master node sends shared data here.
+        /* Master node sends shared data here.
         This SGCT stage is called before the data is synchronized across the cluster.
         Set the shared variables here on the master and the slaves will receive them during the sync stage.
         The actual SGCT sync stage distributes the shared data from the master to the slaves.
@@ -54,10 +55,10 @@ namespace viscom {
         The master encodes and serializes the data and the slaves decode and de-serialize the data.*/
         void PreSync() override;
 
-		void EncodeData() override;
-		void UpdateSyncedInfo() override;
+        void EncodeData() override;
+        void UpdateSyncedInfo() override;
 
-		void UpdateFrame(double, double) override;
+        void UpdateFrame(double, double) override;
 
         /* This SGCT stage draws the scene to the current back buffer (left, right or both). 
         This stage can be called several times per frame if multiple viewports and/or if stereoscopic rendering is active.*/
@@ -65,7 +66,7 @@ namespace viscom {
         void Draw2D(FrameBuffer& fbo) override;
 
         /* This SGCT stage is called after the rendering is finalized. */
-		void PostDraw() override;
+        void PostDraw() override;
 
         void CleanUp() override;
 

@@ -45,14 +45,14 @@ public:
     static const GLuint INFECTED = 512;
     static const GLuint OUTER_INFLUENCE = 1024;
 
-	static const int MAX_HEALTH = 100;
-	static const int MIN_HEALTH = 0;
+	static const unsigned int MAX_HEALTH = 100;
+	static const unsigned int MIN_HEALTH = 0;
 private:
 	struct Vertex {
 		GLfloat x_position;
 		GLfloat y_position;
 		GLuint build_state;
-		GLint health_points;
+		GLuint health_points;
 		static const void setAttribPointer() {
 			const GLint posAttrLoc = 0;
 			const GLint buildStateAttrLoc = 1;
@@ -60,10 +60,10 @@ private:
 			glVertexAttribPointer(posAttrLoc, 2, GL_FLOAT, false,
 				sizeof(Vertex),
 				(GLvoid*)0);
-			glVertexAttribIPointer(buildStateAttrLoc, 1, GL_INT,
+			glVertexAttribIPointer(buildStateAttrLoc, 1, GL_UNSIGNED_INT,
 				sizeof(Vertex),
 				(GLvoid*)(2 * sizeof(float)));
-			glVertexAttribIPointer(healthAttrLoc, 1, GL_INT,
+			glVertexAttribIPointer(healthAttrLoc, 1, GL_UNSIGNED_INT,
 				sizeof(Vertex),
 				(GLvoid*)(2 * sizeof(float) + sizeof(GLuint)));
 			glEnableVertexAttribArray(posAttrLoc);
@@ -83,10 +83,10 @@ private:
 public:
 	GridCell(float x, float y, size_t col_idx, size_t row_idx);
 	~GridCell() = default;
-    void removeBuildState(GLuint vbo, GLuint s, bool makeEmpty);
-    void addBuildState(GLuint vbo, GLuint s);
-    void andBuildStateWith(GLuint vbo, GLuint s);
-    void updateHealthPoints(GLuint vbo, int hp);
+    void removeBuildState(GLuint vbo, unsigned int s, bool makeEmpty);
+    void addBuildState(GLuint vbo, unsigned int s);
+    void andBuildStateWith(GLuint vbo, unsigned int s);
+    void updateHealthPoints(GLuint vbo, unsigned int hp);
 	void setMeshInstance(RoomSegmentMesh::InstanceBufferRange mesh_instance);
 	static void setVertexAttribPointer();
 	void setVertexBufferOffset(GLintptr o);
@@ -101,8 +101,8 @@ public:
 	glm::vec2 getPosition();
 	float getXPosition();
 	float getYPosition();
-	GLuint getBuildState();
-	int getHealthPoints();
+	unsigned int getBuildState();
+	unsigned int getHealthPoints();
 	GLintptr getVertexBufferOffset();
 	static size_t getVertexBytes();
 	void* getVertexPointer();
