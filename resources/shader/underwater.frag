@@ -66,8 +66,8 @@ void main() {
 	waterTexCoords += distortOffset; 	
 
 
-	color = texture(diffuseTexture, waterTexCoords);
-	//color = texture(diffuseTexture, vTexCoords);
+	//color = texture(diffuseTexture, waterTexCoords);
+	color = texture(diffuseTexture, vTexCoords);
 	
 	// color.rgb = vec3(0.0,0.1,0.3) + color.rgb * vec3(0.5,0.6,0.1);
 	// color *= visibility(thisFragment);
