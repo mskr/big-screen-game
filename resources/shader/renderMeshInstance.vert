@@ -49,17 +49,17 @@ vec2 rotateZ_step90(int st, float x, float y) {
 	//TODO Find more generic solution
 	if((buildState & (LEFT | TOP | CORNER))==(LEFT|TOP|CORNER) ||
 		(buildState & (LEFT | WALL))==(LEFT | WALL)){
-			return vec2(y, -x);
+			return vec2(-y, x);
 	}
 	else if((buildState & (RIGHT | TOP | CORNER))==(RIGHT|TOP|CORNER) ||
 		(buildState & (TOP | WALL))==(TOP | WALL)){
-			return vec2(-x, -y);
+			return vec2(x, y);
 	}
 	else if((buildState & (RIGHT | BOTTOM | CORNER))==(RIGHT|BOTTOM|CORNER) ||
 		(buildState & (RIGHT | WALL))==(RIGHT | WALL)){
-			return vec2(-y, x);
+			return vec2(y, -x);
 	}else{
-			return vec2(x, y);
+			return vec2(-x, -y);
 	}
 
 

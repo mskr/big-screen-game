@@ -80,15 +80,19 @@ protected:
 			"bumpMultiplier",
 			"viewProjectionMatrix",
 			"isDebugMode",
-            "time"
-		});
+            "time",
+            "material.alpha",
+            "material.ambient",
+            "material.diffuse",
+            "material.specular"
+        });
 	}
 
 	void render(const glm::mat4& vpMatrix, GLint isDebugMode = 0, const glm::mat4& modelMatrix = glm::mat4(1), bool overrideBump = false) const {
 		glUseProgram(program_->getProgramId());
 		glBindVertexArray(vao_);
 		forEachSubmeshOf(mesh_->GetRootNode(), modelMatrix, [&](const viscom::SubMesh* submesh, const glm::mat4& localTransform) {
-			bindUniformsAndTextures(vpMatrix, localTransform, submesh->GetMaterial()->diffuseTex, submesh->GetMaterial()->bumpTex, submesh->GetMaterial()->bumpMultiplier, overrideBump, isDebugMode);
+			bindUniformsAndTextures(vpMatrix, localTransform, submesh->GetMaterial()->diffuseTex, submesh->GetMaterial()->bumpTex, submesh->GetMaterial()->bumpMultiplier, overrideBump, isDebugMode, submesh->GetMaterial());
 			if (isDebugMode == 1) glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 			else glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 			glDrawElements(GL_TRIANGLES, submesh->GetNumberOfIndices(), GL_UNSIGNED_INT,
@@ -100,7 +104,7 @@ protected:
 		glUseProgram(program_->getProgramId());
 		glBindVertexArray(vao_);
 		forEachSubmeshOf(mesh_->GetRootNode(), modelMatrix, [&](const viscom::SubMesh* submesh, const glm::mat4& localTransform) {
-			bindUniformsAndTextures(vpMatrix, localTransform, submesh->GetMaterial()->diffuseTex, submesh->GetMaterial()->bumpTex, submesh->GetMaterial()->bumpMultiplier, overrideBump, isDebugMode);
+			bindUniformsAndTextures(vpMatrix, localTransform, submesh->GetMaterial()->diffuseTex, submesh->GetMaterial()->bumpTex, submesh->GetMaterial()->bumpMultiplier, overrideBump, isDebugMode, submesh->GetMaterial());
 			outsideUniformSetter();
 			if (isDebugMode == 1) glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 			else glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -113,7 +117,7 @@ protected:
 		glUseProgram(program_->getProgramId());
 		glBindVertexArray(vao_);
 		forEachSubmeshOf(mesh_->GetRootNode(), modelMatrix, [&](const viscom::SubMesh* submesh, const glm::mat4& localTransform) {
-			bindUniformsAndTextures(vpMatrix, localTransform, submesh->GetMaterial()->diffuseTex, submesh->GetMaterial()->bumpTex, submesh->GetMaterial()->bumpMultiplier, overrideBump, isDebugMode);
+			bindUniformsAndTextures(vpMatrix, localTransform, submesh->GetMaterial()->diffuseTex, submesh->GetMaterial()->bumpTex, submesh->GetMaterial()->bumpMultiplier, overrideBump, isDebugMode, submesh->GetMaterial());
 			if (isDebugMode == 1) glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 			else glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 			glDrawElementsInstanced(GL_TRIANGLES, submesh->GetNumberOfIndices(), GL_UNSIGNED_INT,
@@ -125,7 +129,8 @@ protected:
 		glUseProgram(program_->getProgramId());
 		glBindVertexArray(vao_);
 		forEachSubmeshOf(mesh_->GetRootNode(), modelMatrix, [&](const viscom::SubMesh* submesh, const glm::mat4& localTransform) {
-			bindUniformsAndTextures(vpMatrix, localTransform, submesh->GetMaterial()->diffuseTex, submesh->GetMaterial()->bumpTex, submesh->GetMaterial()->bumpMultiplier, overrideBump, isDebugMode);
+            //std::cout << submesh->GetMaterial()->diffuse[0] << submesh->GetMaterial()->diffuse[1] << submesh->GetMaterial()->diffuse[2] << std::endl;
+            bindUniformsAndTextures(vpMatrix, localTransform, submesh->GetMaterial()->diffuseTex, submesh->GetMaterial()->bumpTex, submesh->GetMaterial()->bumpMultiplier, overrideBump, isDebugMode, submesh->GetMaterial());
 			outsideUniformSetter();
 			if (isDebugMode == 1) glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 			else glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -147,7 +152,7 @@ private:
 
 	void bindUniformsAndTextures(const glm::mat4& vpMatrix, const glm::mat4& localMatrix,
 			std::shared_ptr<const viscom::Texture> diffuseTex, std::shared_ptr<const viscom::Texture> bumpTex, GLfloat bumpMultiplier,
-			bool overrideBump = false, GLint isDebugMode = 0) const {
+			bool overrideBump = false, GLint isDebugMode = 0, const viscom::Material* mat = nullptr) const {
 		glUniformMatrix4fv(uniformLocations_[0], 1, GL_FALSE, glm::value_ptr(localMatrix));
 		glUniformMatrix3fv(uniformLocations_[1], 1, GL_FALSE, glm::value_ptr(glm::inverseTranspose(glm::mat3(localMatrix))));
 		if (diffuseTex && uniformLocations_.size() > 2) {
@@ -172,6 +177,13 @@ private:
 		glUniformMatrix4fv(uniformLocations_[5], 1, GL_FALSE, glm::value_ptr(vpMatrix));
 		glUniform1i(uniformLocations_[6], isDebugMode);
         glUniform1f(uniformLocations_[7], (float)glfwGetTime());
+        //std::cout << mat->diffuse[0] << mat->diffuse[1] << mat->diffuse[2] << std::endl;
+        if (mat != nullptr && mat->diffuse[0]!=0) {
+            glUniform1f(uniformLocations_[8], mat->alpha);
+            glUniform3fv(uniformLocations_[9],1,glm::value_ptr(mat->ambient));
+            glUniform3fv(uniformLocations_[10],1, glm::value_ptr(mat->diffuse));
+            glUniform3fv(uniformLocations_[11],1, glm::value_ptr(mat->specular));
+        }
 		
 	}
 };
@@ -298,8 +310,8 @@ template <class PER_INSTANCE_DATA>
 class SynchronizedInstancedMesh : public MeshBase<viscom::SimpleMeshVertex> {
 private:
     sgct::SharedVector<PER_INSTANCE_DATA> shared_instance_buffer_;
-	sgct::SharedInt shared_num_instances_;
-	sgct::SharedInt shared_num_reallocations_;
+	sgct::SharedInt64 shared_num_instances_;
+	sgct::SharedInt64 shared_num_reallocations_;
 protected:
     roomgame::InstanceBuffer gpu_instance_buffer_;
     std::vector<PER_INSTANCE_DATA> instance_buffer_;
@@ -319,18 +331,18 @@ public:
     }
     void encode() { // master
         sgct::SharedData::instance()->writeVector(&shared_instance_buffer_);
-		sgct::SharedData::instance()->writeInt(&shared_num_instances_);
-        sgct::SharedData::instance()->writeInt(&shared_num_reallocations_);
+		sgct::SharedData::instance()->writeInt64(&shared_num_instances_);
+        sgct::SharedData::instance()->writeInt64(&shared_num_reallocations_);
     }
     void decode() { // slave
         sgct::SharedData::instance()->readVector(&shared_instance_buffer_);
-		sgct::SharedData::instance()->readInt(&shared_num_instances_);
-		sgct::SharedData::instance()->readInt(&shared_num_reallocations_);
+		sgct::SharedData::instance()->readInt64(&shared_num_instances_);
+		sgct::SharedData::instance()->readInt64(&shared_num_reallocations_);
     }
     void updateSyncedSlave() {
         instance_buffer_ = shared_instance_buffer_.getVal();
-		gpu_instance_buffer_.num_instances_ = shared_num_instances_.getVal();
-		gpu_instance_buffer_.num_reallocations_ = shared_num_reallocations_.getVal();
+		gpu_instance_buffer_.num_instances_ = (int) shared_num_instances_.getVal();
+		gpu_instance_buffer_.num_reallocations_ = (int) shared_num_reallocations_.getVal();
         uploadInstanceBufferToGPU();
     }
     void updateSyncedMaster() {
