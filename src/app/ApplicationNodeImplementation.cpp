@@ -86,7 +86,7 @@ namespace viscom {
 			current_grid_state_texture_.format,
 			current_grid_state_texture_.datatype);
 
-		meshpool_.updateUniformEveryFrame("gridTex", [&](GLint uloc) {
+		meshpool_.updateUniformEveryFrame("curr_grid_state", [&](GLint uloc) {
 			GLuint texture_unit = GL_TEXTURE0 + 0;
 			glActiveTexture(texture_unit);
 			glBindTexture(GL_TEXTURE_2D, current_grid_state_texture_.id);
@@ -99,7 +99,7 @@ namespace viscom {
 			glUniform1i(uloc, 0);
 		});
 
-		meshpool_.updateUniformEveryFrame("gridTex_PrevState", [&](GLint uloc) {
+		meshpool_.updateUniformEveryFrame("last_grid_state", [&](GLint uloc) {
 			GLuint texture_unit = GL_TEXTURE0 + 1;
 			glActiveTexture(texture_unit);
 			glBindTexture(GL_TEXTURE_2D, last_grid_state_texture_.id);

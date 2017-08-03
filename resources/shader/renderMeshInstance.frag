@@ -1,30 +1,38 @@
 #version 330 core
 
-#define EMPTY 0
-#define INSIDE_ROOM 1
-#define CORNER 2
-#define WALL 4
-#define TOP 8
-#define BOTTOM 16
-#define RIGHT 32
-#define LEFT 64
-#define INVALID 128
-#define SOURCE 256
-#define INFECTED 512
-#define OUTER_INFLUENCE 1024
+/* Build state bits */
+#define EMPTY 0U
+#define INSIDE_ROOM 1U
+#define CORNER 2U
+#define WALL 4U
+#define TOP 8U
+#define BOTTOM 16U
+#define RIGHT 32U
+#define LEFT 64U
+#define INVALID 128U
+#define SOURCE 256U
+#define INFECTED 512U
+#define OUTER_INFLUENCE 1024U
 
-// uniform sampler2D diffuseTexture;
+/* Max health, respectively sand pile height */
+#define MAX_HEALTH 100
 
+/* Build state and health for the whole grid (bilinear interpolation enabled) */
+uniform sampler2D curr_grid_state;
+uniform sampler2D last_grid_state;
+
+/* Coordinates of this fragment on the grid (in texture space) */
+in vec2 cellCoords;
+
+/* Build state and health of this grid cell */
+flat in int st;
+flat in int hp;
+
+/* Interpolated vertex attributes */
 in vec3 vPosition;
 in vec3 vNormal;
 in vec2 vTexCoords;
 
-flat in int st;
-flat in int hp;
-
-in vec2 cellCoords;
-uniform sampler2D gridTex;
-uniform sampler2D gridTex_PrevState;
 uniform float automatonTimeDelta;
 
 uniform int isDepthPass;
@@ -33,22 +41,25 @@ uniform int isDebugMode;
 out vec4 color;
 
 void main() {
+	// In depth pass do not need to do anything because depth is implicitly written
 	if(isDepthPass == 1) return;
+
+	// Debug mode draws white wireframe
 	if(isDebugMode == 1) {
 		color = vec4(1);
 		return;
 	}
 
-	//TODO lighting
+	// Lighting
 	// vec3 lightDir = normalize(vPosition - vec3(-10.0f, -10.0f, -10.0f));
-
 	// float NdotL = clamp(dot(lightDir, normalize(vNormal)), 0.0f, 1.0f);
-	// vec3 texColor = texture(diffuseTexture, vTexCoords).rgb;
 	
-	float healthNormalized = float(hp)/100;
+	float healthNormalized = float(hp)/MAX_HEALTH;
 
 	// if current mesh instance is INFECTED, apply some effect
-	if((st & INFECTED) != 0) {
+	if(st & INFECTED) {
+		float state_prev = texture(gridTex_PrevState, cellCoords).r;
+		float state = texture(gridTex, cellCoords).r;
 		color = vec4(1,0,0,.5);
 	}
 	else { // else visualize normals
