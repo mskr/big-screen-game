@@ -81,15 +81,15 @@ namespace viscom {
         automaton_transition_time_delta_ = synchronized_automaton_transition_time_delta_.getVal();
         grid_state_ = synchronized_grid_state_.getVal();
         // GPU data:
-        /**
-        glBindTexture(GL_TEXTURE_2D, last_grid_state_texture_.id); // upload old grid state
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, (GLsizei)GRID_COLS_, (GLsizei)GRID_ROWS_,
-            last_grid_state_texture_.format, last_grid_state_texture_.datatype, grid_state_.data());
-        grid_state_ = synchronized_grid_state_.getVal(); // fetch new grid state
-        glBindTexture(GL_TEXTURE_2D, current_grid_state_texture_.id); // upload new grid state
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, (GLsizei)GRID_COLS_, (GLsizei)GRID_ROWS_,
-            current_grid_state_texture_.format, current_grid_state_texture_.datatype, grid_state_.data());
-            */
+        if (last_grid_state_texture_.id > 0 && current_grid_state_texture_.id > 0) {
+            glBindTexture(GL_TEXTURE_2D, last_grid_state_texture_.id); // upload old grid state
+            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, (GLsizei)GRID_COLS_, (GLsizei)GRID_ROWS_,
+                last_grid_state_texture_.format, last_grid_state_texture_.datatype, grid_state_.data());
+            grid_state_ = synchronized_grid_state_.getVal(); // fetch new grid state
+            glBindTexture(GL_TEXTURE_2D, current_grid_state_texture_.id); // upload new grid state
+            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, (GLsizei)GRID_COLS_, (GLsizei)GRID_ROWS_,
+                current_grid_state_texture_.format, current_grid_state_texture_.datatype, grid_state_.data());
+        }
     }
 
     /* This SGCT stage is called only once before each frame, regardless of the number of viewports */
@@ -197,7 +197,7 @@ namespace viscom {
             }
         }
         #ifndef VISCOM_CLIENTGUI
-                ImGui_ImplGlfwGL3_KeyCallback(key, scancode, action, mods);
+            ImGui_ImplGlfwGL3_KeyCallback(key, scancode, action, mods);
         #endif
         return ApplicationNodeImplementation::KeyboardCallback(key, scancode, action, mods);
     }
@@ -222,7 +222,7 @@ namespace viscom {
             }
         }
         #ifndef VISCOM_CLIENTGUI
-                ImGui_ImplGlfwGL3_MouseButtonCallback(button, action, 0);
+            ImGui_ImplGlfwGL3_MouseButtonCallback(button, action, 0);
         #endif
         return ApplicationNodeImplementation::MouseButtonCallback(button, action);
     }
@@ -237,7 +237,7 @@ namespace viscom {
         grid_.onMouseMove(-1, x, y);
         //camera_.onMouseMove((float)x, (float)y);
         #ifndef VISCOM_CLIENTGUI
-                ImGui_ImplGlfwGL3_MousePositionCallback(x, y);
+            ImGui_ImplGlfwGL3_MousePositionCallback(x, y);
         #endif
         return ApplicationNodeImplementation::MousePosCallback(x, y);
     }
@@ -245,19 +245,19 @@ namespace viscom {
     /* Mouse scroll events are used to zoom, when in camera mode */
     bool MasterNode::MouseScrollCallback(double xoffset, double yoffset) {
         if (interaction_mode_ == InteractionMode::CAMERA) {
-        // camera_.onScroll((float)yoffset);
-        // camera_->HandleMouse(0,0,)
+            // camera_.onScroll((float)yoffset);
+            // camera_->HandleMouse(0,0,)
             GetCamera()->SetPosition(GetCamera()->GetPosition() + glm::vec3(0, 0, (float)yoffset*0.1f));
         }
         #ifndef VISCOM_CLIENTGUI
-                ImGui_ImplGlfwGL3_ScrollCallback(xoffset, yoffset);
+            ImGui_ImplGlfwGL3_ScrollCallback(xoffset, yoffset);
         #endif
         return ApplicationNodeImplementation::MouseScrollCallback(xoffset, yoffset);
     }
 
     bool MasterNode::CharCallback(unsigned int character, int mods) {
         #ifndef VISCOM_CLIENTGUI
-                ImGui_ImplGlfwGL3_CharCallback(character);
+            ImGui_ImplGlfwGL3_CharCallback(character);
         #endif
         return ApplicationNodeImplementation::CharCallback(character, mods);
     }
