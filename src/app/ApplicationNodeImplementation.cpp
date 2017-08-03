@@ -42,14 +42,14 @@ namespace viscom {
 		meshpool_.loadShader(GetApplication()->GetGPUProgramManager());
 
 		meshpool_.addMesh({ GridCell::INSIDE_ROOM },
-                            GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/floor.obj"));
+                            GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/newModels/RoomFloor.obj"));
 
 		meshpool_.addMesh({ GridCell::CORNER,
 							GridCell::INVALID },
-                            GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/corner.obj"));
+                            GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/newModels/RoomCorner.obj"));
 
 		meshpool_.addMesh({ GridCell::WALL,},
-                            GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/wall.obj"));
+                            GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/newModels/RoomWall.obj"));
 
 		meshpool_.addMesh({ GridCell::INFECTED },
 			GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/latticeplane.obj"));

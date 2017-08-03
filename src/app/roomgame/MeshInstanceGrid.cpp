@@ -10,10 +10,11 @@ void MeshInstanceGrid::addInstanceAt(GridCell* c, GLuint st) {
 	RoomSegmentMesh* mesh = meshpool_->getMeshOfType(st);
 	if (!mesh) return;
 	RoomSegmentMesh::Instance instance;
-	instance.scale = cell_size_ / 2.0f; // assume model extends [-1,1]^3
+    instance.scale = cell_size_;// / 2.0f; // assume model extends [-1,1]^3
 	instance.translation = translation_; // grid translation
 	instance.translation += glm::vec3(c->getPosition(), 0.0f); // + relative cell translation
-	instance.translation += glm::vec3(cell_size_ / 2.0f, -cell_size_ / 2.0f, 0.0f); // with origin in middle of cell
+    instance.translation += glm::vec3(0.0f,0.0f, cell_size_);
+	//instance.translation += glm::vec3(cell_size_ / 2.0f, -cell_size_ / 2.0f, 0.0f); // with origin in middle of cell
 	instance.buildState = st;
 	instance.health = c->getHealthPoints();
 	c->setMeshInstance(mesh->addInstanceUnordered(instance));

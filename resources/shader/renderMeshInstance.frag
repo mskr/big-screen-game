@@ -27,6 +27,16 @@ uniform sampler2D gridTex;
 uniform sampler2D gridTex_PrevState;
 uniform float automatonTimeDelta;
 
+struct Material {
+    float alpha;
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+//    float shininess;
+};
+
+uniform Material material;
+
 uniform int isDepthPass;
 uniform int isDebugMode;
 
@@ -52,6 +62,9 @@ void main() {
 		color = vec4(1,0,0,.5);
 	}
 	else { // else visualize normals
-		color = vec4(vNormal, 1) * healthNormalized;
+//		color = vec4(vNormal, 1) * healthNormalized;
+        vec3 col = material.ambient+material.diffuse+material.specular;
+        color = vec4(col,1) * healthNormalized;
+
 	}
 }
