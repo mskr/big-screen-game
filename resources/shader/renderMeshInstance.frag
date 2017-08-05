@@ -94,8 +94,8 @@ void main() {
         color = vec4(1,0,0, 0.2+infectedness);
     }
     else {
-        color = vec4(vNormal, 1) * healthNormalized;
-
+        //color = vec4(vNormal, material.alpha) * healthNormalized;
+        color = vec4(material.diffuse,material.alpha);
         //TODO do phong lighting correctly
         //vec3 col = material.ambient + material.diffuse * NdotL + material.specular * R;
         //color = vec4(col,1) * healthNormalized;

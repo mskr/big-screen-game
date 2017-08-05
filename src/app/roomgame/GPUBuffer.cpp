@@ -1,4 +1,5 @@
 #include "GPUBuffer.h"
+#include <iostream>
 
 GPUBuffer::GPUBuffer() {
 	glGenBuffers(1, &opengl_id_);
@@ -22,8 +23,11 @@ GPUBuffer::GPUBuffer(GLsizei w, GLsizei h, std::initializer_list<Tex*> tex_attac
 		GLuint tex_ptr = tex->id;
 		tex->id = new_texture2D(w, h, tex->sized_format, tex->format, tex->datatype);
 		GLenum attachment_type = tex->attachmentType;
+        std::cout << "after 2 " << glGetError() << std::endl;
+
 		glFramebufferTexture2D(GL_FRAMEBUFFER, attachment_type, GL_TEXTURE_2D, tex->id, 0);
-		// Count attachments
+        std::cout << "after 3 " << glGetError() << std::endl;
+        // Count attachments
 		GLint max_color_attachments = 8;
 		glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &max_color_attachments);
 		if ((int)attachment_type >= (int)GL_COLOR_ATTACHMENT0 && (int)attachment_type <= ((int)GL_COLOR_ATTACHMENT0 + max_color_attachments - 1))
@@ -101,6 +105,15 @@ GLuint GPUBuffer::new_texture2D(GLsizei w, GLsizei h, GLint sized_format, GLenum
 	GLuint tex;
 	glGenTextures(1, &tex);
 	glBindTexture(GL_TEXTURE_2D, tex);
-	glTexStorage2D(GL_TEXTURE_2D, 1, sized_format, w, h);
+    //glTexImage2D(GL_TEXTURE_2D, 0, sized_format, w, h, 0, format, type, NULL);
+
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+//    GLint lala;
+//    glGetIntegerv(GL_TEXTURE_BINDING_2D, &lala);
+//    std::cout << lala << std::endl;
+    std::cout << "before glTexStorage2D"<<glGetError() << std::endl;
+    glTexStorage2D(GL_TEXTURE_2D, 1, sized_format, w, h);
+    std::cout << "after  glTexStorage2D" << glGetError() << std::endl;
 	return tex;
 }
