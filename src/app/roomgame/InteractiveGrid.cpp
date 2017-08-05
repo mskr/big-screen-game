@@ -4,8 +4,9 @@
 InteractiveGrid::InteractiveGrid(size_t columns, size_t rows, float height) {
 	height_units_ = height;
 	cell_size_ = height_units_ / float(rows);
-	grid_center_ = glm::vec3(-1.0f + cell_size_ * columns / 2.0f, -1.0f + height_units_ / 2.0f, 0.0f);
-	for (int x = 0; x < columns; x++) {
+	//grid_center_ = glm::vec3(-1.0f + cell_size_ * columns / 2.0f, -1.0f + height_units_ / 2.0f, 0.0f);
+    grid_center_ = glm::vec3(0, 0, -4);
+    for (int x = 0; x < columns; x++) {
 		std::vector<GridCell> column;
 		for (int y = 0; y < rows; y++) {
 			GridCell current(-1.0f + x * cell_size_, -1.0f + y * cell_size_, x, y);
@@ -30,12 +31,6 @@ InteractiveGrid::InteractiveGrid(size_t columns, size_t rows, float height) {
 
 InteractiveGrid::~InteractiveGrid() {
 	for(GridInteraction* ia : interactions_) delete ia;
-}
-
-
-void InteractiveGrid::translate(float dx, float dy, float dz) {
-	translation_ += glm::vec3(dx, dy, dz);
-	grid_center_ += translation_;
 }
 
 
@@ -188,12 +183,15 @@ GridCell* InteractiveGrid::pickCell(glm::vec3 rayStartPoint, glm::vec3 rayInterm
 	glm::mat3 m{ 0.0f };
 	m[0] = rayStartPoint - rayIntermediatePoint;
 	glm::vec3 center = grid_center_;
-	glm::vec3 gridRight = glm::vec3(translation_.x + cell_size_ * getNumColumns() / 2.0f, 0, center.z);
-	glm::vec3 gridTop = glm::vec3(0.0f, translation_.y + height_units_ / 2.0f, center.z);
+    glm::vec3 gridRight = getWorldCoordinates(cells_[getNumColumns()-1][0].getPosition())- getWorldCoordinates(cells_[0][0].getPosition());
+    glm::vec3 gridTop = getWorldCoordinates(cells_[0][getNumRows() - 1].getPosition())-getWorldCoordinates(cells_[0][0].getPosition());
+//    glm::vec3 gridRight = glm::vec3(translation_.x + cell_size_ * getNumColumns() / 2.0f, 0, center.z);
+//	glm::vec3 gridTop = glm::vec3(0.0f, translation_.y + height_units_ / 2.0f, center.z);
 	m[1] = gridRight - center;
 	m[2] = gridTop - center;
 
 	glm::vec3 intersection = glm::inverse(m) * (rayStartPoint - center);
+    std::cout << intersection.x << "/" << intersection.y << "/" << intersection.z << std::endl;
 	size_t row = (size_t) glm::round((intersection.z / 2.0f + 0.5f) * getNumRows());
 	size_t col = (size_t) glm::round((intersection.y / 2.0f + 0.5f) * getNumColumns());
 
@@ -258,11 +256,6 @@ void InteractiveGrid::cleanup() {
 
 
 void InteractiveGrid::onTouch(int touchID) {
-	/* this only worked in single window mode
-	glm::vec2 touchPositionNDC =
-		glm::vec2(last_mouse_position_.x, 1.0 - last_mouse_position_.y)
-		* glm::vec2(2.0, 2.0) - glm::vec2(1.0, 1.0);
-	GridCell* maybeCell = getCellAt(touchPositionNDC);*/
 	// now use picking
 	GridCell* maybeCell = pickCell(last_ray_start_point_, last_ray_intermediate_point_);
 	if (!maybeCell) return;
@@ -279,39 +272,11 @@ void InteractiveGrid::onRelease(int touchID) {
 	}
 }
 
-
-void InteractiveGrid::onMouseMove(int touchID, double newx, double newy) {
-	last_mouse_position_ = glm::dvec2(newx, newy);
-	for (GridInteraction* interac : interactions_) {
-		if (interac->getTouchID() == touchID) {
-			interac->update(last_mouse_position_);
-			/* this only worked in single window mode
-			glm::vec2 touchPositionNDC =
-				glm::vec2(last_mouse_position_.x, 1.0 - last_mouse_position_.y)
-				* glm::vec2(2.0, 2.0) - glm::vec2(1.0, 1.0); // transform window system coords
-			GridCell* maybeCell = getCellAt(touchPositionNDC);*/
-			GridCell* maybeCell = pickCell(last_ray_start_point_, last_ray_intermediate_point_);
-			if (!maybeCell)	return; // cursor was outside grid
-			handleHoveredCell(maybeCell, interac);
-			break;
-		}
-	}
-}
-
-
 void InteractiveGrid::onMouseMove(int touchID, glm::vec3 rayStartPoint, glm::vec3 rayIntermediatePoint) {
 	last_ray_start_point_ = rayStartPoint;
 	last_ray_intermediate_point_ = rayIntermediatePoint;
-	/*printf("Ray start: %f %f %f, Ray intermediate: %f %f %f\n", rayStartPoint.x, rayStartPoint.y, rayStartPoint.z,
-		rayIntermediatePoint.x, rayIntermediatePoint.y, rayIntermediatePoint.z);*/
 	for (GridInteraction* interac : interactions_) {
 		if (interac->getTouchID() == touchID) {
-			interac->update(last_mouse_position_);
-			/* this only worked in single window mode
-			glm::vec2 touchPositionNDC =
-			glm::vec2(last_mouse_position_.x, 1.0 - last_mouse_position_.y)
-			* glm::vec2(2.0, 2.0) - glm::vec2(1.0, 1.0); // transform window system coords
-			GridCell* maybeCell = getCellAt(touchPositionNDC);*/
 			GridCell* maybeCell = pickCell(last_ray_start_point_, last_ray_intermediate_point_);
 			if (!maybeCell)	return; // cursor was outside grid
 			handleHoveredCell(maybeCell, interac);
@@ -330,18 +295,6 @@ void InteractiveGrid::buildAt(size_t col, size_t row, GLuint buildState) {
 
 void InteractiveGrid::replaceRoompieceWith(size_t col, size_t row, GLuint buildState) {
     std::cout << "Called the wrong replaceRoompieceWith" << std::endl;
-}
-
-
-void InteractiveGrid::buildAtLastMousePosition(GLuint buildState) {
-	glm::vec2 touchPositionNDC =
-		glm::vec2(last_mouse_position_.x, 1.0 - last_mouse_position_.y)
-		* glm::vec2(2.0, 2.0) - glm::vec2(1.0, 1.0);
-	GridCell* maybeCell = getCellAt(touchPositionNDC);
-	if (!maybeCell) return;
-	if (maybeCell->getBuildState() != GridCell::EMPTY) return;
-	if (maybeCell->getBuildState() == buildState) return;
-	buildAt(maybeCell->getCol(), maybeCell->getRow(), buildState);
 }
 
 void InteractiveGrid::deleteNeighbouringWalls(GridCell* cell) {
@@ -457,7 +410,7 @@ void InteractiveGrid::handleTouchedCell(int touchID, GridCell* c) {
 	// Debug stuff here, extending classes should add logic
 	std::cout << "INTERACTION START " << "id=" << touchID << " "
 		<< "cell=(" << c->getCol() << ", " << c->getRow() << ")" << std::endl;
-	interactions_.push_back(new GridInteraction(-42, last_mouse_position_, c, 0));
+	interactions_.push_back(new GridInteraction(-42, c, 0));
 }
 
 void InteractiveGrid::handleRelease(GridInteraction* in) {

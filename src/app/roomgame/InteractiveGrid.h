@@ -14,12 +14,13 @@
  * Provides a number of helper functions.
 */
 class InteractiveGrid {
+public:
+    glm::vec3 grid_center_;
 protected:
 	// Data members
 	float height_units_;
 	float cell_size_;
 	std::vector<std::vector<GridCell>> cells_;
-	glm::vec3 grid_center_;
 	// Render-related members
 	GLuint vao_, vbo_;
 	std::shared_ptr<viscom::GPUProgram> shader_;
@@ -28,7 +29,6 @@ protected:
 	GLsizei num_vertices_;
 	glm::mat4 last_view_projection_;
 	// Input-related members
-	glm::dvec2 last_mouse_position_;
 	std::list<GridInteraction*> interactions_;
 	glm::vec3 last_ray_start_point_;
 	glm::vec3 last_ray_intermediate_point_;
@@ -75,13 +75,11 @@ public:
 	virtual void loadShader(viscom::GPUProgramManager mgr);
 	void onFrame();
 	void cleanup();
-	void translate(float dx, float dy, float dz);
 
 
 	// Input and interaction functions
 	void onTouch(int touchID);
 	void onRelease(int touchID);
-	void onMouseMove(int touchID, double newx, double newy);
 	void onMouseMove(int touchID, glm::vec3 rayStartPoint, glm::vec3 rayIntermediatePoint);
 
     /* Transform original cell position into what the user sees */
@@ -98,8 +96,6 @@ public:
 	virtual void buildAt(size_t col, size_t row, GLuint buildState);
     virtual void replaceRoompieceWith(size_t col, size_t row, GLuint buildState);
     void deleteNeighbouringWalls(GridCell* cell);
-
-    void buildAtLastMousePosition(GLuint buildState);
 };
 
 #endif

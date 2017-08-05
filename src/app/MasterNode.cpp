@@ -141,9 +141,9 @@ namespace viscom {
         ApplicationNodeImplementation::CleanUp();
     }
 
-    glm::vec2 MasterNode::GetCirclePos(glm::vec2 center, float radius, float angle) {
-        float x = center.x + radius*cos(glm::radians<float>(angle));
-        float y = center.y + radius*sin(glm::radians<float>(angle));
+    glm::vec2 MasterNode::GetCirclePos(glm::vec2 center, float radius, int angle) {
+        float x = center.x + radius*cos(glm::radians<float>(static_cast<float>(angle)));
+        float y = center.y + radius*sin(glm::radians<float>(static_cast<float>(angle)));
 
         return glm::vec2(x, y);
     }
@@ -209,23 +209,14 @@ namespace viscom {
         return ApplicationNodeImplementation::KeyboardCallback(key, scancode, action, mods);
     }
 
-    /* Mouse/touch controls camera and room-/outer influence placement
-     * When in "place outer influence"-mode, click to place outer influence
-     * When in camera mode, click and drag to move camera
-     * When in grid mode, click and drag to build room
+    /* Mouse/touch control room placement
+    * click to place rooms
     */
     bool MasterNode::MouseButtonCallback(int button, int action) {
         if (button == GLFW_MOUSE_BUTTON_LEFT) {
             if (interaction_mode_ == InteractionMode::GRID) {
                 if (action == GLFW_PRESS) grid_.onTouch(-1);
                 else if (action == GLFW_RELEASE) grid_.onRelease(-1);
-            }
-            else if (interaction_mode_ == InteractionMode::GRID_PLACE_OUTER_INFLUENCE) {
-                if (action == GLFW_PRESS) grid_.populateCircleAtLastMousePosition(1);
-            }
-            else if (interaction_mode_ == InteractionMode::CAMERA) {
-            // if (action == GLFW_PRESS) camera_.onTouch();
-            // else if (action == GLFW_RELEASE) camera_.onRelease();
             }
         }
         #ifndef VISCOM_CLIENTGUI
@@ -241,8 +232,6 @@ namespace viscom {
     bool MasterNode::MousePosCallback(double x, double y) {
         viscom::math::Line3<float> ray = GetCamera()->GetPickRay({ x,y });
         grid_.onMouseMove(-1, ray[0], ray[1]);
-        grid_.onMouseMove(-1, x, y);
-        //camera_.onMouseMove((float)x, (float)y);
         #ifndef VISCOM_CLIENTGUI
             ImGui_ImplGlfwGL3_MousePositionCallback(x, y);
         #endif
@@ -252,8 +241,6 @@ namespace viscom {
     /* Mouse scroll events are used to zoom, when in camera mode */
     bool MasterNode::MouseScrollCallback(double xoffset, double yoffset) {
         if (interaction_mode_ == InteractionMode::CAMERA) {
-            // camera_.onScroll((float)yoffset);
-            // camera_->HandleMouse(0,0,)
             GetCamera()->SetPosition(GetCamera()->GetPosition() + glm::vec3(0, 0, (float)yoffset*0.1f));
         }
         #ifndef VISCOM_CLIENTGUI
@@ -283,7 +270,6 @@ namespace viscom {
             float y = tcur->getY();
             viscom::math::Line3<float> ray = GetCamera()->GetPickRay({ x,y });
             grid_.onMouseMove(-1, ray[0], ray[1]);
-            grid_.onMouseMove(-1, x, y);
             std::cout << "set    cur  " << tcur->getCursorID() << " (" << tcur->getSessionID() << "/" << tcur->getTuioSourceID() << ") " << tcur->getX() << " " << tcur->getY()
                 << " " << tcur->getMotionSpeed() << " " << tcur->getMotionAccel() << " " << std::endl;
             return false;

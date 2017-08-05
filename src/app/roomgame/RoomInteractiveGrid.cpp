@@ -15,7 +15,7 @@ void RoomInteractiveGrid::handleTouchedCell(int touchID, GridCell* touchedCell) 
     if (touchedCell->getBuildState() != GridCell::EMPTY) return;
     // ...then start room creation
     Room* room = new Room(touchedCell, touchedCell, this);
-    interactions_.push_back(new GridInteraction(touchID, last_mouse_position_, touchedCell, room));
+    interactions_.push_back(new GridInteraction(touchID, touchedCell, room));
     buildAt(touchedCell->getCol(), touchedCell->getRow(), GridCell::INVALID);
 }
 

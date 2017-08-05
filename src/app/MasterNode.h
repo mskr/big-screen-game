@@ -102,7 +102,7 @@ namespace viscom {
         bool UpdateTuioCursor(TUIO::TuioCursor *tcur) override;
         bool RemoveTuioCursor(TUIO::TuioCursor *tcur) override;
 
-        glm::vec2 GetCirclePos(glm::vec2 center, float radius, float angle);
+        glm::vec2 GetCirclePos(glm::vec2 center, float radius, int angle);
         int viewAngle = 90;
     };
 }
