@@ -42,9 +42,13 @@ uniform float automatonTimeDelta;
 struct Material {
     float alpha;
     vec3 ambient;
+    float bumpMultiplier;
+    sampler2D bumpTex;
     vec3 diffuse;
+    sampler2D diffuseTex;
+    float refraction;
     vec3 specular;
-//    float shininess;
+    float specularExponent;
 };
 
 uniform Material material;

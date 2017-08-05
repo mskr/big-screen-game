@@ -1,8 +1,19 @@
 #version 330 core
 
+struct Material {
+//    float alpha;
+//    vec3 ambient;
+//    float bumpMultiplier;
+//    sampler2D bumpTex;
+//    vec3 diffuse;
+    sampler2D diffuseTex;
+//    float refraction;
+//    vec3 specular;
+//    float specularExponent;
+};
 
+uniform Material material;
 
-uniform sampler2D diffuseTexture;
 uniform sampler2D shadowMap;
 uniform float time;
 
@@ -33,7 +44,7 @@ void main() {
 	}
 	vec3 thisFragment = vPosLightSpace.xyz / vPosLightSpace.w * 0.5 + 0.5;
 
-	color = texture(diffuseTexture, vTexCoords);
+	color = texture(material.diffuseTex, vTexCoords);
 
 	// color *= visibility(thisFragment);
 	if(texture(shadowMap, thisFragment.xy).r < (thisFragment.z - DEPTH_BIAS))

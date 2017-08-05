@@ -41,7 +41,6 @@ vec4 drawSlice( vec2 uv )
 }
 
 void main() {
-	//color = texture(diffuseTexture, vTexCoords);
 	// draw spots
 	vec2 uv = vTexCoords;
 	//uv = vec2(.01,0.);
