@@ -9,6 +9,7 @@
 #pragma once
 
 #include "roomgame\InnerInfluence.h"
+#include "glm\gtx\quaternion.hpp"
 
 #include "../app/ApplicationNodeImplementation.h"
 #include "core\camera\ArcballCamera.h"
@@ -100,5 +101,8 @@ namespace viscom {
         bool AddTuioCursor(TUIO::TuioCursor *tcur) override;
         bool UpdateTuioCursor(TUIO::TuioCursor *tcur) override;
         bool RemoveTuioCursor(TUIO::TuioCursor *tcur) override;
+
+        glm::vec2 GetCirclePos(glm::vec2 center, float radius, float angle);
+        int viewAngle = 90;
     };
 }

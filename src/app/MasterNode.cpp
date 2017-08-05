@@ -141,6 +141,13 @@ namespace viscom {
         ApplicationNodeImplementation::CleanUp();
     }
 
+    glm::vec2 MasterNode::GetCirclePos(glm::vec2 center, float radius, float angle) {
+        float x = center.x + radius*cos(glm::radians<float>(angle));
+        float y = center.y + radius*sin(glm::radians<float>(angle));
+
+        return glm::vec2(x, y);
+    }
+
     /* Switch input modes by keyboard on master
      * [C] key down: camera control mode
      * [V] key hit: tilt camera 45 degrees
@@ -159,17 +166,34 @@ namespace viscom {
                 interaction_mode_ = (InteractionMode)mode_before_switch_to_camera;
             }
         }
-        else if (key == GLFW_KEY_V && action == GLFW_PRESS) {
-            GetCamera()->SetOrientation(GetCamera()->GetOrientation()*glm::quat(glm::vec3(glm::radians<float>(-5),0,0)));
-        }
-        else if (key == GLFW_KEY_S && action == GLFW_PRESS) {
-            if (interaction_mode_ == GRID_PLACE_OUTER_INFLUENCE) {
-                interaction_mode_ = InteractionMode::GRID;
-                cellular_automaton_.init(GetApplication()->GetGPUProgramManager());
+        else if (interaction_mode_ == InteractionMode::CAMERA) {
+            /* I thought this was the position of the gridmesh...
+            glm::vec3 gridPos = glm::vec3(
+                0,
+                -(GRID_HEIGHT_ / GRID_ROWS_), // position background mesh exactly under grid 
+                -0.001f); //TODO better remove the z bias and use thicker meshes 
+                */
+            //but this seems to be the real one
+            glm::vec3 gridPos = glm::vec3(0, 0, -4);
+
+            int right = key == GLFW_KEY_D ? 1 : 0;
+            int left = key == GLFW_KEY_A ? 1 : 0;
+            int up = key == GLFW_KEY_W ? 1 : 0;
+            int down = key == GLFW_KEY_S ? 1 : 0;
+            int xAxis = right - left;
+            int yAxis = up - down;
+            GetCamera()->SetPosition(GetCamera()->GetPosition()+glm::vec3(xAxis,yAxis,0)*0.1f);
+            int upWards = key == GLFW_KEY_UP ? 1 : 0;
+            int downWards = key == GLFW_KEY_DOWN ? 1 : 0;
+            int rotate = upWards - downWards;
+            if (rotate!=0) {
+                viewAngle += 5*rotate;
+                viewAngle = glm::clamp(viewAngle, 5, 175);
+                glm::vec2 pos = GetCirclePos(glm::vec2(gridPos.y, gridPos.z), 4, viewAngle);
+                GetCamera()->SetPosition(glm::vec3(0, pos.x, pos.y));
             }
-            else {
-                interaction_mode_ = GRID_PLACE_OUTER_INFLUENCE;
-            }
+            glm::quat lookDir = glm::toQuat(glm::lookAt(GetCamera()->GetPosition(), gridPos, glm::vec3(0, 1, 0)));
+            GetCamera()->SetOrientation(lookDir);
         }
         else if (key == GLFW_KEY_D) {
             if (action == GLFW_PRESS) {

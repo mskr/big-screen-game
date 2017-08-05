@@ -32,9 +32,12 @@ namespace roomgame {
 	void OuterInfluence::calcPositions(bool init = false) {
 		for (int i = 0; i < 5; i++) {
 			glm::mat4 translation = glm::translate(glm::vec3(sinf(i*(float)glfwGetTime()), 0, 0));
-			if (mode == ATTACK) {
-				translation *= 0.1f;
-			}
+            if (mode != PATROL) {
+                translation = glm::translate(glm::vec3(0,sinf(i*(float)glfwGetTime()), 0));
+                if (mode == ATTACK) {
+                    translation *= 0.001f;
+                }
+            }
             if (i<meshComponent->influencePositions_.size()) {
                 meshComponent->influencePositions_[i] = meshComponent->model_matrix_*translation;
             }
