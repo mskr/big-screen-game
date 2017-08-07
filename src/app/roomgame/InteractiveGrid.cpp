@@ -183,17 +183,31 @@ GridCell* InteractiveGrid::pickCell(glm::vec3 rayStartPoint, glm::vec3 rayInterm
 	glm::mat3 m{ 0.0f };
 	m[0] = rayStartPoint - rayIntermediatePoint;
 	glm::vec3 center = grid_center_;
-    glm::vec3 gridRight = getWorldCoordinates(cells_[getNumColumns()-1][0].getPosition())- getWorldCoordinates(cells_[0][0].getPosition());
-    glm::vec3 gridTop = getWorldCoordinates(cells_[0][getNumRows() - 1].getPosition())-getWorldCoordinates(cells_[0][0].getPosition());
-//    glm::vec3 gridRight = glm::vec3(translation_.x + cell_size_ * getNumColumns() / 2.0f, 0, center.z);
-//	glm::vec3 gridTop = glm::vec3(0.0f, translation_.y + height_units_ / 2.0f, center.z);
-	m[1] = gridRight - center;
-	m[2] = gridTop - center;
+    glm::vec3 gridLeftLowerCorner = getWorldCoordinates(cells_[0][0].getPosition());
+    glm::vec3 gridRight = getWorldCoordinates(cells_[getNumColumns()-1][0].getPosition())- gridLeftLowerCorner;
+    glm::vec3 gridTop = getWorldCoordinates(cells_[0][getNumRows() - 1].getPosition())- gridLeftLowerCorner;
 
-	glm::vec3 intersection = glm::inverse(m) * (rayStartPoint - center);
-    std::cout << intersection.x << "/" << intersection.y << "/" << intersection.z << std::endl;
-	size_t row = (size_t) glm::round((intersection.z / 2.0f + 0.5f) * getNumRows());
-	size_t col = (size_t) glm::round((intersection.y / 2.0f + 0.5f) * getNumColumns());
+    gridLeftLowerCorner = glm::vec3(-2, -2, -4);
+    gridRight = glm::vec3(4, 0, 0);
+    gridTop = glm::vec3(0, 4, 0);
+    //    glm::vec3 gridRight = glm::vec3(translation_.x + cell_size_ * getNumColumns() / 2.0f, 0, center.z);
+//	glm::vec3 gridTop = glm::vec3(0.0f, translation_.y + height_units_ / 2.0f, center.z);
+	m[1] = gridRight;
+	m[2] = gridTop;
+
+	glm::vec3 intersection = glm::inverse(m) * (rayStartPoint - gridLeftLowerCorner);
+    //std::cout << "rayStartPoint: " << rayStartPoint.x << "/" << rayStartPoint.y << "/" << rayStartPoint.z << std::endl;
+    //std::cout << "rayIntermediatePoint: " << rayIntermediatePoint.x << "/" << rayIntermediatePoint.y << "/" << rayIntermediatePoint.z << std::endl;
+    //std::cout << "gridTop: " << gridTop.x << "/" << gridTop.y << "/" << gridTop.z << std::endl;
+    //std::cout << "gridRight: " << gridRight.x << "/" << gridRight.y << "/" << gridRight.z << std::endl;
+    std::cout << "Intersection: " << intersection.x << "/" << intersection.y << "/" << intersection.z << std::endl;
+    //std::cout << "Lower Left: " << gridLeftLowerCorner.x << "/" << gridLeftLowerCorner.y << "/" << gridLeftLowerCorner.z << std::endl;
+
+
+//    size_t row = (size_t)glm::round((intersection.z / 2.0f + 0.5f) * getNumRows());
+//    size_t col = (size_t)glm::round((intersection.y / 2.0f + 0.5f) * getNumColumns());
+    size_t row = (size_t)glm::round(intersection.z * getNumRows());
+    size_t col = (size_t)glm::round(intersection.y * getNumColumns());
 
 	if (row >= getNumRows() || col >= getNumColumns()) return 0;
 	return &cells_[col][row];
