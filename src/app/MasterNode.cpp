@@ -39,12 +39,12 @@ namespace viscom {
         outerInfluence_->meshComponent->preSync();
         meshpool_.preSync();
         synchronized_grid_translation_.setVal(grid_.getTranslation());
-        if (cellular_automaton_.isInitialized()) {
+        //if (cellular_automaton_.isInitialized()) {
             synchronized_automaton_transition_time_delta_.setVal(cellular_automaton_.getTimeDeltaNormalized());
             //TODO grid state sync only when automaton changed it
             synchronized_grid_state_.setVal(std::vector<roomgame::GRID_STATE_ELEMENT>(cellular_automaton_.getGridBuffer(),
                 cellular_automaton_.getGridBuffer() + cellular_automaton_.getGridBufferSize()));
-        }
+        //}
     }
 
     /* Sync step 2: Master sends shared objects to the central SharedData singleton
@@ -55,10 +55,10 @@ namespace viscom {
         outerInfluence_->meshComponent->encode();
         meshpool_.encode();
         sgct::SharedData::instance()->writeObj<glm::vec3>(&synchronized_grid_translation_);
-        if (cellular_automaton_.isInitialized()) {
+        //if (cellular_automaton_.isInitialized()) {
             sgct::SharedData::instance()->writeFloat(&synchronized_automaton_transition_time_delta_);
             sgct::SharedData::instance()->writeVector(&synchronized_grid_state_);
-        }
+        //}
     }
 
     /* Sync step 3: Master updates its copies of cluster-wide variables with data it just synced
