@@ -76,13 +76,8 @@ namespace viscom {
             glUniform1f(uloc, GRID_CELL_SIZE_);
         });
 
-        glGenTextures(1, &current_grid_state_texture_.id);
-        glBindTexture(GL_TEXTURE_2D, current_grid_state_texture_.id);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RG32F, GRID_COLS_, GRID_ROWS_, 0, GL_RG, GL_UNSIGNED_INT, 0);
-
-        glGenTextures(1, &last_grid_state_texture_.id);
-        glBindTexture(GL_TEXTURE_2D, last_grid_state_texture_.id);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RG32F, GRID_COLS_, GRID_ROWS_, 0, GL_RG, GL_UNSIGNED_INT, 0);
+        current_grid_state_texture_.id = GPUBuffer::alloc_texture2D(GRID_COLS_, GRID_ROWS_, GL_RG32F, GL_RG, GL_UNSIGNED_INT);
+        last_grid_state_texture_.id = GPUBuffer::alloc_texture2D(GRID_COLS_, GRID_ROWS_, GL_RG32F, GL_RG, GL_UNSIGNED_INT);
 
         meshpool_.updateUniformEveryFrame("curr_grid_state", [&](GLint uloc) {
             GLuint texture_unit = GL_TEXTURE0 + 0;
@@ -111,11 +106,12 @@ namespace viscom {
         });
 
         /* Init outer influence */
+        std::shared_ptr<viscom::GPUProgram> outerInfShader = GetApplication()->GetGPUProgramManager().GetResource("stuff",
+            std::initializer_list<std::string>{ "applyTextureAndShadow.vert", "OuterInfl.frag" });
 
         SynchronizedGameMesh* outerInfluenceMeshComp = new SynchronizedGameMesh(
             GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/latticeplane.obj"),
-            GetApplication()->GetGPUProgramManager().GetResource("stuff",
-                std::initializer_list<std::string>{ "applyTextureAndShadow.vert", "OuterInfl.frag" }));
+            outerInfShader);
         outerInfluence_->meshComponent = outerInfluenceMeshComp;
         glm::mat4 movMat = glm::mat4(1);
         movMat = glm::scale(movMat, glm::vec3(0.1, 0.1, 0.1));

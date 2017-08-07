@@ -14,7 +14,20 @@
 #define xSineCycles 6.28 /10
 #define ySineCycles 6.28 /10
 
-uniform sampler2D diffuseTexture;
+struct Material {
+//    float alpha;
+//    vec3 ambient;
+//    float bumpMultiplier;
+//    sampler2D bumpTex;
+//    vec3 diffuse;
+    sampler2D diffuseTex;
+//    float refraction;
+//    vec3 specular;
+//    float specularExponent;
+};
+
+uniform Material material;
+
 uniform sampler2D shadowMap;
 uniform float time;
 
@@ -66,8 +79,8 @@ void main() {
 	waterTexCoords += distortOffset; 	
 
 
-	//color = texture(diffuseTexture, waterTexCoords);
-	color = texture(diffuseTexture, vTexCoords);
+	//color = texture(materal.diffuseTex, waterTexCoords);
+	color = texture(material.diffuseTex, vTexCoords);
 	
 	// color.rgb = vec3(0.0,0.1,0.3) + color.rgb * vec3(0.5,0.6,0.1);
 	// color *= visibility(thisFragment);

@@ -21,13 +21,20 @@
  * Uses naked pointers to mesh and shader (according resources should be owned by extending classes).
  * Holds VAO, VBO and the shader locations of common uniform variables.
  * Common uniforms that are provided:
-	"subMeshLocalMatrix",
-	"normalMatrix",
-	"diffuseTexture",
-	"bumpTexture",
-	"bumpMultiplier",
-	"viewProjectionMatrix",
-	"isDebugMode"
+     "subMeshLocalMatrix",
+     "normalMatrix",
+     "viewProjectionMatrix",
+     "isDebugMode",
+     "time",
+     "material.alpha",
+     "material.ambient",
+     "material.bumpMultiplier",
+     "material.bumpTex",
+     "material.diffuse",
+     "material.diffuseTex",
+     "material.refraction",
+     "material.specular",
+     "material.specularExponent"
  * Provides instanced and non-instanced render functions.
  * Both functions have one overload which takes a callback where custom uniform variables can be set.
  * Custom uniform locations and updates are managed by extending classes.
@@ -46,6 +53,23 @@ protected:
 
 
 public:
+    //Uniform Location names
+    const int UL_SUB_MESH_LOCAL_MATRIX = 0;
+    const int UL_NORMAL_MATRIX = 1;
+    const int UL_VIEW_PROJECTION_MATRIX = 2;
+    const int UL_IS_DEBUG_MODE = 3;
+    const int UL_TIME = 4;
+    const int UL_MATERIAL_ALPHA = 5;
+    const int UL_MATERIAL_AMBIENT = 6;
+    const int UL_MATERIAL_BUMP_MULTIPLIER = 7;
+    const int UL_MATERIAL_BUMP_TEX = 8;
+    const int UL_MATERIAL_DIFFUSE = 9;
+    const int UL_MATERIAL_DIFFUSE_TEX = 10;
+    const int UL_MATERIAL_REFRACTION = 11;
+    const int UL_MATERIAL_SPECULAR = 12;
+    const int UL_MATERIAL_SPECULAR_EXPONENT = 13;
+
+
 
 	MeshBase(viscom::Mesh* mesh, viscom::GPUProgram* program) :
 		mesh_(mesh), program_(program), vbo_(VERTEX_LAYOUT::CreateVertexBuffer(mesh)), vao_(0)
@@ -75,24 +99,29 @@ protected:
 		uniformLocations_ = program_->getUniformLocations({
 			"subMeshLocalMatrix",
 			"normalMatrix",
-			"diffuseTexture",
-			"bumpTexture",
-			"bumpMultiplier",
+			//"diffuseTexture",
+			//"bumpTexture",
+			//"bumpMultiplier",
 			"viewProjectionMatrix",
 			"isDebugMode",
             "time",
             "material.alpha",
             "material.ambient",
+            "material.bumpMultiplier",
+            "material.bumpTex",
             "material.diffuse",
-            "material.specular"
+            "material.diffuseTex",
+            "material.refraction",
+            "material.specular",
+            "material.specularExponent"
         });
-	}
+    }
 
 	void render(const glm::mat4& vpMatrix, GLint isDebugMode = 0, const glm::mat4& modelMatrix = glm::mat4(1), bool overrideBump = false) const {
 		glUseProgram(program_->getProgramId());
 		glBindVertexArray(vao_);
 		forEachSubmeshOf(mesh_->GetRootNode(), modelMatrix, [&](const viscom::SubMesh* submesh, const glm::mat4& localTransform) {
-			bindUniformsAndTextures(vpMatrix, localTransform, submesh->GetMaterial()->diffuseTex, submesh->GetMaterial()->bumpTex, submesh->GetMaterial()->bumpMultiplier, overrideBump, isDebugMode, submesh->GetMaterial());
+			bindUniformsAndTextures(vpMatrix, localTransform, submesh->GetMaterial(), overrideBump, isDebugMode);
 			if (isDebugMode == 1) glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 			else glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 			glDrawElements(GL_TRIANGLES, submesh->GetNumberOfIndices(), GL_UNSIGNED_INT,
@@ -104,8 +133,8 @@ protected:
 		glUseProgram(program_->getProgramId());
 		glBindVertexArray(vao_);
 		forEachSubmeshOf(mesh_->GetRootNode(), modelMatrix, [&](const viscom::SubMesh* submesh, const glm::mat4& localTransform) {
-			bindUniformsAndTextures(vpMatrix, localTransform, submesh->GetMaterial()->diffuseTex, submesh->GetMaterial()->bumpTex, submesh->GetMaterial()->bumpMultiplier, overrideBump, isDebugMode, submesh->GetMaterial());
-			outsideUniformSetter();
+            bindUniformsAndTextures(vpMatrix, localTransform, submesh->GetMaterial(), overrideBump, isDebugMode);
+            outsideUniformSetter();
 			if (isDebugMode == 1) glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 			else glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 			glDrawElements(GL_TRIANGLES, submesh->GetNumberOfIndices(), GL_UNSIGNED_INT,
@@ -117,8 +146,8 @@ protected:
 		glUseProgram(program_->getProgramId());
 		glBindVertexArray(vao_);
 		forEachSubmeshOf(mesh_->GetRootNode(), modelMatrix, [&](const viscom::SubMesh* submesh, const glm::mat4& localTransform) {
-			bindUniformsAndTextures(vpMatrix, localTransform, submesh->GetMaterial()->diffuseTex, submesh->GetMaterial()->bumpTex, submesh->GetMaterial()->bumpMultiplier, overrideBump, isDebugMode, submesh->GetMaterial());
-			if (isDebugMode == 1) glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            bindUniformsAndTextures(vpMatrix, localTransform, submesh->GetMaterial(), overrideBump, isDebugMode);
+            if (isDebugMode == 1) glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 			else glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 			glDrawElementsInstanced(GL_TRIANGLES, submesh->GetNumberOfIndices(), GL_UNSIGNED_INT,
 				(static_cast<char*> (nullptr)) + (submesh->GetIndexOffset() * sizeof(unsigned int)), num_instances);
@@ -130,8 +159,8 @@ protected:
 		glBindVertexArray(vao_);
 		forEachSubmeshOf(mesh_->GetRootNode(), modelMatrix, [&](const viscom::SubMesh* submesh, const glm::mat4& localTransform) {
             //std::cout << submesh->GetMaterial()->diffuse[0] << submesh->GetMaterial()->diffuse[1] << submesh->GetMaterial()->diffuse[2] << std::endl;
-            bindUniformsAndTextures(vpMatrix, localTransform, submesh->GetMaterial()->diffuseTex, submesh->GetMaterial()->bumpTex, submesh->GetMaterial()->bumpMultiplier, overrideBump, isDebugMode, submesh->GetMaterial());
-			outsideUniformSetter();
+            bindUniformsAndTextures(vpMatrix, localTransform, submesh->GetMaterial(), overrideBump, isDebugMode);
+            outsideUniformSetter();
 			if (isDebugMode == 1) glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 			else glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 			glDrawElementsInstanced(GL_TRIANGLES, submesh->GetNumberOfIndices(), GL_UNSIGNED_INT,
@@ -150,39 +179,49 @@ private:
 			forEachSubmeshOf(subtree->GetChild(i), localTransform, callback);
 	}
 
-	void bindUniformsAndTextures(const glm::mat4& vpMatrix, const glm::mat4& localMatrix,
-			std::shared_ptr<const viscom::Texture> diffuseTex, std::shared_ptr<const viscom::Texture> bumpTex, GLfloat bumpMultiplier,
-			bool overrideBump = false, GLint isDebugMode = 0, const viscom::Material* mat = nullptr) const {
-		glUniformMatrix4fv(uniformLocations_[0], 1, GL_FALSE, glm::value_ptr(localMatrix));
-		glUniformMatrix3fv(uniformLocations_[1], 1, GL_FALSE, glm::value_ptr(glm::inverseTranspose(glm::mat3(localMatrix))));
-		if (diffuseTex && uniformLocations_.size() > 2) {
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, diffuseTex->getTextureId());
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-			glUniform1i(uniformLocations_[2], 0);
-		}
-		if (bumpTex && uniformLocations_.size() > 3) {
-			glActiveTexture(GL_TEXTURE1);
-			glBindTexture(GL_TEXTURE_2D, bumpTex->getTextureId());
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-			glUniform1i(uniformLocations_[3], 1);
-			if (!overrideBump) glUniform1f(uniformLocations_[4], bumpMultiplier);
-		}
-		glUniformMatrix4fv(uniformLocations_[5], 1, GL_FALSE, glm::value_ptr(vpMatrix));
-		glUniform1i(uniformLocations_[6], isDebugMode);
-        glUniform1f(uniformLocations_[7], (float)glfwGetTime());
-        //std::cout << mat->diffuse[0] << mat->diffuse[1] << mat->diffuse[2] << std::endl;
-        if (mat != nullptr && mat->diffuse[0]!=0) {
-            glUniform1f(uniformLocations_[8], mat->alpha);
-            glUniform3fv(uniformLocations_[9],1,glm::value_ptr(mat->ambient));
-            glUniform3fv(uniformLocations_[10],1, glm::value_ptr(mat->diffuse));
-            glUniform3fv(uniformLocations_[11],1, glm::value_ptr(mat->specular));
+	void bindUniformsAndTextures(const glm::mat4& vpMatrix, const glm::mat4& localMatrix, const viscom::Material* mat = nullptr ,bool overrideBump = false, GLint isDebugMode = 0) const {
+		
+        glUniformMatrix4fv(uniformLocations_[UL_SUB_MESH_LOCAL_MATRIX], 1, GL_FALSE, glm::value_ptr(localMatrix));
+		glUniformMatrix3fv(uniformLocations_[UL_NORMAL_MATRIX], 1, GL_FALSE, glm::value_ptr(glm::inverseTranspose(glm::mat3(localMatrix))));
+		glUniformMatrix4fv(uniformLocations_[UL_VIEW_PROJECTION_MATRIX], 1, GL_FALSE, glm::value_ptr(vpMatrix));
+		glUniform1i(uniformLocations_[UL_IS_DEBUG_MODE], isDebugMode);
+        glUniform1f(uniformLocations_[UL_TIME], (float)glfwGetTime());
+
+        //Material Properties
+        if (mat != nullptr) {
+            glUniform1f(uniformLocations_[UL_MATERIAL_ALPHA], mat->alpha);
+            glUniform3fv(uniformLocations_[UL_MATERIAL_AMBIENT],1,glm::value_ptr(mat->ambient));
+
+            //Bumpmap and multiplier
+            if (!overrideBump) {
+                glUniform1f(uniformLocations_[UL_MATERIAL_BUMP_MULTIPLIER], mat->bumpMultiplier);
+            }
+            if (mat->bumpTex && uniformLocations_[UL_MATERIAL_BUMP_TEX]!=-1) {
+                glActiveTexture(GL_TEXTURE1);
+                glBindTexture(GL_TEXTURE_2D, mat->bumpTex->getTextureId());
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+                glUniform1i(uniformLocations_[UL_MATERIAL_BUMP_TEX], 1);
+            }
+
+            //diffuse properties and diffuse texture
+            glUniform3fv(uniformLocations_[UL_MATERIAL_DIFFUSE],1, glm::value_ptr(mat->diffuse));
+            if (mat->diffuseTex && uniformLocations_[UL_MATERIAL_DIFFUSE_TEX] != -1) {
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, mat->diffuseTex->getTextureId());
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+                glUniform1i(uniformLocations_[UL_MATERIAL_DIFFUSE_TEX], 0);
+            }
+
+            //refraction and specular properties
+            glUniform1f(uniformLocations_[UL_MATERIAL_REFRACTION], mat->refraction);
+            glUniform3fv(uniformLocations_[UL_MATERIAL_SPECULAR], 1, glm::value_ptr(mat->specular));
+            glUniform1f(uniformLocations_[UL_MATERIAL_SPECULAR_EXPONENT], mat->specularExponent);
         }
 		
 	}

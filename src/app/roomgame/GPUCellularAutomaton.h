@@ -5,9 +5,9 @@
 #include "GPUBuffer.h"
 
 namespace roomgame {
-	/* Minimal version of grid state (build state and health as 32 bit unsigned integers) */
-	const GPUBuffer::Tex GRID_STATE_TEXTURE = { 0, 0, GL_RG32UI, GL_RG_INTEGER, GL_UNSIGNED_INT };
-	using GRID_STATE_ELEMENT = GLuint;
+    /* Minimal version of grid state (build state and health as 32 bit unsigned integers) */
+    const GPUBuffer::Tex GRID_STATE_TEXTURE = { 0, 0, GL_RG32UI, GL_RG_INTEGER, GL_UNSIGNED_INT };
+    using GRID_STATE_ELEMENT = GLuint;
 }
 
 /* Implementation of a parallelized cellular automaton with interactive grid.
@@ -31,7 +31,7 @@ private:
     GPUBuffer::Tex texture_pair_[2]; // ... reading from one while writing to other
     int current_read_index_;
     roomgame::GRID_STATE_ELEMENT* tmp_client_buffer_; // temporary grid state buffer for GPU-CPU transfer
-	size_t sizeof_tmp_client_buffer_;
+    size_t sizeof_tmp_client_buffer_;
     GLuint vao_; // holds screenfilling quad
     bool is_initialized_; // true if quad and framebuffers are ready
     GLint pixel_size_uniform_location_;
@@ -40,8 +40,8 @@ private:
     double transition_time_;
     double last_time_;
     double delta_time_;
-	void copyFromGridToTexture(int tex_index);
-	void copyFromTextureToGrid(int tex_index);
+    void copyFromGridToTexture(int tex_index);
+    void copyFromTextureToGrid(int tex_index);
 public:
     GPUCellularAutomaton(AutomatonGrid* grid, double transition_time);
     void updateCell(GridCell* c, GLuint state, GLint hp);
@@ -55,8 +55,8 @@ public:
     GLuint getLatestTexture();
     GLuint getPreviousTexture();
     bool isInitialized();
-	size_t getGridBufferSize(); // "grid buffer" refers to automaton state storage
-	roomgame::GRID_STATE_ELEMENT* getGridBuffer();
+    size_t getGridBufferSize(); // "grid buffer" refers to automaton state storage
+    roomgame::GRID_STATE_ELEMENT* getGridBuffer();
 };
 
 #endif

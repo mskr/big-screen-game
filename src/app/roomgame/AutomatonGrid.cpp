@@ -88,19 +88,19 @@ void AutomatonGrid::onTransition() {
 }
 
 void AutomatonGrid::populateCircleAtLastMousePosition(int radius) {
-	/*
-	glm::vec2 touchPositionNDC =
-		glm::vec2(last_mouse_position_.x, 1.0 - last_mouse_position_.y)
-		* glm::vec2(2.0, 2.0) - glm::vec2(1.0, 1.0);
-	GridCell* startCell = getCellAt(touchPositionNDC);*/
-	GridCell* startCell = pickCell(last_ray_start_point_, last_ray_intermediate_point_);
-	if (!startCell) return;
-	for (int x = -radius; x < radius; x++) {
-		for (int y = -radius; y < radius; y++) {
-			GridCell* c = getCellAt(startCell->getCol() + x, startCell->getRow() + y);
-			if (!c) continue;
-			if (c->getDistanceTo(startCell) > radius) continue;
-			buildAt(c->getCol(), c->getRow(), SIMULATED_STATE);
-		}
-	}
+    /*
+    glm::vec2 touchPositionNDC =
+    glm::vec2(last_mouse_position_.x, 1.0 - last_mouse_position_.y)
+    * glm::vec2(2.0, 2.0) - glm::vec2(1.0, 1.0);
+    GridCell* startCell = getCellAt(touchPositionNDC);*/
+    GridCell* startCell = pickCell(last_ray_start_point_, last_ray_intermediate_point_);
+    if (!startCell) return;
+    for (int x = -radius; x < radius; x++) {
+        for (int y = -radius; y < radius; y++) {
+            GridCell* c = getCellAt(startCell->getCol() + x, startCell->getRow() + y);
+            if (!c) continue;
+            if (c->getDistanceTo(startCell) > radius) continue;
+            buildAt(c->getCol(), c->getRow(), SIMULATED_STATE);
+        }
+    }
 }

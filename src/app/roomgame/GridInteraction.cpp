@@ -1,9 +1,8 @@
 #include "GridInteraction.h"
 
-GridInteraction::GridInteraction(int touchID, glm::dvec2 position, GridCell* start_cell, Room* room) {
+GridInteraction::GridInteraction(int touchID, GridCell* start_cell, Room* room) {
 	touchID_ = touchID;
 	is_touched_ = true;
-	last_position_ = position;
 	last_timestamp_ = glfwGetTime();
 	start_cell_ = start_cell;
 	last_cell_ = start_cell;

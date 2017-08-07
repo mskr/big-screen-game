@@ -44,9 +44,13 @@ uniform float automatonTimeDelta;
 struct Material {
     float alpha;
     vec3 ambient;
+    float bumpMultiplier;
+    sampler2D bumpTex;
     vec3 diffuse;
+    sampler2D diffuseTex;
+    float refraction;
     vec3 specular;
-//    float shininess;
+    float specularExponent;
 };
 
 uniform Material material;
@@ -96,8 +100,8 @@ void main() {
         color = vec4(1,1,1, infectedness);
     }
     else {
-        color = vec4(vNormal, 1) * healthNormalized;
-
+        //color = vec4(vNormal, material.alpha) * healthNormalized;
+        color = vec4(material.diffuse,material.alpha);
         //TODO do phong lighting correctly
         //vec3 col = material.ambient + material.diffuse * NdotL + material.specular * R;
         //color = vec4(col,1) * healthNormalized;

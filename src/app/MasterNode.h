@@ -9,6 +9,7 @@
 #pragma once
 
 #include "roomgame\InnerInfluence.h"
+#include "glm\gtx\quaternion.hpp"
 
 #include "../app/ApplicationNodeImplementation.h"
 #include "core\camera\ArcballCamera.h"
@@ -34,7 +35,9 @@ namespace viscom {
 
         //	DragAndZoomCamera camera_;
     
-        enum InteractionMode { GRID, CAMERA, GRID_PLACE_OUTER_INFLUENCE } interaction_mode_;
+        /* Interaction modes: GRID: build rooms, CAMERA: move camera,
+        AUTOMATON: define init state for testing automaton rules */
+        enum InteractionMode { GRID, CAMERA, AUTOMATON } interaction_mode_;
 
     public:
         explicit MasterNode(ApplicationNodeInternal* appNode);
@@ -100,5 +103,8 @@ namespace viscom {
         bool AddTuioCursor(TUIO::TuioCursor *tcur) override;
         bool UpdateTuioCursor(TUIO::TuioCursor *tcur) override;
         bool RemoveTuioCursor(TUIO::TuioCursor *tcur) override;
+
+        glm::vec2 GetCirclePos(glm::vec2 center, float radius, int angle);
+        int viewAngle = 90;
     };
 }
