@@ -19,6 +19,9 @@ namespace viscom {
         cellular_automaton_(&grid_, 0.5),
         interaction_mode_(InteractionMode::GRID)
     {
+        grid_state_ = {};
+        automaton_transition_time_delta_ = 0.0;
+        automaton_has_transitioned_ = false;
     }
 
     MasterNode::~MasterNode() = default;
@@ -30,6 +33,8 @@ namespace viscom {
         grid_.loadShader(GetApplication()->GetGPUProgramManager()); // for viewing build states...
         grid_.uploadVertexData(); // ...for debug purposes
 
+        cellular_automaton_.init(GetApplication()->GetGPUProgramManager());
+
         outerInfluence_->grid = &grid_;
     }
 
@@ -39,12 +44,11 @@ namespace viscom {
         outerInfluence_->meshComponent->preSync();
         meshpool_.preSync();
         synchronized_grid_translation_.setVal(grid_.getTranslation());
-        //if (cellular_automaton_.isInitialized()) {
-            synchronized_automaton_transition_time_delta_.setVal(cellular_automaton_.getTimeDeltaNormalized());
-            //TODO grid state sync only when automaton changed it
-            synchronized_grid_state_.setVal(std::vector<roomgame::GRID_STATE_ELEMENT>(cellular_automaton_.getGridBuffer(),
-                cellular_automaton_.getGridBuffer() + cellular_automaton_.getGridBufferSize()));
-        //}
+        synchronized_automaton_transition_time_delta_.setVal(cellular_automaton_.getTimeDeltaNormalized());
+        //TODO grid state sync only when automaton changed it
+        synchronized_grid_state_.setVal(std::vector<roomgame::GRID_STATE_ELEMENT>(cellular_automaton_.getGridBuffer(),
+            cellular_automaton_.getGridBuffer() + cellular_automaton_.getGridBufferSize()));
+        synchronized_automaton_has_transitioned_.setVal(automaton_has_transitioned_);
     }
 
     /* Sync step 2: Master sends shared objects to the central SharedData singleton
@@ -55,10 +59,9 @@ namespace viscom {
         outerInfluence_->meshComponent->encode();
         meshpool_.encode();
         sgct::SharedData::instance()->writeObj<glm::vec3>(&synchronized_grid_translation_);
-        //if (cellular_automaton_.isInitialized()) {
-            sgct::SharedData::instance()->writeFloat(&synchronized_automaton_transition_time_delta_);
-            sgct::SharedData::instance()->writeVector(&synchronized_grid_state_);
-        //}
+        sgct::SharedData::instance()->writeFloat(&synchronized_automaton_transition_time_delta_);
+        sgct::SharedData::instance()->writeBool(&synchronized_automaton_has_transitioned_);
+        sgct::SharedData::instance()->writeVector(&synchronized_grid_state_);
     }
 
     /* Sync step 3: Master updates its copies of cluster-wide variables with data it just synced
@@ -74,11 +77,13 @@ namespace viscom {
         // Of course the following variables are redundant on master 
         // but help to write "unified" code in ApplicationNodeImplementation
         grid_translation_ = synchronized_grid_translation_.getVal();
-        if (cellular_automaton_.isInitialized()) {
-            automaton_transition_time_delta_ = synchronized_automaton_transition_time_delta_.getVal();
-            grid_state_ = synchronized_grid_state_.getVal();
-            // GPU data upload behind check if GL was initialized
-            if (last_grid_state_texture_.id > 0 && current_grid_state_texture_.id > 0) {
+        automaton_transition_time_delta_ = synchronized_automaton_transition_time_delta_.getVal();
+        grid_state_ = synchronized_grid_state_.getVal();
+        automaton_has_transitioned_ = synchronized_automaton_has_transitioned_.getVal();
+        // GPU data upload behind check if GL was initialized
+        if (last_grid_state_texture_.id > 0 && current_grid_state_texture_.id > 0) {
+            // ensure that this happens only once after a automaton transition to have last and current state right
+            if (automaton_has_transitioned_) {
                 // Grid state: type UINT has to be converted to UNORM to make use of bilinear interpolation when rendering
                 glBindTexture(GL_TEXTURE_2D, last_grid_state_texture_.id);
                 glTexImage2D(GL_TEXTURE_2D, 0,
@@ -95,7 +100,6 @@ namespace viscom {
                     GL_RG, // no "_INTEGER" postfix means data is treated as NORM and sampling delivers float
                     GL_UNSIGNED_INT, // pixel data points to integers treated as UNORM
                     grid_state_.data());
-                //TODO ensure that this happens only once after a automaton transition to have last and current right
             }
         }
     }
@@ -106,7 +110,7 @@ namespace viscom {
 
         //cellular_automaton_.setTransitionTime(automaton_transition_time);
         //cellular_automaton_.setDamagePerCell(automaton_damage_per_cell);
-        cellular_automaton_.transition(clock_.t_in_sec);
+        automaton_has_transitioned_ = cellular_automaton_.transition(clock_.t_in_sec);
 
 
         updateManager_.ManageUpdates(min(clock_.deltat(), 0.25));
@@ -217,10 +221,8 @@ namespace viscom {
         }
         else if (key == GLFW_KEY_S && action == GLFW_PRESS) {
             // "S" stands for "start the automaton"
-            if (interaction_mode_ == AUTOMATON) {
-                cellular_automaton_.init(GetApplication()->GetGPUProgramManager());
-                interaction_mode_ = InteractionMode::GRID;
-            } else interaction_mode_ = AUTOMATON;
+            if (interaction_mode_ == AUTOMATON) interaction_mode_ = InteractionMode::GRID;
+            else interaction_mode_ = InteractionMode::AUTOMATON;
         }
         #ifndef VISCOM_CLIENTGUI
             ImGui_ImplGlfwGL3_KeyCallback(key, scancode, action, mods);

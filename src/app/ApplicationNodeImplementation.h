@@ -78,6 +78,8 @@ namespace viscom {
 		/* Some automaton parameters are also needed on slave nodes */
 		sgct::SharedFloat synchronized_automaton_transition_time_delta_;
 		float automaton_transition_time_delta_;
+        sgct::SharedBool synchronized_automaton_has_transitioned_;
+        bool automaton_has_transitioned_;
 
 		/* Outer influence object containing AI logic and mesh */
 		std::shared_ptr<roomgame::OuterInfluence> outerInfluence_;
