@@ -76,15 +76,8 @@ namespace viscom {
             glUniform1f(uloc, GRID_CELL_SIZE_);
         });
 
-        current_grid_state_texture_.id = GPUBuffer::new_texture2D(GRID_COLS_, GRID_ROWS_,
-            current_grid_state_texture_.sized_format,
-            current_grid_state_texture_.format,
-            current_grid_state_texture_.datatype);
-
-        last_grid_state_texture_.id = GPUBuffer::new_texture2D(GRID_COLS_, GRID_ROWS_,
-            current_grid_state_texture_.sized_format,
-            current_grid_state_texture_.format,
-            current_grid_state_texture_.datatype);
+        current_grid_state_texture_.id = GPUBuffer::alloc_texture2D(GRID_COLS_, GRID_ROWS_, GL_RG32F, GL_RG, GL_UNSIGNED_INT);
+        last_grid_state_texture_.id = GPUBuffer::alloc_texture2D(GRID_COLS_, GRID_ROWS_, GL_RG32F, GL_RG, GL_UNSIGNED_INT);
 
         meshpool_.updateUniformEveryFrame("curr_grid_state", [&](GLint uloc) {
             GLuint texture_unit = GL_TEXTURE0 + 0;
@@ -193,7 +186,6 @@ namespace viscom {
         shadowMap_->DrawToFBO([&]() {
             meshpool_.renderAllMeshesExcept(lightspace, GridCell::OUTER_INFLUENCE, 1);
         });
-        
 
         fbo.DrawToFBO([&]() {
             //backgroundMesh_->render(viewProj, lightspace, shadowMap_->get(), (render_mode_ == RenderMode::DBG) ? 1 : 0);

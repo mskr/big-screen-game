@@ -35,7 +35,9 @@ namespace viscom {
 
         //	DragAndZoomCamera camera_;
     
-        enum InteractionMode { GRID, CAMERA, GRID_PLACE_OUTER_INFLUENCE } interaction_mode_;
+        /* Interaction modes: GRID: build rooms, CAMERA: move camera,
+        AUTOMATON: define init state for testing automaton rules */
+        enum InteractionMode { GRID, CAMERA, AUTOMATON } interaction_mode_;
 
     public:
         explicit MasterNode(ApplicationNodeInternal* appNode);
