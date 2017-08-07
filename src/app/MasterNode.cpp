@@ -39,10 +39,12 @@ namespace viscom {
         outerInfluence_->meshComponent->preSync();
         meshpool_.preSync();
         synchronized_grid_translation_.setVal(grid_.getTranslation());
-        synchronized_automaton_transition_time_delta_.setVal(cellular_automaton_.getTimeDeltaNormalized());
-        //TODO grid state sync only when automaton changed it
-        synchronized_grid_state_.setVal(std::vector<roomgame::GRID_STATE_ELEMENT>(cellular_automaton_.getGridBuffer(), 
-            cellular_automaton_.getGridBuffer() + cellular_automaton_.getGridBufferSize()));
+        if (cellular_automaton_.isInitialized()) {
+            synchronized_automaton_transition_time_delta_.setVal(cellular_automaton_.getTimeDeltaNormalized());
+            //TODO grid state sync only when automaton changed it
+            synchronized_grid_state_.setVal(std::vector<roomgame::GRID_STATE_ELEMENT>(cellular_automaton_.getGridBuffer(),
+                cellular_automaton_.getGridBuffer() + cellular_automaton_.getGridBufferSize()));
+        }
     }
 
     /* Sync step 2: Master sends shared objects to the central SharedData singleton
@@ -53,8 +55,10 @@ namespace viscom {
         outerInfluence_->meshComponent->encode();
         meshpool_.encode();
         sgct::SharedData::instance()->writeObj<glm::vec3>(&synchronized_grid_translation_);
-        sgct::SharedData::instance()->writeFloat(&synchronized_automaton_transition_time_delta_);
-        sgct::SharedData::instance()->writeVector(&synchronized_grid_state_);
+        if (cellular_automaton_.isInitialized()) {
+            sgct::SharedData::instance()->writeFloat(&synchronized_automaton_transition_time_delta_);
+            sgct::SharedData::instance()->writeVector(&synchronized_grid_state_);
+        }
     }
 
     /* Sync step 3: Master updates its copies of cluster-wide variables with data it just synced
@@ -70,20 +74,29 @@ namespace viscom {
         // Of course the following variables are redundant on master 
         // but help to write "unified" code in ApplicationNodeImplementation
         grid_translation_ = synchronized_grid_translation_.getVal();
-        automaton_transition_time_delta_ = synchronized_automaton_transition_time_delta_.getVal();
-        grid_state_ = synchronized_grid_state_.getVal();
-        // GPU data upload behind check if GL was initialized
-        if (last_grid_state_texture_.id > 0 && current_grid_state_texture_.id > 0) {
-            // Grid state: type UINT has to be converted to UNORM to make use of bilinear interpolation when rendering
-            //TODO investigate why conversion doesnt seem to work, giving GL_INVALID_OPERATION error
-            // see https://www.khronos.org/opengl/wiki/Pixel_Transfer#Format_conversion
-            glBindTexture(GL_TEXTURE_2D, last_grid_state_texture_.id); // upload old grid state
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RG8, GRID_COLS_, GRID_ROWS_, 0,
-                last_grid_state_texture_.format, last_grid_state_texture_.datatype, grid_state_.data());
-            grid_state_ = synchronized_grid_state_.getVal(); // fetch new grid state
-            glBindTexture(GL_TEXTURE_2D, current_grid_state_texture_.id); // upload new grid state
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RG8, GRID_COLS_, GRID_ROWS_, 0,
-                last_grid_state_texture_.format, last_grid_state_texture_.datatype, grid_state_.data());
+        if (cellular_automaton_.isInitialized()) {
+            automaton_transition_time_delta_ = synchronized_automaton_transition_time_delta_.getVal();
+            grid_state_ = synchronized_grid_state_.getVal();
+            // GPU data upload behind check if GL was initialized
+            if (last_grid_state_texture_.id > 0 && current_grid_state_texture_.id > 0) {
+                // Grid state: type UINT has to be converted to UNORM to make use of bilinear interpolation when rendering
+                glBindTexture(GL_TEXTURE_2D, last_grid_state_texture_.id);
+                glTexImage2D(GL_TEXTURE_2D, 0,
+                    GL_RG32F, // 32 bit UNORM means 1.0F == 2^31 == 4294967296U (=> 1.0/(2^22) == 2^9 == 512U == INFECTED)
+                    GRID_COLS_, GRID_ROWS_, 0,
+                    GL_RG, // no "_INTEGER" postfix means data is treated as NORM and sampling delivers float
+                    GL_UNSIGNED_INT, // pixel data points to integers treated as UNORM
+                    grid_state_.data());
+                grid_state_ = synchronized_grid_state_.getVal(); // fetch new grid state
+                glBindTexture(GL_TEXTURE_2D, current_grid_state_texture_.id);
+                glTexImage2D(GL_TEXTURE_2D, 0,
+                    GL_RG32F, // 32 bit UNORM means 1.0F == 2^31 == 4294967296U (=> 1.0/(2^22) == 2^9 == 512U == INFECTED)
+                    GRID_COLS_, GRID_ROWS_, 0,
+                    GL_RG, // no "_INTEGER" postfix means data is treated as NORM and sampling delivers float
+                    GL_UNSIGNED_INT, // pixel data points to integers treated as UNORM
+                    grid_state_.data());
+                //TODO ensure that this happens only once after a automaton transition to have last and current right
+            }
         }
     }
 

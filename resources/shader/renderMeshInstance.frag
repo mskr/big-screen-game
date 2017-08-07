@@ -33,9 +33,11 @@ uniform sampler2D last_grid_state;
 /* Coordinates of this fragment on the grid (in texture space) */
 in vec2 cellCoords;
 
-/* Normalization factor for infected state of a fragment
-after spatial and temporal interpolation */
-const float INFECTEDNESS_NORMALIZATION_FACTOR = INFECTED;
+/* Normalization factor for infectedness of a fragment
+after spatial and temporal interpolation of the infected state
+(the 32 bit uint are treated as unsigned normalized (unorm), i.e. 2^31 == 1.0
+ => 1.0/(2^22) == 2^9 == 512U == INFECTED) */
+const float INFECTEDNESS_NORMALIZATION_FACTOR = 1.0 / pow(2.0, 22);
 
 uniform float automatonTimeDelta;
 
@@ -85,13 +87,13 @@ void main() {
     // 3) an infection source, most likely in a wall (st has SOURCE bit set)
     // 4) an invalid room, that is too small or too big (st has INVALID bit set)
     // ...
-    if(st == INFECTED) {
+    if((st & INFECTED) > 0U) {
         float infectednessInterpolatedSpatialTemporal = mix(
             lastCellBuildStateInterpolatedSpatial,
             currCellBuildStateInterpolatedSpatial,
             automatonTimeDelta);
         float infectedness = infectednessInterpolatedSpatialTemporal / INFECTEDNESS_NORMALIZATION_FACTOR;
-        color = vec4(1,0,0, 0.2+infectedness);
+        color = vec4(1,1,1, infectedness);
     }
     else {
         color = vec4(vNormal, 1) * healthNormalized;

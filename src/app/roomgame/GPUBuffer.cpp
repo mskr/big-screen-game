@@ -101,6 +101,8 @@ GLuint GPUBuffer::new_texture2D(GLsizei w, GLsizei h, GLint sized_format, GLenum
 	GLuint tex;
 	glGenTextures(1, &tex);
 	glBindTexture(GL_TEXTURE_2D, tex);
+    // glTexStorage specifies an immutable-format texture,
+    // which means glTexImage cannot be called because it might alter format (glTexSubImage is possible anyway)
 	glTexStorage2D(GL_TEXTURE_2D, 1, sized_format, w, h);
 	return tex;
 }
