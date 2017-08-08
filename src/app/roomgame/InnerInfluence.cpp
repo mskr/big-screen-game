@@ -23,7 +23,7 @@ void InnerInfluence::init(viscom::GPUProgramManager mgr) {
 }
 
 
-void InnerInfluence::transition(double time) {
+bool InnerInfluence::transition(double time) {
 	if (GPUCellularAutomaton::isInitialized()) {
 		glUseProgram(shader_->getProgramId());
 		glUniform2i(movedir_uniform_location_, movedir_.x, movedir_.y);
@@ -32,8 +32,9 @@ void InnerInfluence::transition(double time) {
 		glUniform1f(room_nbors_ahead_thd_uloc_, room_nbors_ahead_thd_);
 		glUniform1i(outer_infl_nbors_thd_uloc_, outer_infl_nbors_thd_);
 		glUniform1i(damage_per_cell_uloc_, damage_per_cell_);
-		GPUCellularAutomaton::transition(time);
+		return GPUCellularAutomaton::transition(time);
 	}
+    return false;
 }
 
 void InnerInfluence::spawnAt(GridCell* c) {

@@ -29,7 +29,7 @@ public:
 	void setCollisionThreshold(GLfloat v);
 	void setOuterInfluenceNeighborThreshold(GLint v);
 	void setDamagePerCell(GLint v);
-	void transition(double time);
+	bool transition(double time);
     void spawnAt(GridCell* cell);
 };
 

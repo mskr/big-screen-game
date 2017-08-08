@@ -116,14 +116,14 @@ void GPUCellularAutomaton::updateCell(GridCell* c, GLuint buildState, GLint hp) 
         texture_pair_[0].format, texture_pair_[0].datatype, data);
 }
 
-void GPUCellularAutomaton::transition(double time) {
+bool GPUCellularAutomaton::transition(double time) {
     // Test if it is time for the next generation
     delta_time_ = time - last_time_;
     if (delta_time_ >= transition_time_) {
         last_time_ = time;
         delta_time_ = 0;
     }
-    else return;
+    else return false;
     int current_write_index = (current_read_index_ == 0) ? 1 : 0;
     // Do transition on gpu
     framebuffer_pair_[current_write_index]->bind();
@@ -148,6 +148,7 @@ void GPUCellularAutomaton::transition(double time) {
     copyFromTextureToGrid(current_write_index); // Performance bottleneck
     // Swap buffers
     current_read_index_ = current_write_index;
+    return true;
 }
 
 void GPUCellularAutomaton::setTransitionTime(double t) {

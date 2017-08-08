@@ -59,7 +59,11 @@ vec2 rotateZ_step90(float x, float y) {
     else if((buildState & (RIGHT | BOTTOM | CORNER))==(RIGHT|BOTTOM|CORNER) ||
         (buildState & (RIGHT | WALL))==(RIGHT | WALL)){
             return vec2(y, -x);
-    }else{
+    }
+    else if((buildState & INFECTED) == INFECTED) {
+        return vec2(x, y);
+    }
+    else {
             return vec2(-x, -y);
     }
 
