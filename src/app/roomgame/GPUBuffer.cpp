@@ -20,7 +20,6 @@ GPUBuffer::GPUBuffer(GLsizei w, GLsizei h, std::initializer_list<Tex*> tex_attac
     int num_depth_attachments = 0;
     int num_stencil_attachments = 0;
     for (Tex* tex : tex_attachments) {
-        GLuint tex_ptr = tex->id;
         tex->id = alloc_immutable_format_texture2D(w, h, tex->sized_format);
         GLenum attachment_type = tex->attachmentType;
         glFramebufferTexture2D(GL_FRAMEBUFFER, attachment_type, GL_TEXTURE_2D, tex->id, 0);
