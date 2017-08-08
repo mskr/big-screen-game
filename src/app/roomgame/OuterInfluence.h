@@ -20,6 +20,8 @@ namespace roomgame {
 		SynchronizedGameMesh* meshComponent;
 		RoomInteractiveGrid* grid;
 	private:
+        float movementType = 0; // 0 is patrolling movement, 1 is attacking movement
+        float ChangeSpeed = 1.25f; // How fast the influence changes its movement pattern
         float speed;
         float distance;
         int attackChance;
