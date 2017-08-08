@@ -46,7 +46,7 @@ public:
     GPUCellularAutomaton(AutomatonGrid* grid, double transition_time);
     void updateCell(GridCell* c, GLuint state, GLint hp);
     virtual void init(viscom::GPUProgramManager mgr);
-    virtual bool transition(double time);
+    virtual bool transition(double time); // return false if it is not time yet
     void cleanup();
     //Setter
     void setTransitionTime(double);
