@@ -5,6 +5,8 @@ namespace roomgame {
 	const int ATTACK = 1;
 	const int RETREAT = 2;
     const int ATTACK_CHANCE_BASE = 0;
+    const float BASE_SPEED = 0.5f;
+    const float ROT_SPEED_MULTIPLIER = 50.0f;
 
 	OuterInfluence::OuterInfluence()
 	{
@@ -15,7 +17,7 @@ namespace roomgame {
 		targetPosition = glm::vec3(2, 0, 0);
 		posDiff = glm::vec3(0);
         viewPersMat = glm::mat4(1);
-        speed = 0.5f;
+        speed = BASE_SPEED;
         attackChance = ATTACK_CHANCE_BASE;
         attackChanceGrowth = 1;
         unsigned seed1 = (unsigned) std::chrono::system_clock::now().time_since_epoch().count();
@@ -31,13 +33,10 @@ namespace roomgame {
 
 	void OuterInfluence::calcPositions(bool init = false) {
 		for (int i = 0; i < 5; i++) {
-			glm::mat4 translation = glm::translate(glm::vec3(sinf(i*(float)glfwGetTime()), 0, 0));
-            if (mode != PATROL) {
-                translation = glm::translate(glm::vec3(0,sinf(i*(float)glfwGetTime()), 0));
-                if (mode == ATTACK) {
-                    translation *= 0.001f;
-                }
-            }
+            float tmpI = i + 0.1f;
+            glm::mat4 transPat = glm::translate(glm::vec3(sinf(tmpI*(float)glfwGetTime()), cosf(tmpI*(float)glfwGetTime())*0.5f, cosf(tmpI*(float)glfwGetTime())*0.5f));
+            glm::mat4 transAtt = glm::translate(glm::vec3(cosf(tmpI*(float)glfwGetTime())*0.05f, sinf(tmpI*(float)glfwGetTime())*0.1, cosf(tmpI*(float)glfwGetTime())*0.05f));
+            glm::mat4 translation = glm::mix(transPat, transAtt, movementType);
             if (i<meshComponent->influencePositions_.size()) {
                 meshComponent->influencePositions_[i] = meshComponent->model_matrix_*translation;
             }
@@ -45,6 +44,14 @@ namespace roomgame {
 				meshComponent->influencePositions_.push_back(meshComponent->model_matrix_*translation);
             }
 		}
+        if (mode == ATTACK) {
+            movementType = min(movementType + ChangeSpeed*(float)deltaTime, 1);
+            speed = min(speed + ChangeSpeed*(float)deltaTime, 1.3f);
+        }
+        else if (mode == RETREAT) {
+            movementType = max(movementType - ChangeSpeed*(float)deltaTime, 0);
+            speed = max(speed - ChangeSpeed*10*(float)deltaTime, 0.5f);
+        }
 	}
 
 	void OuterInfluence::Update(double deltaTime)
@@ -64,7 +71,7 @@ namespace roomgame {
 	void OuterInfluence::Move() {
         if(mode==PATROL){
             meshComponent->transform(glm::translate(glm::vec3(-10, 0, 0)));
-            meshComponent->transform(glm::rotate(glm::radians(speed), glm::vec3(0, 0, 1)));
+            meshComponent->transform(glm::rotate(glm::radians(speed*ROT_SPEED_MULTIPLIER*(float)deltaTime), glm::vec3(0, 0, 1)));
             meshComponent->transform(glm::translate(glm::vec3(10, 0, 0)));
         }
         else{
@@ -120,11 +127,8 @@ namespace roomgame {
         GridCell* tmp = grid->getCellAt(glm::vec2(ndcCoords.x, ndcCoords.y));
         float cellDistance = 9999.0f;
         GridCell* closestWallCell = nullptr;
-        float range = 200.0f;
-        glm::vec2 minCoords = grid->pushNDCinsideGrid(glm::vec2(ndcCoords.x - range, ndcCoords.y - range));
-        glm::vec2 maxCoords = grid->pushNDCinsideGrid(glm::vec2(ndcCoords.x + range, ndcCoords.y + range));
-        GridCell* leftLower = grid->getCellAt(minCoords);
-        GridCell* rightUpper = grid->getCellAt(maxCoords);
+        GridCell* leftLower = grid->getCellAt(0,0);
+        GridCell* rightUpper = grid->getCellAt(grid->getNumRows()-1,grid->getNumColumns()-1);
         grid->forEachCellInRange(leftLower, rightUpper, [&](GridCell* cell) {
             if ((cell->getBuildState() & GridCell::WALL) != 0 && cell->getDistanceTo(tmp) < cellDistance) {
                 cellDistance = cell->getDistanceTo(tmp);

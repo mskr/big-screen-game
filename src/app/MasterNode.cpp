@@ -192,7 +192,7 @@ namespace viscom {
                 -0.001f); //TODO better remove the z bias and use thicker meshes 
                 */
             //but this seems to be the real one
-            glm::vec3 gridPos = glm::vec3(0, 0, -4);
+            glm::vec3 gridPos = grid_.grid_center_;
 
             int right = key == GLFW_KEY_D ? 1 : 0;
             int left = key == GLFW_KEY_A ? 1 : 0;
@@ -206,8 +206,8 @@ namespace viscom {
             int rotate = upWards - downWards;
             if (rotate!=0) {
                 viewAngle += 5*rotate;
-                viewAngle = glm::clamp(viewAngle, 5, 175);
-                glm::vec2 pos = GetCirclePos(glm::vec2(gridPos.y, gridPos.z), 4, viewAngle);
+                viewAngle = glm::clamp(viewAngle, 90, 170);
+                glm::vec2 pos = GetCirclePos(glm::vec2(gridPos.y, gridPos.z), range, viewAngle);
                 GetCamera()->SetPosition(glm::vec3(0, pos.x, pos.y));
             }
             glm::quat lookDir = glm::toQuat(glm::lookAt(GetCamera()->GetPosition(), gridPos, glm::vec3(0, 1, 0)));
@@ -266,7 +266,12 @@ namespace viscom {
     /* Mouse scroll events are used to zoom, when in camera mode */
     bool MasterNode::MouseScrollCallback(double xoffset, double yoffset) {
         if (interaction_mode_ == InteractionMode::CAMERA) {
-            GetCamera()->SetPosition(GetCamera()->GetPosition() + glm::vec3(0, 0, (float)yoffset*0.1f));
+            float change = (float)yoffset*0.1f;
+            glm::vec3 camToGrid = GetCamera()->GetPosition() - grid_.grid_center_;
+            if (glm::length(camToGrid) > 0.5 || yoffset>0) {
+                GetCamera()->SetPosition(GetCamera()->GetPosition() + camToGrid*change);
+                range = glm::distance(GetCamera()->GetPosition(), grid_.grid_center_);
+            }
         }
         #ifndef VISCOM_CLIENTGUI
             ImGui_ImplGlfwGL3_ScrollCallback(xoffset, yoffset);

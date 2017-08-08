@@ -58,6 +58,8 @@ namespace viscom {
 		/* Update Manager */
 		roomgame::UpdateManager updateManager_;
 
+        std::vector<glm::mat4> outerInfPositions_;
+
 		/* Grid parameters (constant on all nodes) */
 		const int GRID_COLS_ = 64;
 		const int GRID_ROWS_ = 64;

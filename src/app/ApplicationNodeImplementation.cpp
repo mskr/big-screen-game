@@ -193,8 +193,20 @@ namespace viscom {
             glEnable(GL_BLEND); glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             meshpool_.renderAllMeshes(viewProj, 0, (render_mode_ == RenderMode::DBG) ? 1 : 0);
             glm::mat4 influPos = outerInfluence_->meshComponent->model_matrix_;
+            if (outerInfPositions_.size() > 40) {
+                outerInfPositions_.resize(40);
+            }
+            for (int i = 0; i < outerInfPositions_.size(); i++) {
+                if (i % 5 == 0) {
+                    outerInfluence_->meshComponent->scale -= 0.01f;
+                }
+                outerInfluence_->meshComponent->model_matrix_ = outerInfPositions_[i];
+                outerInfluence_->meshComponent->render(viewProj);
+            }
+            outerInfluence_->meshComponent->scale = 0.1f;
             for (int i = 0; i < outerInfluence_->meshComponent->influencePositions_.size(); i++) {
                 outerInfluence_->meshComponent->model_matrix_ = outerInfluence_->meshComponent->influencePositions_[i];
+                outerInfPositions_.insert(outerInfPositions_.begin(),outerInfluence_->meshComponent->influencePositions_[i]);
                 outerInfluence_->meshComponent->render(viewProj);
             }
             outerInfluence_->meshComponent->model_matrix_ = influPos;
