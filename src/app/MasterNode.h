@@ -106,5 +106,6 @@ namespace viscom {
 
         glm::vec2 GetCirclePos(glm::vec2 center, float radius, int angle);
         int viewAngle = 90;
+        float range = 4;
     };
 }
