@@ -1,67 +1,39 @@
 #include "InnerInfluence.h"
 
 InnerInfluence::InnerInfluence(AutomatonGrid* grid, double transition_time) :
-	GPUCellularAutomaton(grid, transition_time),
-	movedir_(1,0),
-	birth_thd_(0.4f),
-	death_thd_(0.5f),
-	room_nbors_ahead_thd_(0.2f),
-	outer_infl_nbors_thd_(1),
-	damage_per_cell_(5)
+	GPUCellularAutomaton(grid, transition_time)
 {
-
+    FLOW_DIRECTION = glm::ivec2(-1, 0); // arbitrary start direction
+    FLOW_SPEED = 4;
+    CRITICAL_VALUE = 12;
 }
 
 void InnerInfluence::init(viscom::GPUProgramManager mgr) {
 	GPUCellularAutomaton::init(mgr);
-	movedir_uniform_location_ = shader_->getUniformLocation("moveDirection");
-	birth_thd_uloc_ = shader_->getUniformLocation("BIRTH_THRESHOLD");
-	death_thd_uloc_ = shader_->getUniformLocation("DEATH_THRESHOLD");
-	room_nbors_ahead_thd_uloc_ = shader_->getUniformLocation("ROOM_NBORS_AHEAD_THRESHOLD");
-	outer_infl_nbors_thd_uloc_ = shader_->getUniformLocation("OUTER_INFL_NBORS_THRESHOLD");
-	damage_per_cell_uloc_ = shader_->getUniformLocation("DAMAGE_PER_CELL");
+	uloc_FLOW_DIRECTION = shader_->getUniformLocation("FLOW_DIRECTION");
+	uloc_FLOW_SPEED = shader_->getUniformLocation("FLOW_SPEED");
+	uloc_CRITICAL_VALUE = shader_->getUniformLocation("CRITICAL_VALUE");
 }
 
 
 bool InnerInfluence::transition(double time) {
 	if (GPUCellularAutomaton::isInitialized()) {
 		glUseProgram(shader_->getProgramId());
-		glUniform2i(movedir_uniform_location_, movedir_.x, movedir_.y);
-		glUniform1f(birth_thd_uloc_, birth_thd_);
-		glUniform1f(death_thd_uloc_, death_thd_);
-		glUniform1f(room_nbors_ahead_thd_uloc_, room_nbors_ahead_thd_);
-		glUniform1i(outer_infl_nbors_thd_uloc_, outer_infl_nbors_thd_);
-		glUniform1i(damage_per_cell_uloc_, damage_per_cell_);
-		return GPUCellularAutomaton::transition(time);
+		glUniform2i(uloc_FLOW_DIRECTION, FLOW_DIRECTION.x, FLOW_DIRECTION.y);
+		glUniform1ui(uloc_FLOW_SPEED, FLOW_SPEED);
+		glUniform1i(uloc_CRITICAL_VALUE, CRITICAL_VALUE);
+        if (GPUCellularAutomaton::transition(time)) {
+            // rotate flow direction 90 degrees clockwise
+            glm::ivec2 tmp = FLOW_DIRECTION;
+            tmp.x = 0 * FLOW_DIRECTION.x + 1 * FLOW_DIRECTION.y;
+            tmp.y = -1 * FLOW_DIRECTION.x + 0 * FLOW_DIRECTION.y;
+            FLOW_DIRECTION = tmp;
+            return true;
+        }
 	}
     return false;
 }
 
 void InnerInfluence::spawnAt(GridCell* c) {
     grid_->buildAt(c->getCol(), c->getRow(), grid_->SIMULATED_STATE);
-}
-
-void InnerInfluence::setMoveDir(int x, int y) {
-	movedir_.x = x;
-	movedir_.y = y;
-}
-
-void InnerInfluence::setBirthThreshold(GLfloat v) {
-	birth_thd_ = v;
-}
-
-void InnerInfluence::setDeathThreshold(GLfloat v) {
-	death_thd_ = v;
-}
-
-void InnerInfluence::setCollisionThreshold(GLfloat v) {
-	room_nbors_ahead_thd_ = v;
-}
-
-void InnerInfluence::setOuterInfluenceNeighborThreshold(GLint v) {
-	outer_infl_nbors_thd_ = v;
-}
-
-void InnerInfluence::setDamagePerCell(GLint v) {
-	damage_per_cell_ = v;
 }

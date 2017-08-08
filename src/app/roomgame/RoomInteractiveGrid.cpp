@@ -16,7 +16,7 @@ void RoomInteractiveGrid::handleTouchedCell(int touchID, GridCell* touchedCell) 
     // ...then start room creation
     Room* room = new Room(touchedCell, touchedCell, this);
     interactions_.push_back(new GridInteraction(touchID, touchedCell, room));
-    buildAt(touchedCell->getCol(), touchedCell->getRow(), GridCell::INVALID);
+    buildAt(touchedCell->getCol(), touchedCell->getRow(), GridCell::INVALID); // room covering one cell is invalid
 }
 
 void RoomInteractiveGrid::handleHoveredCell(GridCell* hoveredCell, GridInteraction* interac) {
@@ -71,9 +71,13 @@ void RoomInteractiveGrid::handleRelease(GridInteraction* interac) {
         interactions_.remove(interac);
     }
     else { // if ID not 1, then this was really a touch interaction
-        //TODO React to touch interaction
-        //TODO wait for possible end of discontinuaty
+        //TODO @Tobias: React to touch interaction, considering bad tuio touch hardware
+        /* wait for possible end of discontinuaty for a fixed time.
+           if another touch occurs in spatial and temporal proximity, reuse the touchID.
+           if timeout, consider this a user-intended release.
+        */
     }
+    //TODO optimization: instead of iterating the whole grid here, we could iterate over rooms
     forEachCellInRange(getCellAt(0,0),getCellAt(cells_.size()-1, cells_[0].size()-1), [&](GridCell* cell) {
         //GridCell* tmp = cell;
         deleteNeighbouringWalls(cell);

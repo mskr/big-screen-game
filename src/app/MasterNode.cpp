@@ -173,7 +173,7 @@ namespace viscom {
     /* Switch input modes by keyboard on master
      * [C] key down: camera control mode
      * [V] key hit: tilt camera 45 degrees
-     * [S] key hit: start automaton and switch between outer influence and room placement
+     * [S] key hit: switch between interacting with automaton state or building rooms
      * [D] key down: debug render mode
     */
     bool MasterNode::KeyboardCallback(int key, int scancode, int action, int mods) {
@@ -226,9 +226,8 @@ namespace viscom {
             }
         }
         else if (key == GLFW_KEY_S && action == GLFW_PRESS) {
-// "S" stands for "start the automaton"
-if (interaction_mode_ == AUTOMATON) interaction_mode_ = InteractionMode::GRID;
-else interaction_mode_ = InteractionMode::AUTOMATON;
+            if (interaction_mode_ == AUTOMATON) interaction_mode_ = InteractionMode::GRID;
+            else interaction_mode_ = InteractionMode::AUTOMATON;
         }
 #ifndef VISCOM_CLIENTGUI
         ImGui_ImplGlfwGL3_KeyCallback(key, scancode, action, mods);
@@ -344,6 +343,7 @@ else interaction_mode_ = InteractionMode::AUTOMATON;
             }
             inputBuffer.clear();
             mtx.unlock();
+            return true;
         }
         else return false;
     }

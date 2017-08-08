@@ -23,7 +23,7 @@ flat in uint hp;
 #define INFECTED 512U
 #define OUTER_INFLUENCE 1024U
 
-/* Max health, respectively sand pile height */
+/* Max health (should match GridCell::MAX_HEALTH) */
 #define MAX_HEALTH 100U
 
 /* Build state and health for the whole grid (bilinear interpolation enabled) */
@@ -97,7 +97,8 @@ void main() {
             lastCellBuildStateInterpolatedSpatial,
             currCellBuildStateInterpolatedSpatial,
             automatonTimeDelta);
-        float infectedness = infectednessInterpolatedSpatialTemporal / INFECTEDNESS_NORMALIZATION_FACTOR;
+        float infectedness = infectednessInterpolatedSpatialTemporal 
+            / INFECTEDNESS_NORMALIZATION_FACTOR;
         if(infectedness < 0.6) discard;
         color = vec4(1,1,1, infectedness);
     }
