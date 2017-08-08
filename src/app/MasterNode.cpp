@@ -285,7 +285,11 @@ namespace viscom {
     #ifdef WITH_TUIO
         bool MasterNode::AddTuioCursor(TUIO::TuioCursor* tcur)
         {
-            grid_.onTouch(-1);
+            grid_.onTouch(-1); //TODO @Tobias: pass the CursorID here,
+            // ID is saved in interaction object by RoomInteractiveGrid::handleTouchedCell,
+            // this object lives for the duration of one touch gesture
+            // and is used to distinguish clicks/touches, to reuse IDs of accidentally interrupted touch gestures, etc.
+            // (see RoomInteractiveGrid::handleHoveredCell + handleRelease + GridInteraction::testTemporalAndSpatialProximity)
             std::cout << "add    cur  " << tcur->getCursorID() << " (" << tcur->getSessionID() << "/" << tcur->getTuioSourceID() << ") " << tcur->getX() << " " << tcur->getY() << std::endl;
             return false;
         }
