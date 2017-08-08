@@ -45,10 +45,12 @@ namespace viscom {
         meshpool_.preSync();
         synchronized_grid_translation_.setVal(grid_.getTranslation());
         synchronized_automaton_transition_time_delta_.setVal(cellular_automaton_.getTimeDeltaNormalized());
-        //TODO grid state sync only when automaton changed it
-        synchronized_grid_state_.setVal(std::vector<roomgame::GRID_STATE_ELEMENT>(cellular_automaton_.getGridBuffer(),
-            cellular_automaton_.getGridBuffer() + cellular_automaton_.getGridBufferSize()));
         synchronized_automaton_has_transitioned_.setVal(automaton_has_transitioned_);
+        // grid state sync only when automaton changed it
+        if (automaton_has_transitioned_) {
+            synchronized_grid_state_.setVal(std::vector<roomgame::GRID_STATE_ELEMENT>(cellular_automaton_.getGridBuffer(),
+                cellular_automaton_.getGridBuffer() + cellular_automaton_.getGridBufferSize()));
+        }
     }
 
     /* Sync step 2: Master sends shared objects to the central SharedData singleton
@@ -61,7 +63,8 @@ namespace viscom {
         sgct::SharedData::instance()->writeObj<glm::vec3>(&synchronized_grid_translation_);
         sgct::SharedData::instance()->writeFloat(&synchronized_automaton_transition_time_delta_);
         sgct::SharedData::instance()->writeBool(&synchronized_automaton_has_transitioned_);
-        sgct::SharedData::instance()->writeVector(&synchronized_grid_state_);
+        if(automaton_has_transitioned_)
+            sgct::SharedData::instance()->writeVector(&synchronized_grid_state_);
     }
 
     /* Sync step 3: Master updates its copies of cluster-wide variables with data it just synced
@@ -78,7 +81,6 @@ namespace viscom {
         // but help to write "unified" code in ApplicationNodeImplementation
         grid_translation_ = synchronized_grid_translation_.getVal();
         automaton_transition_time_delta_ = synchronized_automaton_transition_time_delta_.getVal();
-        grid_state_ = synchronized_grid_state_.getVal();
         automaton_has_transitioned_ = synchronized_automaton_has_transitioned_.getVal();
         // GPU data upload behind check if GL was initialized
         if (last_grid_state_texture_.id > 0 && current_grid_state_texture_.id > 0) {

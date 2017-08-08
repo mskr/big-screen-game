@@ -44,7 +44,8 @@ namespace viscom {
         sgct::SharedData::instance()->readObj<glm::vec3>(&synchronized_grid_translation_);
         sgct::SharedData::instance()->readFloat(&synchronized_automaton_transition_time_delta_);
         sgct::SharedData::instance()->readBool(&synchronized_automaton_has_transitioned_);
-        sgct::SharedData::instance()->readVector(&synchronized_grid_state_);
+        if(synchronized_automaton_has_transitioned_.getVal())
+            sgct::SharedData::instance()->readVector(&synchronized_grid_state_);
     }
 
     /* Sync step 2: Slaves set their copies of cluster-wide variables to values received from master 
