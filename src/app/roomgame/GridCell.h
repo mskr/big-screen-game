@@ -5,13 +5,16 @@
 #include "RoomSegmentMesh.h"
 
 /* Represents one cell of the grid.
- * Defines the list of build states used by the roomgame.
- * Supports a debug rendering of grid cells as GL_POINTS.
- * Holds positions, build state and health points.
- * Holds neighbor cells.
- * Holds its own column and row in the containing grid.
- * Holds reference to an instance buffer range, where a mesh instance is stored that is renderd at this cell's position.
- * Privides a number of helper methods.
+ * Defines the build states used by the roomgame.
+ * Holds position, build state and health points (on CPU and GPU side).
+ * Supports debug rendering of grid cells as GL_POINTS.
+ * Holds offset into a vertex buffer with a vertex for each grid cell.
+ * The vertex buffer is owned by the grid.
+ * Holds reference to a mesh instance.
+ * Only on the CPU side, the grid cell...
+ * ... holds neighbor cells.
+ * ... holds its own column and row in the containing grid.
+ * ... privides a number of helper methods.
 */
 class GridCell {
 public:
