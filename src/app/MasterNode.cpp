@@ -192,7 +192,7 @@ namespace viscom {
                 -0.001f); //TODO better remove the z bias and use thicker meshes 
                 */
             //but this seems to be the real one
-            glm::vec3 gridPos = glm::vec3(0, 0, -4);
+            glm::vec3 gridPos = grid_.grid_center_;
 
             int right = key == GLFW_KEY_D ? 1 : 0;
             int left = key == GLFW_KEY_A ? 1 : 0;
