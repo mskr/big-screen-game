@@ -206,7 +206,7 @@ namespace viscom {
             int rotate = upWards - downWards;
             if (rotate!=0) {
                 viewAngle += 5*rotate;
-                viewAngle = glm::clamp(viewAngle, 5, 175);
+                viewAngle = glm::clamp(viewAngle, 90, 170);
                 glm::vec2 pos = GetCirclePos(glm::vec2(gridPos.y, gridPos.z), range, viewAngle);
                 GetCamera()->SetPosition(glm::vec3(0, pos.x, pos.y));
             }
@@ -269,8 +269,10 @@ namespace viscom {
         if (interaction_mode_ == InteractionMode::CAMERA) {
             float change = (float)yoffset*0.1f;
             glm::vec3 camToGrid = GetCamera()->GetPosition() - grid_.grid_center_;
-            GetCamera()->SetPosition(GetCamera()->GetPosition()+camToGrid*change);
-            range = glm::distance(GetCamera()->GetPosition(),grid_.grid_center_);
+            if (glm::length(camToGrid) > 0.5 || yoffset>0) {
+                GetCamera()->SetPosition(GetCamera()->GetPosition() + camToGrid*change);
+                range = glm::distance(GetCamera()->GetPosition(), grid_.grid_center_);
+            }
         }
         #ifndef VISCOM_CLIENTGUI
             ImGui_ImplGlfwGL3_ScrollCallback(xoffset, yoffset);

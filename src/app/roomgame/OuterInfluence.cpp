@@ -127,11 +127,8 @@ namespace roomgame {
         GridCell* tmp = grid->getCellAt(glm::vec2(ndcCoords.x, ndcCoords.y));
         float cellDistance = 9999.0f;
         GridCell* closestWallCell = nullptr;
-        float range = 200.0f;
-        glm::vec2 minCoords = grid->pushNDCinsideGrid(glm::vec2(ndcCoords.x - range, ndcCoords.y - range));
-        glm::vec2 maxCoords = grid->pushNDCinsideGrid(glm::vec2(ndcCoords.x + range, ndcCoords.y + range));
-        GridCell* leftLower = grid->getCellAt(minCoords);
-        GridCell* rightUpper = grid->getCellAt(maxCoords);
+        GridCell* leftLower = grid->getCellAt(0,0);
+        GridCell* rightUpper = grid->getCellAt(grid->getNumRows()-1,grid->getNumColumns()-1);
         grid->forEachCellInRange(leftLower, rightUpper, [&](GridCell* cell) {
             if ((cell->getBuildState() & GridCell::WALL) != 0 && cell->getDistanceTo(tmp) < cellDistance) {
                 cellDistance = cell->getDistanceTo(tmp);
