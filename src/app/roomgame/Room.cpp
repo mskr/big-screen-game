@@ -33,11 +33,13 @@ bool Room::isValid(bool firstRoom) {
     bool connectedToARoom = false;
 
     grid_->forEachCellInRange(leftLowerCorner_, rightUpperCorner_, [&](GridCell* cell) {
-        bool deletedANeighbour = false;
+        if ((cell->getBuildState() & (GridCell::WALL))!=0) {
+            bool deletedANeighbour = false;
 
-        deletedANeighbour = grid_->deleteNeighbouringWalls(cell,true);
-        if (deletedANeighbour) {
-            connectedToARoom = true;
+            deletedANeighbour = grid_->deleteNeighbouringWalls(cell, true);
+            if (deletedANeighbour) {
+                connectedToARoom = true;
+            }
         }
     });
     if (firstRoom) {
@@ -314,11 +316,12 @@ void Room::finish() {
 
 
 void Room::fillRoom(GridCell* startCell, GridCell* endCell, bool temporary, bool firstRoom) {
+    int temporaryCell = temporary ? GridCell::TEMPORARY : GridCell::EMPTY;
     //get corners
-    int minX = min(startCell->getCol(), endCell->getCol());
-    int minY = min(startCell->getRow(), endCell->getRow());
-    int maxX = max(startCell->getCol(), endCell->getCol());
-    int maxY = max(startCell->getRow(), endCell->getRow());
+    size_t minX = min(startCell->getCol(), endCell->getCol());
+    size_t minY = min(startCell->getRow(), endCell->getRow());
+    size_t maxX = max(startCell->getCol(), endCell->getCol());
+    size_t maxY = max(startCell->getRow(), endCell->getRow());
 
     GridCell* leftLowerCorner = grid_->getCellAt(minX,minY);
     GridCell* rightUpperCorner = grid_->getCellAt(maxX, maxY);
@@ -335,10 +338,10 @@ void Room::fillRoom(GridCell* startCell, GridCell* endCell, bool temporary, bool
         return;
     }
     // Set build states
-    grid_->buildAt(leftLowerCorner->getCol(), leftLowerCorner->getRow(), GridCell::LEFT | GridCell::BOTTOM | GridCell::CORNER);
-    grid_->buildAt(rightUpperCorner->getCol(), rightUpperCorner->getRow(), GridCell::RIGHT | GridCell::TOP | GridCell::CORNER);
-    grid_->buildAt(leftUpperCorner->getCol(), leftUpperCorner->getRow(), GridCell::LEFT | GridCell::TOP | GridCell::CORNER);
-    grid_->buildAt(rightLowerCorner->getCol(), rightLowerCorner->getRow(), GridCell::RIGHT | GridCell::BOTTOM | GridCell::CORNER);
+    grid_->buildAt(minX, minY, GridCell::LEFT | GridCell::BOTTOM | GridCell::CORNER);
+    grid_->buildAt(maxX, maxY, GridCell::RIGHT | GridCell::TOP | GridCell::CORNER);
+    grid_->buildAt(minX, maxY, GridCell::LEFT | GridCell::TOP | GridCell::CORNER);
+    grid_->buildAt(maxX, minY, GridCell::RIGHT | GridCell::BOTTOM | GridCell::CORNER);
 
     grid_->forEachCellInRange(leftUpperCorner->getEastNeighbor(), rightUpperCorner->getWestNeighbor(), [&](GridCell* cell) {
         grid_->buildAt(cell->getCol(), cell->getRow(), GridCell::WALL | GridCell::TOP);

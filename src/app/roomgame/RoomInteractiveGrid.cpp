@@ -37,6 +37,25 @@ GridCell* RoomInteractiveGrid::getNextFreeCell(GridCell* startCell, GridCell* cu
     }
 }
 
+bool RoomInteractiveGrid::anyRoomCollisions(Room* newRoom) {
+    int lengthX = newRoom->getColSize();
+    int lengthY = newRoom->getRowSize();
+    size_t posX = newRoom->rightUpperCorner_->getCol();
+    size_t posY = newRoom->rightUpperCorner_->getRow();
+    for (Room* r : rooms_) {
+        if (r == newRoom) {
+            continue;
+        }
+        if (posX >= r->leftLowerCorner_->getCol() && posX <= r->rightUpperCorner_->getCol() + lengthX) {
+            return true;
+        }
+        if (posY >= r->leftLowerCorner_->getRow() && posY <= r->rightUpperCorner_->getRow() + lengthY) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void RoomInteractiveGrid::handleHoveredCell(GridCell* hoveredCell, GridInteraction* interac) {
     // continue room creation
     if (interac->getTouchID() == -1) { // if ID is -1, "touch" was mouse click
@@ -44,9 +63,11 @@ void RoomInteractiveGrid::handleHoveredCell(GridCell* hoveredCell, GridInteracti
         // resize room is done with following assumptions:
         // - whether rooms grow or shrink can be inferred from start-, last- and current cell
         // - collisions can only occur for growing rooms
-        interac->getRoom()->clear();
-        GridCell* nextFreeCell = getNextFreeCell(interac->getStartCell(), hoveredCell);
-        interac->getRoom()->fillRoom(interac->getStartCell(), nextFreeCell, true, firstRoom);
+        if (!anyRoomCollisions(interac->getRoom())) {
+            interac->getRoom()->clear();
+            interac->setLastCell(hoveredCell);
+            interac->getRoom()->fillRoom(interac->getStartCell(), interac->getLastCell(), true, firstRoom);
+        }
 
 
         //Room::CollisionType collision = resizeRoomUntilCollision(interac->getRoom(),

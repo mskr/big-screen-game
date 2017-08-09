@@ -19,13 +19,13 @@ class InteractiveGrid;
  * IsValid() check if the room is bigger than the MIN_SIZE (horizontally and vertically).
 */
 class Room {
-	GridCell* leftLowerCorner_;
-	GridCell* rightUpperCorner_;
 	InteractiveGrid* grid_;
 	bool isFinished_;
 	std::vector<RoomSegmentMesh::InstanceBufferRange> mesh_instances_;
 public:
-	static const size_t MIN_SIZE = 2;
+    GridCell* leftLowerCorner_;
+    GridCell* rightUpperCorner_;
+    static const size_t MIN_SIZE = 2;
     static const size_t MAX_SIZE = 50;
 	Room(GridCell* leftLowerCorner, GridCell* rightUpperCorner, InteractiveGrid* grid);
 	~Room();

@@ -21,6 +21,7 @@ public:
 private:
     bool firstRoom = true;
     GridCell* getNextFreeCell(GridCell* startCell, GridCell* currentCell);
+    bool anyRoomCollisions(Room* newRoom);
 };
 
 #endif
