@@ -60,7 +60,10 @@ void RoomInteractiveGrid::handleRelease(GridInteraction* interac) {
     // check result and remove interaction
     if (interac->getTouchID() == -1) { // if ID is -1, "touch" was mouse click
         Room* room = interac->getRoom();
-        if (room->isValid()) { // if room valid, i.e. big enough, then store it
+        if (rooms_.size() > 0) {
+            firstRoom = false;
+        }
+        if (room->isValid(firstRoom)) { // if room valid, i.e. big enough, then store it
             room->finish();
             rooms_.push_back(room);
         }
@@ -80,15 +83,15 @@ void RoomInteractiveGrid::handleRelease(GridInteraction* interac) {
     //TODO optimization: instead of iterating the whole grid here, we could iterate over rooms
     forEachCellInRange(getCellAt(0,0),getCellAt(cells_.size()-1, cells_[0].size()-1), [&](GridCell* cell) {
         //GridCell* tmp = cell;
-        deleteNeighbouringWalls(cell);
+        deleteNeighbouringWalls(cell,false);
     });
 }
 
 Room::CollisionType RoomInteractiveGrid::resizeRoomUntilCollision(Room* room, GridCell* startCell, GridCell* lastCell, GridCell* currentCell) {
     // Handle DEGENERATED rooms by update each cell (typically low number of cells)
-    if (startCell == lastCell || !room->isValid()) {
+    if (startCell == lastCell || !room->isValid(firstRoom)) {
         room->clear();
-        return room->spanFromTo(startCell, currentCell) ? Room::CollisionType::NONE : Room::CollisionType::BOTH;
+        return room->spanFromTo(startCell, currentCell, firstRoom) ? Room::CollisionType::NONE : Room::CollisionType::BOTH;
         //TODO Invalid rooms that collide are not rendered
     }
     // Handle OK rooms by update only changed cells (room cell number can be very high)

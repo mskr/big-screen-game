@@ -24,10 +24,31 @@ void Room::invalidate() {
 	});
 }
 
-bool Room::isValid() {
+bool Room::isValid(bool firstRoom) {
 	size_t hsize = rightUpperCorner_->getCol() - leftLowerCorner_->getCol();
 	size_t vsize = rightUpperCorner_->getRow() - leftLowerCorner_->getRow();
-	return (hsize >= MIN_SIZE) && (vsize >= MIN_SIZE) && (hsize * vsize <= MAX_SIZE);
+
+    bool sizeValid = (hsize >= MIN_SIZE) && (vsize >= MIN_SIZE) && (hsize * vsize <= MAX_SIZE);
+
+    bool connectedToARoom = false;
+
+    //int lowerX = max(leftLowerCorner_->getCol() - 1, 0);
+    //int lowerY = max(leftLowerCorner_->getRow() - 1, 0);
+    //int higherX = min(rightUpperCorner_->getCol() + 1, grid_->getNumColumns() - 1);
+    //int higherY = min(rightUpperCorner_->getRow() + 1, grid_->getNumRows() - 1);
+    grid_->forEachCellInRange(leftLowerCorner_, rightUpperCorner_, [&](GridCell* cell) {
+        bool deletedANeighbour = false;
+
+        deletedANeighbour = grid_->deleteNeighbouringWalls(cell,true);
+        if (deletedANeighbour) {
+            connectedToARoom = true;
+        }
+    });
+    if (firstRoom) {
+        connectedToARoom = true;
+    }
+
+	return sizeValid && connectedToARoom;
 }
 
 size_t Room::getColSize() {
@@ -296,7 +317,7 @@ void Room::shrinkToSouth(size_t dist) {
 }
 
 
-bool Room::spanFromTo(GridCell* startCell, GridCell* endCell) {
+bool Room::spanFromTo(GridCell* startCell, GridCell* endCell, bool firstRoom) {
 	GridCell* leftLowerCorner = 0;
 	GridCell* rightUpperCorner = 0;
 	GridCell* leftUpperCorner = 0;

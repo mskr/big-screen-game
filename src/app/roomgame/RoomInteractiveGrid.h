@@ -18,6 +18,8 @@ public:
 	RoomInteractiveGrid(size_t columns, size_t rows, float height);
 	~RoomInteractiveGrid();
 	Room::CollisionType resizeRoomUntilCollision(Room* room, GridCell* startCell, GridCell* lastCell, GridCell* currentCell);
+private:
+    bool firstRoom = true;
 };
 
 #endif

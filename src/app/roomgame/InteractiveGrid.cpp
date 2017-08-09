@@ -313,7 +313,7 @@ void InteractiveGrid::replaceRoompieceWith(size_t col, size_t row, GLuint buildS
     std::cout << "Called the wrong replaceRoompieceWith" << std::endl;
 }
 
-void InteractiveGrid::deleteNeighbouringWalls(GridCell* cell) {
+bool InteractiveGrid::deleteNeighbouringWalls(GridCell* cell, bool simulate) {
     GLuint cellState = cell->getBuildState();
     if ((cellState & GridCell::WALL) != 0) {
         GridCell* neighbour = nullptr;
@@ -321,7 +321,7 @@ void InteractiveGrid::deleteNeighbouringWalls(GridCell* cell) {
         if ((cellState & GridCell::RIGHT) != 0) {
             neighbour = cell->getEastNeighbor();
             if (neighbour == nullptr) {
-                return;
+                return false;
             }
             neighbourCellState = neighbour->getBuildState();
             if ((neighbourCellState & GridCell::WALL) == 0) {
@@ -331,7 +331,7 @@ void InteractiveGrid::deleteNeighbouringWalls(GridCell* cell) {
         else if ((cellState & GridCell::LEFT) != 0) {
             neighbour = cell->getWestNeighbor();
             if (neighbour == nullptr) {
-                return;
+                return false;
             }
             neighbourCellState = neighbour->getBuildState();
             if ((neighbourCellState & GridCell::WALL) == 0) {
@@ -341,7 +341,7 @@ void InteractiveGrid::deleteNeighbouringWalls(GridCell* cell) {
         else if ((cellState & GridCell::TOP) != 0) {
             neighbour = cell->getNorthNeighbor();
             if (neighbour == nullptr) {
-                return;
+                return false;
             }
             neighbourCellState = neighbour->getBuildState();
             if ((neighbourCellState & GridCell::WALL) == 0) {
@@ -351,7 +351,7 @@ void InteractiveGrid::deleteNeighbouringWalls(GridCell* cell) {
         else if ((cellState & GridCell::BOTTOM) != 0) {
             neighbour = cell->getSouthNeighbor();
             if (neighbour == nullptr) {
-                return;
+                return false;
             }
             neighbourCellState = neighbour->getBuildState();
             if ((neighbourCellState & GridCell::WALL) == 0) {
@@ -359,10 +359,15 @@ void InteractiveGrid::deleteNeighbouringWalls(GridCell* cell) {
             }
         }
         if (neighbour != nullptr) {
+            if (simulate) {
+                return true;
+            }
             replaceRoompieceWith(cell->getCol(), cell->getRow(), GridCell::INSIDE_ROOM);
             replaceRoompieceWith(neighbour->getCol(), neighbour->getRow(), GridCell::INSIDE_ROOM);
+            return true;
         }
     }
+    return false;
 }
 
 

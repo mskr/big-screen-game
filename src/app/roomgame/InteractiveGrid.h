@@ -95,7 +95,7 @@ public:
     // Functions for grid modification
     virtual void buildAt(size_t col, size_t row, GLuint buildState);
     virtual void replaceRoompieceWith(size_t col, size_t row, GLuint buildState);
-    void deleteNeighbouringWalls(GridCell* cell);
+    bool deleteNeighbouringWalls(GridCell* cell, bool simulate);
 };
 
 #endif

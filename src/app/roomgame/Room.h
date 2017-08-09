@@ -31,7 +31,7 @@ public:
 	~Room();
 	void clear();
 	void invalidate();
-	bool isValid();
+	bool isValid(bool firstRoom);
 	void finish();
 	size_t getColSize();
 	size_t getRowSize();
@@ -44,7 +44,7 @@ public:
 	void shrinkToWest(size_t dist);
 	void shrinkToSouth(size_t dist);
 	void shrinkToNorth(size_t dist);
-	bool spanFromTo(GridCell* startCell, GridCell* endCell);
+	bool spanFromTo(GridCell* startCell, GridCell* endCell, bool firstRoom);
 	
 	enum CollisionType {
 		HORIZONTAL, VERTICAL, BOTH, NONE
