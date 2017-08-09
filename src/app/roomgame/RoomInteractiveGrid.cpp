@@ -12,11 +12,26 @@ RoomInteractiveGrid::~RoomInteractiveGrid() {
 
 void RoomInteractiveGrid::handleTouchedCell(int touchID, GridCell* touchedCell) {
     // is the touched cell still empty?
-    if (touchedCell->getBuildState() != GridCell::EMPTY) return;
     // ...then start room creation
-    Room* room = new Room(touchedCell, touchedCell, this);
-    interactions_.push_back(new GridInteraction(touchID, touchedCell, room));
-    buildAt(touchedCell->getCol(), touchedCell->getRow(), GridCell::INVALID); // room covering one cell is invalid
+    if (touchedCell->getBuildState() == GridCell::EMPTY) {
+        Room* room = new Room(touchedCell, touchedCell, this);
+        interactions_.push_back(new GridInteraction(touchID, touchedCell, room));
+        buildAt(touchedCell->getCol(), touchedCell->getRow(), GridCell::INVALID); // room covering one cell is invalid
+    }
+    // check if infected or source
+    else if (touchedCell->getBuildState() & (GridCell::SOURCE | GridCell::INFECTED)) {
+        std::cout << "Touched infected cell" << std::endl;
+        GLuint north = touchedCell->getNorthNeighbor()->getBuildState();
+        GLuint east = touchedCell->getEastNeighbor()->getBuildState();
+        GLuint south = touchedCell->getSouthNeighbor()->getBuildState();
+        GLuint west = touchedCell->getWestNeighbor()->getBuildState();
+
+        GLuint test = GridCell::SOURCE | GridCell::INFECTED;
+        if ((north & test) & (south & test) & (east & test) & (west & test) ) {
+            
+        }
+        
+    }
 }
 
 void RoomInteractiveGrid::handleHoveredCell(GridCell* hoveredCell, GridInteraction* interac) {
