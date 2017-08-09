@@ -19,6 +19,24 @@ void RoomInteractiveGrid::handleTouchedCell(int touchID, GridCell* touchedCell) 
     buildAt(touchedCell->getCol(), touchedCell->getRow(), GridCell::INVALID); // room covering one cell is invalid
 }
 
+GridCell* RoomInteractiveGrid::getNextFreeCell(GridCell* startCell, GridCell* currentCell) {
+    if (currentCell->getBuildState() == GridCell::EMPTY) {
+        return currentCell;
+    }
+    else {
+        int diffX = (int)(startCell->getCol() - currentCell->getCol());
+        diffX = diffX > 0 ? 1 : (diffX == 0 ? 0 : -1);
+        int diffY = (int)(startCell->getRow() - currentCell->getRow());
+        diffY = diffY > 0 ? 1 : (diffY == 0 ? 0 : -1);
+        if (diffX == 0 && diffY == 0) {
+            return currentCell;
+        }
+        else {
+            return getNextFreeCell(startCell, getCellAt(currentCell->getCol() + diffX, currentCell->getRow() + diffY));
+        }
+    }
+}
+
 void RoomInteractiveGrid::handleHoveredCell(GridCell* hoveredCell, GridInteraction* interac) {
     // continue room creation
     if (interac->getTouchID() == -1) { // if ID is -1, "touch" was mouse click
@@ -26,27 +44,32 @@ void RoomInteractiveGrid::handleHoveredCell(GridCell* hoveredCell, GridInteracti
         // resize room is done with following assumptions:
         // - whether rooms grow or shrink can be inferred from start-, last- and current cell
         // - collisions can only occur for growing rooms
-        Room::CollisionType collision = resizeRoomUntilCollision(interac->getRoom(),
-            interac->getStartCell(), interac->getLastCell(), hoveredCell);
-        if (collision == Room::CollisionType::NONE) {
-            interac->setLastCell(hoveredCell);
-        }
-        else if (interac->getLastCollision() == Room::CollisionType::NONE) {
-            interac->setLastCell(hoveredCell);
-        }
-        else if (collision == Room::CollisionType::HORIZONTAL) {
-            if (interac->getLastCollision() == Room::CollisionType::VERTICAL)
-                interac->setLastCell(hoveredCell);
-            else
-                interac->setLastCell(getCellAt(interac->getLastCell()->getCol(), hoveredCell->getRow()));
-        }
-        else if (collision == Room::CollisionType::VERTICAL) {
-            if (interac->getLastCollision() == Room::CollisionType::HORIZONTAL)
-                interac->setLastCell(hoveredCell);
-            else
-                interac->setLastCell(getCellAt(hoveredCell->getCol(), interac->getLastCell()->getRow()));
-        }
-        interac->setLastCollision(collision);
+        interac->getRoom()->clear();
+        GridCell* nextFreeCell = getNextFreeCell(interac->getStartCell(), hoveredCell);
+        interac->getRoom()->fillRoom(interac->getStartCell(), nextFreeCell, true, firstRoom);
+
+
+        //Room::CollisionType collision = resizeRoomUntilCollision(interac->getRoom(),
+        //    interac->getStartCell(), interac->getLastCell(), hoveredCell);
+        //if (collision == Room::CollisionType::NONE) {
+        //    interac->setLastCell(hoveredCell);
+        //}
+        //else if (interac->getLastCollision() == Room::CollisionType::NONE) {
+        //    interac->setLastCell(hoveredCell);
+        //}
+        //else if (collision == Room::CollisionType::HORIZONTAL) {
+        //    if (interac->getLastCollision() == Room::CollisionType::VERTICAL)
+        //        interac->setLastCell(hoveredCell);
+        //    else
+        //        interac->setLastCell(getCellAt(interac->getLastCell()->getCol(), hoveredCell->getRow()));
+        //}
+        //else if (collision == Room::CollisionType::VERTICAL) {
+        //    if (interac->getLastCollision() == Room::CollisionType::HORIZONTAL)
+        //        interac->setLastCell(hoveredCell);
+        //    else
+        //        interac->setLastCell(getCellAt(hoveredCell->getCol(), interac->getLastCell()->getRow()));
+        //}
+        //interac->setLastCollision(collision);
     }
     else { // if ID not 1, then this was really a touch interaction
         //TODO React to touch interaction
@@ -87,76 +110,76 @@ void RoomInteractiveGrid::handleRelease(GridInteraction* interac) {
     });
 }
 
-Room::CollisionType RoomInteractiveGrid::resizeRoomUntilCollision(Room* room, GridCell* startCell, GridCell* lastCell, GridCell* currentCell) {
-    // Handle DEGENERATED rooms by update each cell (typically low number of cells)
-    if (startCell == lastCell || !room->isValid(firstRoom)) {
-        room->clear();
-        return room->spanFromTo(startCell, currentCell, firstRoom) ? Room::CollisionType::NONE : Room::CollisionType::BOTH;
-        //TODO Invalid rooms that collide are not rendered
-    }
-    // Handle OK rooms by update only changed cells (room cell number can be very high)
-    bool isNotCollided_H = true;
-    bool isNotCollided_V = true;
-    // Compute size delta
-    size_t colDist = lastCell->getColDistanceTo(currentCell);
-    size_t rowDist = lastCell->getRowDistanceTo(currentCell);
-    // Horizontal grow or shrink
-    if (startCell->isWestOf(lastCell)) {
-        if (lastCell->isWestOf(currentCell))
-            isNotCollided_H = room->growToEast(colDist);
-        else if (lastCell->isEastOf(currentCell)) {
-            if (startCell->isEastOf(currentCell)) {
-                room->shrinkToWest(lastCell->getColDistanceTo(startCell));
-                isNotCollided_H = room->growToWest(startCell->getColDistanceTo(currentCell));
-            } else
-                room->shrinkToWest(colDist);
-        }
-    }
-    else if (startCell->isEastOf(lastCell)) {
-        if (lastCell->isEastOf(currentCell))
-            isNotCollided_H = room->growToWest(colDist);
-        else if (lastCell->isWestOf(currentCell)) {
-            if (startCell->isWestOf(currentCell)) {
-                room->shrinkToEast(lastCell->getColDistanceTo(startCell));
-                isNotCollided_H = room->growToEast(startCell->getColDistanceTo(currentCell));
-            } else
-                room->shrinkToEast(colDist);
-        }
-    }
-    // Vertical grow or shrink
-    if (startCell->isNorthOf(lastCell)) {
-        if (lastCell->isNorthOf(currentCell))
-            isNotCollided_V = room->growToSouth(rowDist);
-        else if (lastCell->isSouthOf(currentCell)) {
-            if (startCell->isSouthOf(currentCell)) {
-                room->shrinkToNorth(lastCell->getRowDistanceTo(startCell));
-                isNotCollided_V = room->growToNorth(startCell->getRowDistanceTo(currentCell));
-            } else
-                room->shrinkToNorth(rowDist);
-        }
-    }
-    else if (startCell->isSouthOf(lastCell)) {
-        if (lastCell->isSouthOf(currentCell))
-            isNotCollided_V = room->growToNorth(rowDist);
-        else if (lastCell->isNorthOf(currentCell)) {
-            if (startCell->isNorthOf(currentCell)) {
-                room->shrinkToSouth(lastCell->getRowDistanceTo(startCell));
-                isNotCollided_V = room->growToSouth(startCell->getRowDistanceTo(currentCell));
-            } else
-                room->shrinkToSouth(rowDist);
-        }
-    }
-    // Has room collided?
-    if (isNotCollided_H && isNotCollided_V) {
-        return Room::CollisionType::NONE;
-    }
-    else if (isNotCollided_H) {
-        return Room::CollisionType::VERTICAL;
-    }
-    else if (isNotCollided_V) {
-        return Room::CollisionType::HORIZONTAL;
-    }
-    else {
-        return Room::CollisionType::BOTH;
-    }
-}
+//Room::CollisionType RoomInteractiveGrid::resizeRoomUntilCollision(Room* room, GridCell* startCell, GridCell* lastCell, GridCell* currentCell) {
+//    // Handle DEGENERATED rooms by update each cell (typically low number of cells)
+//    if (startCell == lastCell || !room->isValid(firstRoom)) {
+//        room->clear();
+//        return room->spanFromTo(startCell, currentCell, firstRoom) ? Room::CollisionType::NONE : Room::CollisionType::BOTH;
+//        //TODO Invalid rooms that collide are not rendered
+//    }
+//    // Handle OK rooms by update only changed cells (room cell number can be very high)
+//    bool isNotCollided_H = true;
+//    bool isNotCollided_V = true;
+//    // Compute size delta
+//    size_t colDist = lastCell->getColDistanceTo(currentCell);
+//    size_t rowDist = lastCell->getRowDistanceTo(currentCell);
+//    // Horizontal grow or shrink
+//    if (startCell->isWestOf(lastCell)) {
+//        if (lastCell->isWestOf(currentCell))
+//            isNotCollided_H = room->growToEast(colDist);
+//        else if (lastCell->isEastOf(currentCell)) {
+//            if (startCell->isEastOf(currentCell)) {
+//                room->shrinkToWest(lastCell->getColDistanceTo(startCell));
+//                isNotCollided_H = room->growToWest(startCell->getColDistanceTo(currentCell));
+//            } else
+//                room->shrinkToWest(colDist);
+//        }
+//    }
+//    else if (startCell->isEastOf(lastCell)) {
+//        if (lastCell->isEastOf(currentCell))
+//            isNotCollided_H = room->growToWest(colDist);
+//        else if (lastCell->isWestOf(currentCell)) {
+//            if (startCell->isWestOf(currentCell)) {
+//                room->shrinkToEast(lastCell->getColDistanceTo(startCell));
+//                isNotCollided_H = room->growToEast(startCell->getColDistanceTo(currentCell));
+//            } else
+//                room->shrinkToEast(colDist);
+//        }
+//    }
+//    // Vertical grow or shrink
+//    if (startCell->isNorthOf(lastCell)) {
+//        if (lastCell->isNorthOf(currentCell))
+//            isNotCollided_V = room->growToSouth(rowDist);
+//        else if (lastCell->isSouthOf(currentCell)) {
+//            if (startCell->isSouthOf(currentCell)) {
+//                room->shrinkToNorth(lastCell->getRowDistanceTo(startCell));
+//                isNotCollided_V = room->growToNorth(startCell->getRowDistanceTo(currentCell));
+//            } else
+//                room->shrinkToNorth(rowDist);
+//        }
+//    }
+//    else if (startCell->isSouthOf(lastCell)) {
+//        if (lastCell->isSouthOf(currentCell))
+//            isNotCollided_V = room->growToNorth(rowDist);
+//        else if (lastCell->isNorthOf(currentCell)) {
+//            if (startCell->isNorthOf(currentCell)) {
+//                room->shrinkToSouth(lastCell->getRowDistanceTo(startCell));
+//                isNotCollided_V = room->growToSouth(startCell->getRowDistanceTo(currentCell));
+//            } else
+//                room->shrinkToSouth(rowDist);
+//        }
+//    }
+//    // Has room collided?
+//    if (isNotCollided_H && isNotCollided_V) {
+//        return Room::CollisionType::NONE;
+//    }
+//    else if (isNotCollided_H) {
+//        return Room::CollisionType::VERTICAL;
+//    }
+//    else if (isNotCollided_V) {
+//        return Room::CollisionType::HORIZONTAL;
+//    }
+//    else {
+//        return Room::CollisionType::BOTH;
+//    }
+//}

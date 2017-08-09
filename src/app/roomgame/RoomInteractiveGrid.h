@@ -17,9 +17,10 @@ class RoomInteractiveGrid : public InteractiveGrid {
 public:
 	RoomInteractiveGrid(size_t columns, size_t rows, float height);
 	~RoomInteractiveGrid();
-	Room::CollisionType resizeRoomUntilCollision(Room* room, GridCell* startCell, GridCell* lastCell, GridCell* currentCell);
+	//Room::CollisionType resizeRoomUntilCollision(Room* room, GridCell* startCell, GridCell* lastCell, GridCell* currentCell);
 private:
     bool firstRoom = true;
+    GridCell* getNextFreeCell(GridCell* startCell, GridCell* currentCell);
 };
 
 #endif

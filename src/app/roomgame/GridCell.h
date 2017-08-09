@@ -47,6 +47,7 @@ public:
     static const GLuint SOURCE = 256;
     static const GLuint INFECTED = 512;
     static const GLuint OUTER_INFLUENCE = 1024;
+    static const GLuint TEMPORARY = 2048;
 
 	static const unsigned int MAX_HEALTH = 100;
 	static const unsigned int MIN_HEALTH = 0;
