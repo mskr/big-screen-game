@@ -131,13 +131,15 @@ namespace viscom {
             GetApplication()->GetGPUProgramManager().GetResource("underwater",
                 std::initializer_list<std::string>{ "underwater.vert", "underwater.frag" }));
         
+        waterMesh_->scale = 1.0f;
         //backgroundMesh_->transform(glm::scale(glm::translate(glm::mat4(1), 
-        waterMesh_->transform(glm::scale(glm::translate(glm::mat4(1),
-            glm::vec3(
-                0,
-                -(GRID_HEIGHT_/GRID_ROWS_), /* position background mesh exactly under grid */
-                -0.001f/*TODO better remove the z bias and use thicker meshes*/)), 
-            glm::vec3(1.0f)));
+        //waterMesh_->transform(glm::scale(glm::translate(glm::mat4(1),
+        //    glm::vec3(
+        //        0,
+        //        -(GRID_HEIGHT_/GRID_ROWS_), /* position background mesh exactly under grid */
+        //        -0.001f/*TODO better remove the z bias and use thicker meshes*/)), 
+        //    glm::vec3(1.0f)));
+        //waterMesh_->transform(glm::translate(glm::vec3(0, 0, -0.4f)));
 
         /* Allocate offscreen framebuffer for shadow map */
 

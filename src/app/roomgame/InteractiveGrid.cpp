@@ -187,17 +187,19 @@ GridCell* InteractiveGrid::pickCell(glm::vec3 rayStartPoint, glm::vec3 rayInterm
     glm::vec3 gridRight = getWorldCoordinates(cells_[getNumColumns()-1][0].getPosition())- gridLeftLowerCorner;
     glm::vec3 gridTop = getWorldCoordinates(cells_[0][getNumRows() - 1].getPosition())- gridLeftLowerCorner;
 
-    gridLeftLowerCorner = glm::vec3(-2, -2, -4);
-    gridRight = glm::vec3(4, 0, 0);
-    gridTop = glm::vec3(0, 4, 0);
+
+
+    gridLeftLowerCorner = glm::vec3(-1, -1, 0);
+    gridRight = glm::vec3(2, 0, 0);
+    gridTop = glm::vec3(0, 2, 0);
     //    glm::vec3 gridRight = glm::vec3(translation_.x + cell_size_ * getNumColumns() / 2.0f, 0, center.z);
 //	glm::vec3 gridTop = glm::vec3(0.0f, translation_.y + height_units_ / 2.0f, center.z);
 	m[1] = gridRight;
 	m[2] = gridTop;
 
 	glm::vec3 intersection = glm::inverse(m) * (rayStartPoint - gridLeftLowerCorner);
-    //std::cout << "rayStartPoint: " << rayStartPoint.x << "/" << rayStartPoint.y << "/" << rayStartPoint.z << std::endl;
-    //std::cout << "rayIntermediatePoint: " << rayIntermediatePoint.x << "/" << rayIntermediatePoint.y << "/" << rayIntermediatePoint.z << std::endl;
+    std::cout << "rayStartPoint: " << rayStartPoint.x << "/" << rayStartPoint.y << "/" << rayStartPoint.z << std::endl;
+    std::cout << "rayIntermediatePoint: " << rayIntermediatePoint.x << "/" << rayIntermediatePoint.y << "/" << rayIntermediatePoint.z << std::endl;
     //std::cout << "gridTop: " << gridTop.x << "/" << gridTop.y << "/" << gridTop.z << std::endl;
     //std::cout << "gridRight: " << gridRight.x << "/" << gridRight.y << "/" << gridRight.z << std::endl;
     std::cout << "Intersection: " << intersection.x << "/" << intersection.y << "/" << intersection.z << std::endl;

@@ -240,19 +240,24 @@ protected:
 	std::shared_ptr<viscom::GPUProgram> shader_resource_;
 	glm::mat4 model_matrix_;
 public:
-	SimpleGameMesh(std::shared_ptr<viscom::Mesh> mesh, std::shared_ptr<viscom::GPUProgram> shader) :
+    float scale;
+    SimpleGameMesh(std::shared_ptr<viscom::Mesh> mesh, std::shared_ptr<viscom::GPUProgram> shader) :
 		MeshBase(mesh.get(), shader.get()),
 		mesh_resource_(mesh), shader_resource_(shader)
 	{}
 	void transform(glm::mat4& t) {
 		model_matrix_ *= t;
 	}
-	virtual void render(glm::mat4& vp, GLint isDebugMode = 0) const {
-		MeshBase::render(vp, isDebugMode, model_matrix_);
-	}
-	virtual void render(std::function<void(void)> outsideUniformSetter, glm::mat4& vp, GLint isDebugMode = 0) const {
-		MeshBase::render(outsideUniformSetter, vp, isDebugMode, model_matrix_);
-	}
+	virtual void render(glm::mat4& vp, GLint isDebugMode = 0) {
+        this->transform(glm::scale(glm::vec3(scale, scale, scale)));
+        MeshBase::render(vp, isDebugMode, model_matrix_);
+        this->transform(glm::scale(glm::vec3(1 / scale, 1 / scale, 1 / scale)));
+    }
+	virtual void render(std::function<void(void)> outsideUniformSetter, glm::mat4& vp, GLint isDebugMode = 0)  {
+        this->transform(glm::scale(glm::vec3(scale, scale, scale)));
+        MeshBase::render(outsideUniformSetter, vp, isDebugMode, model_matrix_);
+        this->transform(glm::scale(glm::vec3(1 / scale, 1 / scale, 1 / scale)));
+    }
 };
 
 
@@ -266,7 +271,7 @@ class ShadowReceivingMesh : public SimpleGameMesh {
     GLint uloc_shadow_map_;
 public:
     ShadowReceivingMesh(std::shared_ptr<viscom::Mesh> mesh, std::shared_ptr<viscom::GPUProgram> shader);
-    void render(glm::mat4& vp, glm::mat4& lightspace, GLuint shadowMap, GLint isDebugMode = 0) const;
+    void render(glm::mat4& vp, glm::mat4& lightspace, GLuint shadowMap, GLint isDebugMode = 0) ;
 };
 
 /* Generic mesh for post processing effects.
@@ -279,11 +284,11 @@ class PostProcessingMesh : public SimpleGameMesh {
 	GLint uloc_time_;
 	GLfloat time_;
 public:
-	PostProcessingMesh(std::shared_ptr<viscom::Mesh> mesh, std::shared_ptr<viscom::GPUProgram> shader);
+    PostProcessingMesh(std::shared_ptr<viscom::Mesh> mesh, std::shared_ptr<viscom::GPUProgram> shader);
 	void setTime(double time) {
 		time_ = (GLfloat) time;
 	}
-	void render(glm::mat4& vp, glm::mat4& lightspace, GLuint shadowMap, GLint isDebugMode = 0) const;
+	void render(glm::mat4& vp, glm::mat4& lightspace, GLuint shadowMap, GLint isDebugMode = 0) ;
 };
 
 /* Simple synchronized mesh class extending MeshBase.

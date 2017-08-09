@@ -7,9 +7,9 @@ ShadowReceivingMesh::ShadowReceivingMesh(std::shared_ptr<viscom::Mesh> mesh, std
 	uloc_shadow_map_ = shader->getUniformLocation("shadowMap");
 }
 
-void ShadowReceivingMesh::render(glm::mat4& vp, glm::mat4& lightspace, GLuint shadowMap, GLint isDebugMode) const {
+void ShadowReceivingMesh::render(glm::mat4& vp, glm::mat4& lightspace, GLuint shadowMap, GLint isDebugMode)  {
 	SimpleGameMesh::render([&]() {
-		glUniformMatrix4fv(uloc_lightspace_matrix_, 1, GL_FALSE, &lightspace[0][0]);
+        glUniformMatrix4fv(uloc_lightspace_matrix_, 1, GL_FALSE, &lightspace[0][0]);
 		// Bind shadow map to texture unit **2** because
 		// the MeshBase super-class already uses 0 (diffuse texture) and 1 (bump map)
 		glActiveTexture(GL_TEXTURE2);
@@ -33,9 +33,9 @@ PostProcessingMesh::PostProcessingMesh(std::shared_ptr<viscom::Mesh> mesh, std::
 	uloc_shadow_map_ = shader->getUniformLocation("shadowMap");
 }
 
-void PostProcessingMesh::render(glm::mat4& vp, glm::mat4& lightspace, GLuint shadowMap, GLint isDebugMode) const {
-	SimpleGameMesh::render([&]() {
-		glUniformMatrix4fv(uloc_lightspace_matrix_, 1, GL_FALSE, &lightspace[0][0]);
+void PostProcessingMesh::render(glm::mat4& vp, glm::mat4& lightspace, GLuint shadowMap, GLint isDebugMode)  {
+    SimpleGameMesh::render([&]() {
+        glUniformMatrix4fv(uloc_lightspace_matrix_, 1, GL_FALSE, &lightspace[0][0]);
 		// Bind shadow map to texture unit **2** because
 		// the MeshBase super-class already uses 0 (diffuse texture) and 1 (bump map)
 		glActiveTexture(GL_TEXTURE2);
