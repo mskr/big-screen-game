@@ -49,7 +49,7 @@ namespace viscom {
         // grid state sync only when automaton changed it
         if (automaton_has_transitioned_) {
             synchronized_grid_state_.setVal(std::vector<roomgame::GRID_STATE_ELEMENT>(cellular_automaton_.getGridBuffer(),
-                cellular_automaton_.getGridBuffer() + cellular_automaton_.getGridBufferSize()));
+                cellular_automaton_.getGridBuffer() + cellular_automaton_.getGridBufferElements()));
         }
     }
 
@@ -330,17 +330,14 @@ namespace viscom {
                 input tmp = inputBuffer.at(i);
                 viscom::math::Line3<float> ray = GetCamera()->GetPickRay({ tmp.x,tmp.y });
                 if (tmp.type == INPUT_UPDATE) {
-                    //std::cout << "DEBUG: update curser at pos " << tmp.x << " " << tmp.y << std::endl;
-                    grid_.onMouseMove(-1, ray[0], ray[1]);
+                    grid_.onMouseMove(tmp.id, ray[0], ray[1]);
                 }
                 else if (tmp.type == INPUT_ADD) {
-                    //std::cout << "DEBUG: Added curser at pos  "<< tmp.x << " " << tmp.y << std::endl;
-                    grid_.onMouseMove(-1, ray[0], ray[1]);
+                    grid_.onMouseMove(tmp.id, ray[0], ray[1]);
                     grid_.onTouch(tmp.id);
                 }
                 else if (tmp.type == INPUT_REMOVE) {
-                    //std::cout << "DEBUG: removed curser at pos " << tmp.x << " " << tmp.y << std::endl;
-                    grid_.onMouseMove(-1, ray[0], ray[1]);
+                    grid_.onMouseMove(tmp.id, ray[0], ray[1]);
                     grid_.onRelease(tmp.id);
                 }
             }

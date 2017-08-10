@@ -21,7 +21,8 @@ void RoomInteractiveGrid::handleTouchedCell(int touchID, GridCell* touchedCell) 
 
 void RoomInteractiveGrid::handleHoveredCell(GridCell* hoveredCell, GridInteraction* interac) {
     // continue room creation
-    if (interac->getTouchID() == -1) { // if ID is -1, "touch" was mouse click
+    //if (interac->getTouchID() == -1) { // if ID is -1, "touch" was mouse click
+    if (true) {
         if (interac->getLastCell() == hoveredCell) return; // return if cursor was still inside last cell
         // resize room is done with following assumptions:
         // - whether rooms grow or shrink can be inferred from start-, last- and current cell
@@ -58,7 +59,8 @@ void RoomInteractiveGrid::handleHoveredCell(GridCell* hoveredCell, GridInteracti
 
 void RoomInteractiveGrid::handleRelease(GridInteraction* interac) {
     // check result and remove interaction
-    if (interac->getTouchID() == -1) { // if ID is -1, "touch" was mouse click
+    //if (interac->getTouchID() == -1) { // if ID is -1, "touch" was mouse click
+    if (true) {
         Room* room = interac->getRoom();
         if (room->isValid()) { // if room valid, i.e. big enough, then store it
             room->finish();
