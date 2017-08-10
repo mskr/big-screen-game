@@ -330,14 +330,14 @@ namespace viscom {
                 viscom::math::Line3<float> ray = GetCamera()->GetPickRay({ tmp.x,tmp.y });
                 
                 if (tmp.type == INPUT_UPDATE) {
-                    grid_.onMouseMove(tmp.id, ray[0], ray[1]);
+                    grid_.onMouseMove(-1, ray[0], ray[1]);
                 }
                 else if (tmp.type == INPUT_ADD) {
-                    grid_.onMouseMove(tmp.id, ray[0], ray[1]);
+                    grid_.onMouseMove(-1, ray[0], ray[1]);
                     grid_.onTouch(tmp.id);
                 }
                 else if (tmp.type == INPUT_REMOVE) {
-                    grid_.onMouseMove(tmp.id, ray[0], ray[1]);
+                    grid_.onMouseMove(-1, ray[0], ray[1]);
                     grid_.onRelease(tmp.id);
                 }
             }
