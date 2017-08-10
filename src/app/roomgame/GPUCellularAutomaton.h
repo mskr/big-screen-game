@@ -56,6 +56,7 @@ public:
     GLuint getPreviousTexture();
     bool isInitialized();
     size_t getGridBufferSize(); // "grid buffer" refers to automaton state storage
+    size_t getGridBufferElements();
     roomgame::GRID_STATE_ELEMENT* getGridBuffer();
 };
 

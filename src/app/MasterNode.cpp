@@ -49,7 +49,7 @@ namespace viscom {
         // grid state sync only when automaton changed it
         if (automaton_has_transitioned_) {
             synchronized_grid_state_.setVal(std::vector<roomgame::GRID_STATE_ELEMENT>(cellular_automaton_.getGridBuffer(),
-                cellular_automaton_.getGridBuffer() + cellular_automaton_.getGridBufferSize()));
+                cellular_automaton_.getGridBuffer() + cellular_automaton_.getGridBufferElements()));
         }
     }
 
