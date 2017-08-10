@@ -125,6 +125,10 @@ namespace roomgame {
         ndcCoords = ndcCoords / ndcCoords.w;
         ndcCoords = glm::vec4(grid->pushNDCinsideGrid(glm::vec2(ndcCoords.x, ndcCoords.y)), ndcCoords.z, ndcCoords.w);
         GridCell* tmp = grid->getCellAt(glm::vec2(ndcCoords.x, ndcCoords.y));
+        if (tmp == nullptr) {
+            std::cout << "nullptr when choosing target" << std::endl;
+            return;
+        }
         float cellDistance = 9999.0f;
         GridCell* closestWallCell = nullptr;
         GridCell* leftLower = grid->getCellAt(0,0);

@@ -198,11 +198,11 @@ GridCell* InteractiveGrid::pickCell(glm::vec3 rayStartPoint, glm::vec3 rayInterm
 	m[2] = gridTop;
 
 	glm::vec3 intersection = glm::inverse(m) * (rayStartPoint - gridLeftLowerCorner);
-    std::cout << "rayStartPoint: " << rayStartPoint.x << "/" << rayStartPoint.y << "/" << rayStartPoint.z << std::endl;
-    std::cout << "rayIntermediatePoint: " << rayIntermediatePoint.x << "/" << rayIntermediatePoint.y << "/" << rayIntermediatePoint.z << std::endl;
+    //std::cout << "rayStartPoint: " << rayStartPoint.x << "/" << rayStartPoint.y << "/" << rayStartPoint.z << std::endl;
+    //std::cout << "rayIntermediatePoint: " << rayIntermediatePoint.x << "/" << rayIntermediatePoint.y << "/" << rayIntermediatePoint.z << std::endl;
     //std::cout << "gridTop: " << gridTop.x << "/" << gridTop.y << "/" << gridTop.z << std::endl;
     //std::cout << "gridRight: " << gridRight.x << "/" << gridRight.y << "/" << gridRight.z << std::endl;
-    std::cout << "Intersection: " << intersection.x << "/" << intersection.y << "/" << intersection.z << std::endl;
+    //std::cout << "Intersection: " << intersection.x << "/" << intersection.y << "/" << intersection.z << std::endl;
     //std::cout << "Lower Left: " << gridLeftLowerCorner.x << "/" << gridLeftLowerCorner.y << "/" << gridLeftLowerCorner.z << std::endl;
 
 
@@ -424,25 +424,28 @@ size_t InteractiveGrid::getNumCells() {
 
 void InteractiveGrid::handleTouchedCell(int touchID, GridCell* c) {
 	// Debug stuff here, extending classes should add logic
-	std::cout << "INTERACTION START " << "id=" << touchID << " "
-		<< "cell=(" << c->getCol() << ", " << c->getRow() << ")" << std::endl;
-	interactions_.push_back(new GridInteraction(-42, c, 0));
+	//std::cout << "INTERACTION START " << "id=" << touchID << " "
+	//	<< "cell=(" << c->getCol() << ", " << c->getRow() << ")" << std::endl;
+	//interactions_.push_back(new GridInteraction(-42, c, 0));
+    return;
 }
 
 void InteractiveGrid::handleRelease(GridInteraction* in) {
 	// Debug stuff here, extending classes should add logic
-	std::cout << "INTERACTION END " << "id=" << in->getTouchID() << " "
-		<< "start_cell=(" << in->getStartCell()->getCol() << ", " << in->getStartCell()->getRow() << ") "
-		<< "last_cell=(" << in->getLastCell()->getCol() << ", " << in->getLastCell()->getRow() << ")"
-		<< std::endl;
-	if (in->getTouchID() == -42) interactions_.remove(in);
+	//std::cout << "INTERACTION END " << "id=" << in->getTouchID() << " "
+	//	<< "start_cell=(" << in->getStartCell()->getCol() << ", " << in->getStartCell()->getRow() << ") "
+	//	<< "last_cell=(" << in->getLastCell()->getCol() << ", " << in->getLastCell()->getRow() << ")"
+	//	<< std::endl;
+	//if (in->getTouchID() == -42) interactions_.remove(in);
+    return;
 }
 
 void InteractiveGrid::handleHoveredCell(GridCell* c, GridInteraction* in) {
 	// Debug stuff here, extending classes should add logic
-	std::cout << "INTERACTION ONGOING " << "id=" << in->getTouchID() << " "
-		<< "start_cell=(" << in->getStartCell()->getCol() << ", " << in->getStartCell()->getRow() << ") "
-		<< "last_cell=(" << in->getLastCell()->getCol() << ", " << in->getLastCell()->getRow() << ") "
-		<< "current_cell=(" << c->getCol() << ", " << c->getRow() << ")"
-		<< std::endl;
+	//std::cout << "INTERACTION ONGOING " << "id=" << in->getTouchID() << " "
+	//	<< "start_cell=(" << in->getStartCell()->getCol() << ", " << in->getStartCell()->getRow() << ") "
+	//	<< "last_cell=(" << in->getLastCell()->getCol() << ", " << in->getLastCell()->getRow() << ") "
+	//	<< "current_cell=(" << c->getCol() << ", " << c->getRow() << ")"
+	//	<< std::endl;
+    return;
 }
