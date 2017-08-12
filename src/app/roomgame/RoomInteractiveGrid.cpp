@@ -28,7 +28,19 @@ void RoomInteractiveGrid::handleTouchedCell(int touchID, GridCell* touchedCell) 
 
         GLuint test = GridCell::SOURCE | GridCell::INFECTED;
         if ((north & test) & (south & test) & (east & test) & (west & test) ) {
-            
+            std::cout << "Cell is in the middle of 4 infected cells" << std::endl;
+            return;
+        }
+        else if (touchedCell->getBuildState() & GridCell::SOURCE) {
+            if ((north & test) | (south & test) | (east & test) | (west & test)) {
+                std::cout << "Try to cure Source Cell but there are infected cells nerby" << std::endl;
+            }
+            else {
+                std::cout << "TODO: Cure source Cell" << std::endl;
+            }
+        }
+        else {
+            std::cout << "TODO: Cure infected Cell" << std::endl;
         }
         
     }
