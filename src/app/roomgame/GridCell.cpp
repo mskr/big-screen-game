@@ -12,12 +12,14 @@ GridCell::GridCell(float x, float y, size_t col_idx, size_t row_idx) {
 }
 
 void GridCell::removeBuildState(GLuint vbo, unsigned int s, bool makeEmpty = false) {
+    std::cout << "Old Build State: " << vertex_.build_state << "make empty is "<< makeEmpty << std::endl;
     if (makeEmpty) {
         vertex_.build_state = EMPTY;
     }
     else {
-        vertex_.build_state = (vertex_.build_state | s) ^ s;
+        vertex_.build_state &= ~s;
     }
+    std::cout << "New Build State: " << vertex_.build_state << " Remove Stated " << s << std::endl;
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferSubData(GL_ARRAY_BUFFER,
         vertex_buffer_offset_ + 2 * sizeof(GLfloat),

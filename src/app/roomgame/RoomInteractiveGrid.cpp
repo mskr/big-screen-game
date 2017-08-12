@@ -27,6 +27,10 @@ void RoomInteractiveGrid::handleTouchedCell(int touchID, GridCell* touchedCell) 
         GLuint west = touchedCell->getWestNeighbor()->getBuildState();
 
         GLuint test = GridCell::SOURCE | GridCell::INFECTED;
+
+        GLuint currentHealth = touchedCell->getHealthPoints();
+        GLuint updatedHealth = min(currentHealth + ((GridCell::MAX_HEALTH - GridCell::MIN_HEALTH) / 4),GridCell::MAX_HEALTH);
+
         if ((north & test) & (south & test) & (east & test) & (west & test) ) {
             std::cout << "Cell is in the middle of 4 infected cells" << std::endl;
             return;
@@ -36,11 +40,20 @@ void RoomInteractiveGrid::handleTouchedCell(int touchID, GridCell* touchedCell) 
                 std::cout << "Try to cure Source Cell but there are infected cells nerby" << std::endl;
             }
             else {
-                std::cout << "TODO: Cure source Cell" << std::endl;
+                std::cout << "Cure source Cell" << std::endl;
+                touchedCell->updateHealthPoints(vbo_, updatedHealth);
+                if (currentHealth >= GridCell::MAX_HEALTH) {
+                    touchedCell->removeBuildState(vbo_, GridCell::SOURCE, false);
+                }
+                
             }
         }
         else {
-            std::cout << "TODO: Cure infected Cell" << std::endl;
+            std::cout << "Cure infected Cell" << std::endl;
+            touchedCell->updateHealthPoints(vbo_, updatedHealth);
+            if (currentHealth >= GridCell::MAX_HEALTH) {
+                touchedCell->removeBuildState(vbo_, GridCell::INFECTED, false);
+            }
         }
         
     }
