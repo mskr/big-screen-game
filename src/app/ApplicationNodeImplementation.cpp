@@ -41,11 +41,10 @@ namespace viscom {
 
         meshpool_.loadShader(GetApplication()->GetGPUProgramManager());
 
-        meshpool_.addMesh({ GridCell::INSIDE_ROOM },
+        meshpool_.addMesh({ GridCell::INSIDE_ROOM, GridCell::TEMPORARY },
                             GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/newModels/RoomFloor.obj"));
 
-        meshpool_.addMesh({ GridCell::CORNER,
-                            GridCell::INVALID },
+        meshpool_.addMesh({ GridCell::CORNER },
                             GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/newModels/RoomCorner.obj"));
 
         meshpool_.addMesh({ GridCell::WALL,},

@@ -11,13 +11,32 @@ GridCell::GridCell(float x, float y, size_t col_idx, size_t row_idx) {
 	row_idx_ = row_idx;
 }
 
-void GridCell::removeBuildState(GLuint vbo, unsigned int s, bool makeEmpty = false) {
-    if (makeEmpty) {
-        vertex_.build_state = EMPTY;
-    }
-    else {
-        vertex_.build_state = (vertex_.build_state | s) ^ s;
-    }
+//void GridCell::removeBuildState(GLuint vbo, unsigned int s, bool makeEmpty = false) {
+//    if (makeEmpty) {
+//        vertex_.build_state = EMPTY;
+//    }
+//    else {
+//        vertex_.build_state = (vertex_.build_state | s) ^ s;
+//    }
+//    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+//    glBufferSubData(GL_ARRAY_BUFFER,
+//        vertex_buffer_offset_ + 2 * sizeof(GLfloat),
+//        sizeof(vertex_.build_state),
+//        (GLvoid*)&vertex_.build_state);
+//    glBindBuffer(GL_ARRAY_BUFFER, 0);
+//}
+//
+//void GridCell::addBuildState(GLuint vbo, unsigned int s) {
+//    vertex_.build_state |= s;
+//    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+//    glBufferSubData(GL_ARRAY_BUFFER,
+//        vertex_buffer_offset_ + 2 * sizeof(GLfloat),
+//        sizeof(vertex_.build_state),
+//        (GLvoid*)&vertex_.build_state);
+//    glBindBuffer(GL_ARRAY_BUFFER, 0);
+//}
+
+void GridCell::updateBuildState(GLuint vbo) {
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferSubData(GL_ARRAY_BUFFER,
         vertex_buffer_offset_ + 2 * sizeof(GLfloat),
@@ -26,25 +45,15 @@ void GridCell::removeBuildState(GLuint vbo, unsigned int s, bool makeEmpty = fal
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void GridCell::addBuildState(GLuint vbo, unsigned int s) {
-    vertex_.build_state |= s;
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferSubData(GL_ARRAY_BUFFER,
-        vertex_buffer_offset_ + 2 * sizeof(GLfloat),
-        sizeof(vertex_.build_state),
-        (GLvoid*)&vertex_.build_state);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-}
-
-void GridCell::andBuildStateWith(GLuint vbo, unsigned int s) {
-    vertex_.build_state &= s;
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferSubData(GL_ARRAY_BUFFER,
-        vertex_buffer_offset_ + 2 * sizeof(GLfloat),
-        sizeof(vertex_.build_state),
-        (GLvoid*)&vertex_.build_state);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-}
+//void GridCell::andBuildStateWith(GLuint vbo, unsigned int s) {
+//    vertex_.build_state &= s;
+//    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+//    glBufferSubData(GL_ARRAY_BUFFER,
+//        vertex_buffer_offset_ + 2 * sizeof(GLfloat),
+//        sizeof(vertex_.build_state),
+//        (GLvoid*)&vertex_.build_state);
+//    glBindBuffer(GL_ARRAY_BUFFER, 0);
+//}
 
 void GridCell::updateHealthPoints(GLuint vbo, unsigned int hp) {
 	if (hp < MIN_HEALTH) hp = MIN_HEALTH;
@@ -125,6 +134,10 @@ float GridCell::getYPosition() {
 
 unsigned int GridCell::getBuildState() {
 	return vertex_.build_state;
+}
+
+void GridCell::setBuildState(unsigned int state) {
+    vertex_.build_state = state;
 }
 
 unsigned int GridCell::getHealthPoints() {

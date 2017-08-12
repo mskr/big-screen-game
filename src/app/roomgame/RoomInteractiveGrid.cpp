@@ -16,7 +16,8 @@ void RoomInteractiveGrid::handleTouchedCell(int touchID, GridCell* touchedCell) 
     // ...then start room creation
     Room* room = new Room(touchedCell, touchedCell, this);
     interactions_.push_back(new GridInteraction(touchID, touchedCell, room));
-    buildAt(touchedCell->getCol(), touchedCell->getRow(), GridCell::INVALID); // room covering one cell is invalid
+    room->updateCorners(touchedCell, touchedCell);
+    buildAt(touchedCell->getCol(), touchedCell->getRow(), GridCell::INVALID | GridCell::TEMPORARY, InteractiveGrid::BuildMode::Additive); // room covering one cell is invalid
 }
 
 GridCell* RoomInteractiveGrid::getNextFreeCell(GridCell* startCell, GridCell* currentCell) {
@@ -37,68 +38,61 @@ GridCell* RoomInteractiveGrid::getNextFreeCell(GridCell* startCell, GridCell* cu
     }
 }
 
-bool RoomInteractiveGrid::anyRoomCollisions(Room* newRoom) {
+bool RoomInteractiveGrid::markRoomCollisions(Room* newRoom) {
     int lengthX = newRoom->getColSize();
     int lengthY = newRoom->getRowSize();
-    size_t posX = newRoom->rightUpperCorner_->getCol();
-    size_t posY = newRoom->rightUpperCorner_->getRow();
+    int posX = newRoom->rightUpperCorner_->getCol();
+    int posY = newRoom->rightUpperCorner_->getRow();
     for (Room* r : rooms_) {
         if (r == newRoom) {
             continue;
         }
-        if (posX >= r->leftLowerCorner_->getCol() && posX <= r->rightUpperCorner_->getCol() + lengthX) {
-            return true;
-        }
-        if (posY >= r->leftLowerCorner_->getRow() && posY <= r->rightUpperCorner_->getRow() + lengthY) {
-            return true;
+        if ((posX >= (int)(r->leftLowerCorner_->getCol())) && 
+            (posX <= (int)(r->rightUpperCorner_->getCol()) + lengthX)) {
+            
+            if (posY >= r->leftLowerCorner_->getRow() && 
+                posY <= r->rightUpperCorner_->getRow() + lengthY) {
+                newRoom->collision = true;
+                return true;
+            }
         }
     }
+    bool connected = false;
+    for (Room* r : rooms_) {
+        if (r == newRoom) {
+            continue;
+        }
+        if ((posX == (int)(r->leftLowerCorner_->getCol()) - 1) ||
+            (posX == (int)(r->rightUpperCorner_->getCol()) + lengthX + 1)) {
+            if (posY - (int)r->rightUpperCorner_->getRow() < lengthY - 3 &&
+                posY - (int)r->leftLowerCorner_->getRow() > 3) {
+                connected = true;
+                break;
+            }
+        }
+        if ((posY == (int)(r->leftLowerCorner_->getRow()) - 1) ||
+            (posY == (int)(r->rightUpperCorner_->getRow()) + lengthY + 1)) {
+            if (posX - (int)r->rightUpperCorner_->getCol() < lengthX - 3 &&
+                posX - (int)r->leftLowerCorner_->getCol() > 3) {
+                connected = true;
+                break;
+            }
+        }
+    }
+    newRoom->connected = connected;
+    newRoom->collision = false;
     return false;
 }
 
 void RoomInteractiveGrid::handleHoveredCell(GridCell* hoveredCell, GridInteraction* interac) {
-    // continue room creation
-    //if (interac->getTouchID() == -1) { // if ID is -1, "touch" was mouse click
-    if (true) {
-        if (interac->getLastCell() == hoveredCell) return; // return if cursor was still inside last cell
-        // resize room is done with following assumptions:
-        // - whether rooms grow or shrink can be inferred from start-, last- and current cell
-        // - collisions can only occur for growing rooms
-        if (!anyRoomCollisions(interac->getRoom())) {
-            interac->getRoom()->clear();
-            interac->setLastCell(hoveredCell);
-            interac->getRoom()->fillRoom(interac->getStartCell(), interac->getLastCell(), true, firstRoom);
-        }
+    if (interac->getLastCell() == hoveredCell) return; // return if cursor was still inside last cell
+    interac->setLastCell(hoveredCell);
+    interac->getRoom()->clear();
+    interac->getRoom()->updateCorners(interac->getStartCell(), hoveredCell);
+    markRoomCollisions(interac->getRoom());
+    interac->getRoom()->checkValidity(firstRoom);
+    interac->getRoom()->fillRoom(interac->getStartCell(), interac->getLastCell(), true);
 
-
-        //Room::CollisionType collision = resizeRoomUntilCollision(interac->getRoom(),
-        //    interac->getStartCell(), interac->getLastCell(), hoveredCell);
-        //if (collision == Room::CollisionType::NONE) {
-        //    interac->setLastCell(hoveredCell);
-        //}
-        //else if (interac->getLastCollision() == Room::CollisionType::NONE) {
-        //    interac->setLastCell(hoveredCell);
-        //}
-        //else if (collision == Room::CollisionType::HORIZONTAL) {
-        //    if (interac->getLastCollision() == Room::CollisionType::VERTICAL)
-        //        interac->setLastCell(hoveredCell);
-        //    else
-        //        interac->setLastCell(getCellAt(interac->getLastCell()->getCol(), hoveredCell->getRow()));
-        //}
-        //else if (collision == Room::CollisionType::VERTICAL) {
-        //    if (interac->getLastCollision() == Room::CollisionType::HORIZONTAL)
-        //        interac->setLastCell(hoveredCell);
-        //    else
-        //        interac->setLastCell(getCellAt(hoveredCell->getCol(), interac->getLastCell()->getRow()));
-        //}
-        //interac->setLastCollision(collision);
-    }
-    else { // if ID not 1, then this was really a touch interaction
-        //TODO React to touch interaction
-        std::cout << "Currently nothing is done for touch interaction." << std::endl;
-        std::cout << "We may want to use the same room building stuff here," << std::endl;
-        std::cout << "but need to be prepared for discontinuaties (sudden releases) due to bad touch hardware." << std::endl;
-    }
 }
 
 void RoomInteractiveGrid::handleRelease(GridInteraction* interac) {
@@ -106,10 +100,12 @@ void RoomInteractiveGrid::handleRelease(GridInteraction* interac) {
     //if (interac->getTouchID() == -1) { // if ID is -1, "touch" was mouse click
     if (true) {
         Room* room = interac->getRoom();
-        if (rooms_.size() > 0) {
-            firstRoom = false;
-        }
-        if (room->isValid(firstRoom)) { // if room valid, i.e. big enough, then store it
+        if (room->isValid) { // if room valid, i.e. big enough, then store it
+            if (rooms_.size() == 0) {
+                firstRoom = false;
+            }
+            room->clear();
+            interac->getRoom()->fillRoom(interac->getRoom()->leftLowerCorner_, interac->getRoom()->rightUpperCorner_, false);
             room->finish();
             rooms_.push_back(room);
         }

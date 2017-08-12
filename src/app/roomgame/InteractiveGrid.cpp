@@ -302,15 +302,20 @@ void InteractiveGrid::onMouseMove(int touchID, glm::vec3 rayStartPoint, glm::vec
 }
 
 
-void InteractiveGrid::buildAt(size_t col, size_t row, GLuint buildState) {
-	GridCell* maybeCell = getCellAt(col, row);
-	if (!maybeCell) return;
-	if (maybeCell->getBuildState() == buildState) return;
-	maybeCell->addBuildState(vbo_, buildState);
+void InteractiveGrid::buildAt(size_t col, size_t row, std::function<void(GridCell*)> callback) {
+    std::cout << "Called the wrong buildAt" << std::endl;
+    //   GridCell* maybeCell = getCellAt(col, row);
+    //if (!maybeCell) return;
+    //if (maybeCell->getBuildState() == buildState) return;
+    //maybeCell->addBuildState(vbo_, buildState);
 }
 
-void InteractiveGrid::replaceRoompieceWith(size_t col, size_t row, GLuint buildState) {
-    std::cout << "Called the wrong replaceRoompieceWith" << std::endl;
+void InteractiveGrid::buildAt(size_t col, size_t row, GLuint state, BuildMode buildMode) {
+    std::cout << "Called the wrong buildAt" << std::endl;
+    //   GridCell* maybeCell = getCellAt(col, row);
+    //if (!maybeCell) return;
+    //if (maybeCell->getBuildState() == buildState) return;
+    //maybeCell->addBuildState(vbo_, buildState);
 }
 
 bool InteractiveGrid::deleteNeighbouringWalls(GridCell* cell, bool simulate) {
@@ -362,8 +367,18 @@ bool InteractiveGrid::deleteNeighbouringWalls(GridCell* cell, bool simulate) {
             if (simulate) {
                 return true;
             }
-            replaceRoompieceWith(cell->getCol(), cell->getRow(), GridCell::INSIDE_ROOM);
-            replaceRoompieceWith(neighbour->getCol(), neighbour->getRow(), GridCell::INSIDE_ROOM);
+            buildAt(cell->getCol(), cell->getRow(), [&](GridCell* c) {
+                GLuint old = c->getBuildState();
+                GLuint modified = old & (GridCell::EMPTY | GridCell::INVALID | GridCell::SOURCE | GridCell::INFECTED | GridCell::OUTER_INFLUENCE);
+                modified |= GridCell::INSIDE_ROOM;
+                c->setBuildState(modified);
+            });
+            buildAt(neighbour->getCol(), neighbour->getRow(), [&](GridCell* c) {
+                GLuint old = c->getBuildState();
+                GLuint modified = old & (GridCell::EMPTY | GridCell::INVALID | GridCell::SOURCE | GridCell::INFECTED | GridCell::OUTER_INFLUENCE);
+                modified |= GridCell::INSIDE_ROOM;
+                c->setBuildState(modified);
+            });
             return true;
         }
     }

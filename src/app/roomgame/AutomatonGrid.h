@@ -26,8 +26,7 @@ public:
 	~AutomatonGrid();
 	void setCellularAutomaton(GPUCellularAutomaton*);
 	void onMeshpoolInitialized() override;
-    void buildAt(size_t col, size_t row, GLuint buildState) override; // for user changes
-    void replaceRoompieceWith(size_t col, size_t row, GLuint buildState) override; // for user changes
+    void buildAt(size_t col, size_t row, GLuint buildState); // for user changes
     void updateCell(GridCell* c, GLuint state, int hp); // for automaton changes
 	void onTransition();
 	void populateCircleAtLastMousePosition(int radius);

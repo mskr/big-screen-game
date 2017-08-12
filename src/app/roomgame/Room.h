@@ -4,7 +4,6 @@
 #include "GridCell.h"
 
 class InteractiveGrid;
-
 /* A room spanning over a rectangular area of cells on a grid.
  * Rooms are also represented by build states of cells.
  * Can be interactively created/resized.
@@ -30,22 +29,17 @@ public:
 	Room(GridCell* leftLowerCorner, GridCell* rightUpperCorner, InteractiveGrid* grid);
 	~Room();
 	void clear();
-	void invalidate();
-	bool isValid(bool firstRoom);
+    void invalidate();
+    void validate();
+    bool isValid = false;
+    bool collision = false;
+    bool connected = false;
+    bool checkValidity(bool firstRoom);
 	void finish();
 	size_t getColSize();
 	size_t getRowSize();
-
-	//bool growToEast(size_t dist);
-	//bool growToWest(size_t dist);
-	//bool growToSouth(size_t dist);
-	//bool growToNorth(size_t dist);
-	//void shrinkToEast(size_t dist);
-	//void shrinkToWest(size_t dist);
-	//void shrinkToSouth(size_t dist);
-	//void shrinkToNorth(size_t dist);
-	//bool spanFromTo(GridCell* startCell, GridCell* endCell, bool firstRoom);
-    void Room::fillRoom(GridCell* startCell, GridCell* endCell, bool temporary, bool firstRoom);
+    void updateCorners(GridCell* startCell, GridCell* endCell);
+    void Room::fillRoom(GridCell* startCell, GridCell* endCell, bool temporary);
 
 	enum CollisionType {
 		HORIZONTAL, VERTICAL, BOTH, NONE

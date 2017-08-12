@@ -87,9 +87,11 @@ private:
 public:
 	GridCell(float x, float y, size_t col_idx, size_t row_idx);
 	~GridCell() = default;
-    void removeBuildState(GLuint vbo, unsigned int s, bool makeEmpty);
-    void addBuildState(GLuint vbo, unsigned int s);
-    void andBuildStateWith(GLuint vbo, unsigned int s);
+    void updateBuildState(GLuint vbo);
+    //void removeBuildState(GLuint vbo, unsigned int s, bool makeEmpty);
+    //void addBuildState(GLuint vbo, unsigned int s);
+    //void andBuildStateWith(GLuint vbo, unsigned int s);
+    void setBuildState(unsigned int state);
     void updateHealthPoints(GLuint vbo, unsigned int hp);
 	void setMeshInstance(RoomSegmentMesh::InstanceBufferRange mesh_instance);
 	static void setVertexAttribPointer();
