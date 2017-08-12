@@ -8,6 +8,10 @@
 
 #pragma once
 
+
+#include <mutex>
+#include <vector>
+
 #include "roomgame\InnerInfluence.h"
 #include "glm\gtx\quaternion.hpp"
 
@@ -18,6 +22,14 @@
 #endif
 
 namespace viscom {
+
+    enum inputType { INPUT_ADD, INPUT_UPDATE, INPUT_REMOVE };
+
+    struct input {
+        inputType type;
+        float x, y;
+        int id;
+    };
 
     /* Roomgame controller class for master node
      * Holds the grid with all the build states
@@ -104,8 +116,13 @@ namespace viscom {
         bool UpdateTuioCursor(TUIO::TuioCursor *tcur) override;
         bool RemoveTuioCursor(TUIO::TuioCursor *tcur) override;
 
+        bool handleInputBuffer();
+
         glm::vec2 GetCirclePos(glm::vec2 center, float radius, int angle);
         int viewAngle = 90;
         float range = 4;
+    private:
+        std::mutex mtx;
+        std::vector<input> inputBuffer;
     };
 }
