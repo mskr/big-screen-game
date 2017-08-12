@@ -49,7 +49,6 @@ ivec4 countNeighborsWithStateDirected(uint st);
 int countNeighborsInRangeWithState(uint state, ivec2 start, ivec2 end);
 ivec4 countNeighborsInRangeWithStateDirected(uint state, ivec2 start, ivec2 end);
 bool isStateInNeighborhood(uint state);
-uint getFluidGradientInDirection(int dir); // dir is one of above defines (N,NE...)
 
 /* Function for lookup state in given grid at given cell */
 uvec2 lookup(usampler2D grid, vec2 cell) {
@@ -68,9 +67,15 @@ void setOutput(uint buildState, uint healthPoints) {
 // flow direction rotates per time step
 uniform ivec2 FLOW_DIRECTION;
 // threshold where the fluid begins to flow
-uniform int CRITICAL_VALUE;
+uniform int CRITICAL_VALUE; //TODO test whether uint works with unary minus
 // amount of fluid a lower cell receives from collapsing neighbor
 uniform uint FLOW_SPEED;
+//TODO Think about avalanches. Will it work with a parallel setup?
+// * Considering only one neighbor might not be correct
+//   * A cell only knows if it gives/receives fluid from e.g. left side
+//   * The cell on the left side only compares against its left side too
+//   * They can never exchange fluid
+// * Try to consider two neighbors swapping horizontal/vertical!
 
 
 
@@ -108,12 +113,12 @@ void main() {
     // CASE 2: cell is INFECTED (& INSIDE_ROOM)
     else if((bstate & INFECTED) > 0U) {
         // compute flow assuming that fluid flows "down hill"
-        if(fluid_gradient > CRITICAL_VALUE) {
-            setOutput(bstate, health - FLOW_SPEED);
+        if(fluid_gradient > CRITICAL_VALUE) { // incoming
+            setOutput(bstate, clamp(health - FLOW_SPEED, MIN_HEALTH, MAX_HEALTH));
             return;
         }
-        else if(fluid_gradient < -CRITICAL_VALUE) {
-            setOutput(bstate, health + FLOW_SPEED);
+        else if(fluid_gradient < -CRITICAL_VALUE) { // outgoing
+            setOutput(bstate, clamp(health + FLOW_SPEED, MIN_HEALTH, MAX_HEALTH));
             return;
         }
     }
@@ -201,9 +206,7 @@ int countNeighborsInRangeWithState(uint state, ivec2 start, ivec2 end) {
         for(int y = start.y; y <= end.y; y += 1) {
             if(x==0 && y==0) continue;
             uvec2 cell = lookup(inputGrid, pixel + vec2(x*pxsize.x, y*pxsize.y));
-            if((cell.r & state) > 0U) {
-                cnt++;
-            }
+            if((cell.r & state) > 0U) cnt++;
         }
     }
     return cnt;
@@ -217,6 +220,7 @@ ivec4 countNeighborsInRangeWithStateDirected(uint state, ivec2 start, ivec2 end)
     ivec4 cnt = ivec4(0);
     for(int x = start.x; x <= end.x; x += 1) {
         for(int y = start.y; y <= end.y; y += 1) {
+            if(x==0 && y==0) continue;
             uint neighborState = lookup(inputGrid, pixel + vec2(x*pxsize.x, y*pxsize.y)).r;
             if(neighborState != state) continue;
             if(x > 0) cnt.x++;

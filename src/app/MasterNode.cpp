@@ -29,7 +29,7 @@ namespace viscom {
 
     void MasterNode::InitOpenGL() {
         ApplicationNodeImplementation::InitOpenGL();
-        
+
         grid_.loadShader(GetApplication()->GetGPUProgramManager()); // for viewing build states...
         grid_.uploadVertexData(); // ...for debug purposes
 
@@ -63,7 +63,7 @@ namespace viscom {
         sgct::SharedData::instance()->writeObj<glm::vec3>(&synchronized_grid_translation_);
         sgct::SharedData::instance()->writeFloat(&synchronized_automaton_transition_time_delta_);
         sgct::SharedData::instance()->writeBool(&synchronized_automaton_has_transitioned_);
-        if(automaton_has_transitioned_)
+        if (automaton_has_transitioned_)
             sgct::SharedData::instance()->writeVector(&synchronized_grid_state_);
     }
 
@@ -110,6 +110,10 @@ namespace viscom {
     void MasterNode::UpdateFrame(double t1, double t2) {
         ApplicationNodeImplementation::UpdateFrame(t1, t2);
 
+        if (!inputBuffer.empty()) {
+            handleInputBuffer();
+        }
+
         //cellular_automaton_.setTransitionTime(automaton_transition_time);
         //cellular_automaton_.setDamagePerCell(automaton_damage_per_cell);
         automaton_has_transitioned_ = cellular_automaton_.transition(clock_.t_in_sec);
@@ -127,10 +131,10 @@ namespace viscom {
         outerInfluence_->viewPersMat = viewProj;
 
         grid_.updateProjection(viewProj);
-        fbo.DrawToFBO([&] { 
+        fbo.DrawToFBO([&] {
             if (render_mode_ == RenderMode::DBG) grid_.onFrame();
         });
-        
+
     }
 
     void MasterNode::Draw2D(FrameBuffer& fbo) {
@@ -140,7 +144,7 @@ namespace viscom {
             ImGui::GetIO().FontGlobalScale = 1.5f;
             if (ImGui::Begin("Roomgame Controls")) {
                 //ImGui::SetWindowFontScale(2.0f);
-                ImGui::Text("Interaction mode: %s", (interaction_mode_ == GRID) ? "GRID" : 
+                ImGui::Text("Interaction mode: %s", (interaction_mode_ == GRID) ? "GRID" :
                     ((interaction_mode_ == AUTOMATON) ? "AUTOMATON" : "CAMERA"));
             }
             ImGui::End();
@@ -188,10 +192,10 @@ namespace viscom {
             /* I thought this was the position of the gridmesh...
             glm::vec3 gridPos = glm::vec3(
                 0,
-                -(GRID_HEIGHT_ / GRID_ROWS_), // position background mesh exactly under grid 
-                -0.001f); //TODO better remove the z bias and use thicker meshes 
+                -(GRID_HEIGHT_ / GRID_ROWS_), // position background mesh exactly under grid
+                -0.001f); //TODO better remove the z bias and use thicker meshes
                 */
-            //but this seems to be the real one
+                //but this seems to be the real one
             glm::vec3 gridPos = grid_.grid_center_;
 
             int right = key == GLFW_KEY_D ? 1 : 0;
@@ -200,12 +204,12 @@ namespace viscom {
             int down = key == GLFW_KEY_S ? 1 : 0;
             int xAxis = right - left;
             int yAxis = up - down;
-            GetCamera()->SetPosition(GetCamera()->GetPosition()+glm::vec3(xAxis,yAxis,0)*0.1f);
+            GetCamera()->SetPosition(GetCamera()->GetPosition() + glm::vec3(xAxis, yAxis, 0)*0.1f);
             int upWards = key == GLFW_KEY_UP ? 1 : 0;
             int downWards = key == GLFW_KEY_DOWN ? 1 : 0;
             int rotate = upWards - downWards;
-            if (rotate!=0) {
-                viewAngle += 5*rotate;
+            if (rotate != 0) {
+                viewAngle += 5 * rotate;
                 viewAngle = glm::clamp(viewAngle, 90, 170);
                 glm::vec2 pos = GetCirclePos(glm::vec2(gridPos.y, gridPos.z), range, viewAngle);
                 GetCamera()->SetPosition(glm::vec3(0, pos.x, pos.y));
@@ -225,9 +229,9 @@ namespace viscom {
             if (interaction_mode_ == AUTOMATON) interaction_mode_ = InteractionMode::GRID;
             else interaction_mode_ = InteractionMode::AUTOMATON;
         }
-        #ifndef VISCOM_CLIENTGUI
-            ImGui_ImplGlfwGL3_KeyCallback(key, scancode, action, mods);
-        #endif
+#ifndef VISCOM_CLIENTGUI
+        ImGui_ImplGlfwGL3_KeyCallback(key, scancode, action, mods);
+#endif
         return ApplicationNodeImplementation::KeyboardCallback(key, scancode, action, mods);
     }
 
@@ -244,9 +248,9 @@ namespace viscom {
                 if (action == GLFW_PRESS) grid_.populateCircleAtLastMousePosition(1);
             }
         }
-        #ifndef VISCOM_CLIENTGUI
-            ImGui_ImplGlfwGL3_MouseButtonCallback(button, action, 0);
-        #endif
+#ifndef VISCOM_CLIENTGUI
+        ImGui_ImplGlfwGL3_MouseButtonCallback(button, action, 0);
+#endif
         return ApplicationNodeImplementation::MouseButtonCallback(button, action);
     }
 
@@ -257,9 +261,9 @@ namespace viscom {
     bool MasterNode::MousePosCallback(double x, double y) {
         viscom::math::Line3<float> ray = GetCamera()->GetPickRay({ x,y });
         grid_.onMouseMove(-1, ray[0], ray[1]);
-        #ifndef VISCOM_CLIENTGUI
-            ImGui_ImplGlfwGL3_MousePositionCallback(x, y);
-        #endif
+#ifndef VISCOM_CLIENTGUI
+        ImGui_ImplGlfwGL3_MousePositionCallback(x, y);
+#endif
         return ApplicationNodeImplementation::MousePosCallback(x, y);
     }
 
@@ -268,52 +272,79 @@ namespace viscom {
         if (interaction_mode_ == InteractionMode::CAMERA) {
             float change = (float)yoffset*0.1f;
             glm::vec3 camToGrid = GetCamera()->GetPosition() - grid_.grid_center_;
-            if (glm::length(camToGrid) > 0.5 || yoffset>0) {
+            if (glm::length(camToGrid) > 0.5 || yoffset > 0) {
                 GetCamera()->SetPosition(GetCamera()->GetPosition() + camToGrid*change);
                 range = glm::distance(GetCamera()->GetPosition(), grid_.grid_center_);
             }
         }
-        #ifndef VISCOM_CLIENTGUI
-            ImGui_ImplGlfwGL3_ScrollCallback(xoffset, yoffset);
-        #endif
+#ifndef VISCOM_CLIENTGUI
+        ImGui_ImplGlfwGL3_ScrollCallback(xoffset, yoffset);
+#endif
         return ApplicationNodeImplementation::MouseScrollCallback(xoffset, yoffset);
     }
 
     bool MasterNode::CharCallback(unsigned int character, int mods) {
-        #ifndef VISCOM_CLIENTGUI
-            ImGui_ImplGlfwGL3_CharCallback(character);
-        #endif
+#ifndef VISCOM_CLIENTGUI
+        ImGui_ImplGlfwGL3_CharCallback(character);
+#endif
         return ApplicationNodeImplementation::CharCallback(character, mods);
     }
 
-    #ifdef WITH_TUIO
-        bool MasterNode::AddTuioCursor(TUIO::TuioCursor* tcur)
-        {
-            grid_.onTouch(-1); //TODO @Tobias: pass the CursorID here,
-            // ID is saved in interaction object by RoomInteractiveGrid::handleTouchedCell,
+    bool MasterNode::AddTuioCursor(TUIO::TuioCursor* tcur)
+    {
+        // grid_.onTouch(-1); //TODO @Tobias: pass the CursorID here,
+        // ID is saved in interaction object by RoomInteractiveGrid::handleTouchedCell,
             // this object lives for the duration of one touch gesture
             // and is used to distinguish clicks/touches, to reuse IDs of accidentally interrupted touch gestures, etc.
             // (see RoomInteractiveGrid::handleHoveredCell + handleRelease + GridInteraction::testTemporalAndSpatialProximity)
-            std::cout << "add    cur  " << tcur->getCursorID() << " (" << tcur->getSessionID() << "/" << tcur->getTuioSourceID() << ") " << tcur->getX() << " " << tcur->getY() << std::endl;
-            return false;
-        }
+        mtx.lock();
+        inputBuffer.push_back(input{ INPUT_ADD,tcur->getX(),tcur->getY(), tcur->getCursorID() });
+        mtx.unlock();
+        std::cout << "add    cur  " << tcur->getCursorID() << " (" << tcur->getSessionID() << "/" << tcur->getTuioSourceID() << ") " << tcur->getX() << " " << tcur->getY() << std::endl;
+        return true;
+    }
 
-        bool MasterNode::UpdateTuioCursor(TUIO::TuioCursor* tcur)
-        {
-            float x = tcur->getX();
-            float y = tcur->getY();
-            viscom::math::Line3<float> ray = GetCamera()->GetPickRay({ x,y });
-            grid_.onMouseMove(-1, ray[0], ray[1]);
-            std::cout << "set    cur  " << tcur->getCursorID() << " (" << tcur->getSessionID() << "/" << tcur->getTuioSourceID() << ") " << tcur->getX() << " " << tcur->getY()
-                << " " << tcur->getMotionSpeed() << " " << tcur->getMotionAccel() << " " << std::endl;
-            return false;
-        }
+    bool MasterNode::UpdateTuioCursor(TUIO::TuioCursor* tcur)
+    {
+        mtx.lock();
+        inputBuffer.push_back(input{ INPUT_UPDATE,tcur->getX(),tcur->getY(), tcur->getCursorID() });
+        mtx.unlock();
+        std::cout << "set    cur  " << tcur->getCursorID() << " (" << tcur->getSessionID() << "/" << tcur->getTuioSourceID() << ") " << tcur->getX() << " " << tcur->getY()
+            << " " << tcur->getMotionSpeed() << " " << tcur->getMotionAccel() << " " << std::endl;
+        return true;
+    }
 
-        bool MasterNode::RemoveTuioCursor(TUIO::TuioCursor* tcur)
-        {
-            grid_.onRelease(-1);
-            std::cout << "delete cur  " << tcur->getCursorID() << " (" << tcur->getSessionID() << "/" << tcur->getTuioSourceID() << ")" << std::endl;
-            return false;
+    bool MasterNode::RemoveTuioCursor(TUIO::TuioCursor* tcur)
+    {
+        mtx.lock();
+        inputBuffer.push_back(input{ INPUT_REMOVE,tcur->getX(),tcur->getY(), tcur->getCursorID() });
+        mtx.unlock();
+        std::cout << "delete cur  " << tcur->getCursorID() << " (" << tcur->getSessionID() << "/" << tcur->getTuioSourceID() << ")" << std::endl;
+        return true;
+    }
+
+    bool MasterNode::handleInputBuffer() {
+        if (mtx.try_lock()) {
+            for (int i = 0; i < inputBuffer.size(); i++) {
+                input tmp = inputBuffer.at(i);
+                viscom::math::Line3<float> ray = GetCamera()->GetPickRay({ tmp.x,tmp.y });
+                
+                if (tmp.type == INPUT_UPDATE) {
+                    grid_.onMouseMove(tmp.id, ray[0], ray[1]);
+                }
+                else if (tmp.type == INPUT_ADD) {
+                    grid_.onMouseMove(tmp.id, ray[0], ray[1]);
+                    grid_.onTouch(tmp.id);
+                }
+                else if (tmp.type == INPUT_REMOVE) {
+                    grid_.onMouseMove(tmp.id, ray[0], ray[1]);
+                    grid_.onRelease(tmp.id);
+                }
+            }
+            inputBuffer.clear();
+            mtx.unlock();
+            return true;
         }
-    #endif
+        else return false;
+    }
 }
