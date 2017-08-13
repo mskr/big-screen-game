@@ -14,15 +14,12 @@
  * Provides a number of helper functions.
 */
 class InteractiveGrid {
-public:
-    glm::vec3 grid_center_;
 protected:
     // Data members
     float height_units_;
     float cell_size_;
     std::vector<std::vector<GridCell>> cells_;
     // Render-related members
-    GLuint vao_, vbo_;
     std::shared_ptr<viscom::GPUProgram> shader_;
     GLint mvp_uniform_location_;
     glm::vec3 translation_;
@@ -36,6 +33,14 @@ protected:
     virtual void handleHoveredCell(GridCell*, GridInteraction*);
     virtual void handleRelease(GridInteraction*);
 public:
+    static enum BuildMode {
+        Additive = 0,
+        Replace = 1,
+        RemoveSpecific = 2
+    };
+    glm::vec3 grid_center_;
+    GLuint vao_, vbo_;
+
 
     /* Computes cell positions by iteratively adding (height/rows, height/rows) to (-1, -1) */
     InteractiveGrid(size_t columns, size_t rows, float height);
@@ -93,9 +98,9 @@ public:
 
 
     // Functions for grid modification
-    virtual void buildAt(size_t col, size_t row, GLuint buildState);
-    virtual void replaceRoompieceWith(size_t col, size_t row, GLuint buildState);
-    void deleteNeighbouringWalls(GridCell* cell);
+    virtual void buildAt(size_t col, size_t row, GLuint newState, BuildMode buildMode);
+    virtual void buildAt(size_t col, size_t row, std::function<void(GridCell*)> callback);
+    bool deleteNeighbouringWalls(GridCell* cell, bool simulate);
 };
 
 #endif

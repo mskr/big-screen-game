@@ -41,11 +41,10 @@ namespace viscom {
 
         meshpool_.loadShader(GetApplication()->GetGPUProgramManager());
 
-        meshpool_.addMesh({ GridCell::INSIDE_ROOM },
+        meshpool_.addMesh({ GridCell::INSIDE_ROOM, GridCell::TEMPORARY },
                             GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/newModels/RoomFloor.obj"));
 
-        meshpool_.addMesh({ GridCell::CORNER,
-                            GridCell::INVALID },
+        meshpool_.addMesh({ GridCell::CORNER },
                             GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/newModels/RoomCorner.obj"));
 
         meshpool_.addMesh({ GridCell::WALL,},
@@ -131,7 +130,7 @@ namespace viscom {
             GetApplication()->GetGPUProgramManager().GetResource("underwater",
                 std::initializer_list<std::string>{ "underwater.vert", "underwater.frag" }));
         
-        waterMesh_->scale = 1.0f;
+        waterMesh_->scale = 2.0f;
         //backgroundMesh_->transform(glm::scale(glm::translate(glm::mat4(1), 
         //waterMesh_->transform(glm::scale(glm::translate(glm::mat4(1),
         //    glm::vec3(

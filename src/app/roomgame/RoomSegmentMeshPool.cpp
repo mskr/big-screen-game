@@ -59,7 +59,9 @@ void RoomSegmentMeshPool::updateUniformEveryFrame(std::string uniform_name, std:
 
 RoomSegmentMesh* RoomSegmentMeshPool::getMeshOfType(GLuint type) {
 	std::vector<RoomSegmentMesh*> mesh_variations;
-    if ((type&GridCell::CORNER) != 0) {
+    if ((type&GridCell::TEMPORARY) != 0) {
+        type = GridCell::TEMPORARY;
+    } else if ((type&GridCell::CORNER) != 0) {
         type = GridCell::CORNER;
     }
     else if ((type&GridCell::WALL) != 0) {
@@ -67,9 +69,6 @@ RoomSegmentMesh* RoomSegmentMeshPool::getMeshOfType(GLuint type) {
     }
     else if ((type&GridCell::INSIDE_ROOM) != 0) {
         type = GridCell::INSIDE_ROOM;
-    }
-    else if ((type&GridCell::INVALID) != 0) {
-        type = GridCell::INVALID;
     }
     try {
 		mesh_variations = meshes_.at(type);

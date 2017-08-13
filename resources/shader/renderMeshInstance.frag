@@ -22,6 +22,7 @@ flat in uint hp;
 #define SOURCE 256U
 #define INFECTED 512U
 #define OUTER_INFLUENCE 1024U
+#define TEMPORARY 2048U
 
 /* Max health (should match GridCell::MAX_HEALTH) */
 #define MAX_HEALTH 100U
@@ -103,8 +104,17 @@ void main() {
         color = vec4(1,1,1, infectedness);
     }
     else {
+        if((st & TEMPORARY) > 0U){
+            float tmpAlpha = 0.5f;
+            if((st & INVALID) > 0U){
+                color = vec4(1,0,0,tmpAlpha);
+            }else{
+                color = vec4(material.diffuse, tmpAlpha);
+            }
+        }else{
+            color = vec4(material.diffuse,material.alpha);            
+        }
         //color = vec4(vNormal, material.alpha) * healthNormalized;
-        color = vec4(material.diffuse,material.alpha);
         //TODO do phong lighting correctly
         //vec3 col = material.ambient + material.diffuse * NdotL + material.specular * R;
         //color = vec4(col,1) * healthNormalized;

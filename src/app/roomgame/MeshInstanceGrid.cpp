@@ -26,26 +26,11 @@ void MeshInstanceGrid::removeInstanceAt(GridCell* c) {
 		bufferRange.mesh_->removeInstanceUnordered(bufferRange.offset_instances_);
 }
 
-void MeshInstanceGrid::buildAt(GridCell* c, GLuint newSt) {
-	GLuint current = c->getBuildState();
-	if (current == newSt) return;
-	else if (current == GridCell::EMPTY) addInstanceAt(c, newSt);
-	else if (newSt == GridCell::EMPTY) removeInstanceAt(c);
-	else {
-		removeInstanceAt(c);
-		addInstanceAt(c, newSt);
-	}
-    c->removeBuildState(vbo_, 0, true);
-    c->addBuildState(vbo_, newSt);
-}
-
-void MeshInstanceGrid::buildAt(size_t col, size_t row, GLuint buildState) {
-	GridCell* maybeCell = getCellAt(col, row);
-	if (maybeCell) buildAt(maybeCell, buildState);
-}
-
-void MeshInstanceGrid::replaceRoompieceWith(GridCell* c, GLuint newSt) {
+void MeshInstanceGrid::buildAt(GridCell* c, std::function<void(GridCell*)> callback) {
     GLuint current = c->getBuildState();
+    callback(c);
+    GLuint newSt = c->getBuildState();
+    c->setBuildState(current);
     if (current == newSt) return;
     else if (current == GridCell::EMPTY) addInstanceAt(c, newSt);
     else if (newSt == GridCell::EMPTY) removeInstanceAt(c);
@@ -53,15 +38,44 @@ void MeshInstanceGrid::replaceRoompieceWith(GridCell* c, GLuint newSt) {
         removeInstanceAt(c);
         addInstanceAt(c, newSt);
     }
-    c->andBuildStateWith(vbo_, GridCell::EMPTY | GridCell::INVALID | GridCell::SOURCE | GridCell::INFECTED | GridCell::OUTER_INFLUENCE);
-    c->addBuildState(vbo_, newSt);
+    c->setBuildState(newSt);
+    c->updateBuildState(vbo_);
 }
 
-void MeshInstanceGrid::replaceRoompieceWith(size_t col, size_t row, GLuint buildState) {
+void MeshInstanceGrid::buildAt(GridCell* c, GLuint newState, BuildMode buildMode) {
+    GLuint current = c->getBuildState();
+    GLuint moddedState;
+    switch (buildMode) {
+    case BuildMode::Additive:
+        moddedState = current | newState;
+        break;
+    case BuildMode::Replace:
+        moddedState = newState;
+        break;
+    case BuildMode::RemoveSpecific:
+        moddedState = (current | newState)^newState;
+        break;
+    }
+    if (current == moddedState) return;
+    else if (current == GridCell::EMPTY) addInstanceAt(c, moddedState);
+    else if (moddedState == GridCell::EMPTY) removeInstanceAt(c);
+    else {
+        removeInstanceAt(c);
+        addInstanceAt(c, moddedState);
+    }
+    c->setBuildState(moddedState);
+    c->updateBuildState(vbo_);
+}
+
+void MeshInstanceGrid::buildAt(size_t col, size_t row, std::function<void(GridCell*)> callback) {
     GridCell* maybeCell = getCellAt(col, row);
-    if (maybeCell) replaceRoompieceWith(maybeCell,buildState);
+    if (maybeCell) buildAt(maybeCell, callback);
 }
 
+void MeshInstanceGrid::buildAt(size_t col, size_t row, GLuint newState, BuildMode buildMode) {
+    GridCell* maybeCell = getCellAt(col, row);
+    if (maybeCell) buildAt(maybeCell, newState, buildMode);
+}
 
 void MeshInstanceGrid::onMeshpoolInitialized() {
 
