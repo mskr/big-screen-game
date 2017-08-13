@@ -45,7 +45,7 @@ void AutomatonGrid::updateCell(GridCell* c, GLuint state, int hp) {
 		delayed_update_list_->next_ = tmp;
 		return;
 	}
-    MeshInstanceGrid::buildAt(c, state, InteractiveGrid::BuildMode::Additive);
+    MeshInstanceGrid::buildAt(c, state, InteractiveGrid::BuildMode::Replace);
     c->updateHealthPoints(vbo_, hp); // thinking of dynamic outer influence...
 	// a fixed-on-cell health is not very practical
 }

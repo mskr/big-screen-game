@@ -62,22 +62,27 @@ bool RoomInteractiveGrid::markRoomCollisions(Room* newRoom) {
         if (r == newRoom) {
             continue;
         }
+        std::cout << "XConnection" << posX << "/" << r->leftLowerCorner_->getCol() - 1 << " and " << posX << "/" << r->rightUpperCorner_->getCol() + lengthX + 1 << std::endl;
+        std::cout << "XConnectionYAxis" << posY - (int)r->rightUpperCorner_->getRow() << "/" << lengthY - 3 << " and " << posY - (int)r->leftLowerCorner_->getRow() << "/" << 3 << std::endl;
         if ((posX == (int)(r->leftLowerCorner_->getCol()) - 1) ||
             (posX == (int)(r->rightUpperCorner_->getCol()) + lengthX + 1)) {
-            if (posY - (int)r->rightUpperCorner_->getRow() < lengthY - 3 &&
-                posY - (int)r->leftLowerCorner_->getRow() > 3) {
+            if (posY - (int)r->rightUpperCorner_->getRow() <= lengthY - 3 &&
+                posY - (int)r->leftLowerCorner_->getRow() >= 3) {
                 connected = true;
                 break;
             }
         }
+        std::cout << "YConnection" << posY << "/" << r->leftLowerCorner_->getRow() - 1 << " and " << posY << "/" << r->rightUpperCorner_->getRow() + lengthY + 1 << std::endl;
+        std::cout << "YConnectionXAxis" << posX - (int)r->rightUpperCorner_->getCol() << "/" << lengthX - 3 << " and " << posX - (int)r->leftLowerCorner_->getCol() << "/" << 3 << std::endl;
         if ((posY == (int)(r->leftLowerCorner_->getRow()) - 1) ||
             (posY == (int)(r->rightUpperCorner_->getRow()) + lengthY + 1)) {
-            if (posX - (int)r->rightUpperCorner_->getCol() < lengthX - 3 &&
-                posX - (int)r->leftLowerCorner_->getCol() > 3) {
+            if (posX - (int)r->rightUpperCorner_->getCol() <= lengthX - 3 &&
+                posX - (int)r->leftLowerCorner_->getCol() >= 3) {
                 connected = true;
                 break;
             }
         }
+        std::cout << "endRoomcheck" << std::endl;
     }
     newRoom->connected = connected;
     newRoom->collision = false;
