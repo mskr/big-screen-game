@@ -127,11 +127,11 @@ namespace viscom {
         //    GetApplication()->GetGPUProgramManager().GetResource("applyTextureAndShadow",
         //		std::initializer_list<std::string>{ "applyTextureAndShadow.vert", "applyTextureAndShadow.frag" }));
         waterMesh_ = new PostProcessingMesh(
-            GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/textured_4vertexplane/textured_4vertexplane.obj"),
+            GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/newModels/UnderwaterDesert.obj"),
             GetApplication()->GetGPUProgramManager().GetResource("underwater",
                 std::initializer_list<std::string>{ "underwater.vert", "underwater.frag" }));
         
-        waterMesh_->scale = 2.0f;
+        waterMesh_->scale = 1.0f;
         //backgroundMesh_->transform(glm::scale(glm::translate(glm::mat4(1), 
         //waterMesh_->transform(glm::scale(glm::translate(glm::mat4(1),
         //    glm::vec3(
@@ -154,16 +154,17 @@ namespace viscom {
         updateManager_.AddUpdateable(outerInfluence_);
 
         /*Light setup*/
+        lightInfo = new LightInfo();
         glm::vec3 direction = glm::vec3(-1,-1,-4);
         glm::vec3 ambient = glm::vec3(0.2f, 0.2f, 0.2f);
         glm::vec3 diffuse = glm::vec3(0.5f, 0.5f, 0.5f);
         glm::vec3 specular = glm::vec3(1.0f, 1.0f, 1.0f);
-        sun = new DirLight(ambient,diffuse,specular,direction);
+        lightInfo->sun = new DirLight(ambient,diffuse,specular,direction);
 
-        ambient = glm::vec3(0.2f, 0.2f, 0.2f);
-        diffuse = glm::vec3(0.8f, 0.5f, 0.5f);
-        specular = glm::vec3(1.0f, 1.0f, 1.0f);
-        outerInfLights = new PointLight(ambient, diffuse, specular,1.0f,0.14f,0.07f );
+        ambient = glm::vec3(0.01f, 0.01f, 0.01f);
+        diffuse = glm::vec3(0.9f, 0.1f, 0.1f);
+        specular = glm::vec3(1.0f, .1f, .1f);
+        lightInfo->outerInfLights = new PointLight(ambient, diffuse, specular,1.0f,2.0f,2.0f );
     }
 
 
@@ -194,18 +195,22 @@ namespace viscom {
 
         glm::mat4 viewProj = GetCamera()->GetViewPerspectiveMatrix();
 
+        lightInfo->outerInfLights->position = glm::vec3(outerInfluence_->meshComponent->model_matrix_[3][0], outerInfluence_->meshComponent->model_matrix_[3][1], outerInfluence_->meshComponent->model_matrix_[3][2]);
+        glm::vec3 viewPos = GetCamera()->GetPosition();
+
         //TODO Is the engine matrix really needed here?
         glm::mat4 lightspace = shadowMap_->getLightMatrix();
 
         shadowMap_->DrawToFBO([&]() {
-            meshpool_.renderAllMeshesExcept(lightspace, GridCell::OUTER_INFLUENCE, 1);
+            meshpool_.renderAllMeshesExcept(lightspace, GridCell::OUTER_INFLUENCE, 1, (render_mode_ == RenderMode::DBG) ? 1 : 0,lightInfo,viewPos);
         });
 
         fbo.DrawToFBO([&]() {
             //backgroundMesh_->render(viewProj, lightspace, shadowMap_->get(), (render_mode_ == RenderMode::DBG) ? 1 : 0);
-            waterMesh_->render(viewProj, lightspace, shadowMap_->get(), (render_mode_ == RenderMode::DBG) ? 1 : 0);
+            waterMesh_->render(viewProj, lightspace, shadowMap_->get(), (render_mode_ == RenderMode::DBG) ? 1 : 0,lightInfo,viewPos);
             glEnable(GL_BLEND); glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            meshpool_.renderAllMeshes(viewProj, 0, (render_mode_ == RenderMode::DBG) ? 1 : 0);
+            //glDisable(GL_DEPTH_TEST);
+            meshpool_.renderAllMeshes(viewProj, 0, (render_mode_ == RenderMode::DBG) ? 1 : 0, lightInfo, viewPos);
             glm::mat4 influPos = outerInfluence_->meshComponent->model_matrix_;
             if (outerInfPositions_.size() > 40) {
                 outerInfPositions_.resize(40);
@@ -215,13 +220,13 @@ namespace viscom {
                     outerInfluence_->meshComponent->scale -= 0.01f;
                 }
                 outerInfluence_->meshComponent->model_matrix_ = outerInfPositions_[i];
-                outerInfluence_->meshComponent->render(viewProj);
+                outerInfluence_->meshComponent->render(viewProj,1,nullptr,glm::mat4(1),false,lightInfo,viewPos, (render_mode_ == RenderMode::DBG) ? 1 : 0);
             }
             outerInfluence_->meshComponent->scale = 0.1f;
             for (int i = 0; i < outerInfluence_->meshComponent->influencePositions_.size(); i++) {
                 outerInfluence_->meshComponent->model_matrix_ = outerInfluence_->meshComponent->influencePositions_[i];
                 outerInfPositions_.insert(outerInfPositions_.begin(),outerInfluence_->meshComponent->influencePositions_[i]);
-                outerInfluence_->meshComponent->render(viewProj);
+                outerInfluence_->meshComponent->render(viewProj, 1, nullptr, glm::mat4(1), false, lightInfo, viewPos, (render_mode_ == RenderMode::DBG) ? 1 : 0);
             }
             outerInfluence_->meshComponent->model_matrix_ = influPos;
             glDisable(GL_BLEND);

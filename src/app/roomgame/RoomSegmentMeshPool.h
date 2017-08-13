@@ -48,8 +48,8 @@ public:
 	// Function for mesh requests
 	RoomSegmentMesh* getMeshOfType(GLuint type);
 	// Functions for rendering
-	void renderAllMeshes(glm::mat4& view_projection, GLint isDepthPass = 0, GLint isDebugMode = 0);
-	void renderAllMeshesExcept(glm::mat4& view_projection, GLuint type_not_to_render, GLint isDepthPass = 0, GLint isDebugMode = 0);
+	void renderAllMeshes(glm::mat4& view_projection, GLint isDepthPass = 0, GLint isDebugMode = 0, LightInfo* lightInfo = nullptr, glm::vec3& viewPos = glm::vec3(0, 0, 4));
+	void renderAllMeshesExcept(glm::mat4& view_projection, GLuint type_not_to_render, GLint isDepthPass = 0, GLint isDebugMode = 0, LightInfo* lightInfo = nullptr, glm::vec3& viewPos = glm::vec3(0, 0, 4));
 	void cleanup();
     // Functions for SGCT synchronization
     void preSync(); // master

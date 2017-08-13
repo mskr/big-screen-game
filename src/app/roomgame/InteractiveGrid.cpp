@@ -205,9 +205,6 @@ GridCell* InteractiveGrid::pickCell(glm::vec3 rayStartPoint, glm::vec3 rayInterm
     //std::cout << "Intersection: " << intersection.x << "/" << intersection.y << "/" << intersection.z << std::endl;
     //std::cout << "Lower Left: " << gridLeftLowerCorner.x << "/" << gridLeftLowerCorner.y << "/" << gridLeftLowerCorner.z << std::endl;
 
-
-//    size_t row = (size_t)glm::round((intersection.z / 2.0f + 0.5f) * getNumRows());
-//    size_t col = (size_t)glm::round((intersection.y / 2.0f + 0.5f) * getNumColumns());
     size_t row = (size_t)glm::round(intersection.z * getNumRows());
     size_t col = (size_t)glm::round(intersection.y * getNumColumns());
 

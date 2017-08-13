@@ -20,7 +20,6 @@
 #include "app/roomgame/OuterInfluence.h"
 #include "app/roomgame/GPUBuffer.h"
 #include "roomgame\GPUCellularAutomaton.h"
-#include "app\roomgame\LightBase.h"
 
 namespace viscom {
 
@@ -56,11 +55,8 @@ namespace viscom {
 		// ROOMGAME DATA
 		// =============
 
-        DirLight* sun;
-        PointLight* outerInfLights;
-        PointLight* sourceLights;
-        std::vector<glm::vec3>* sourceLightsPos;
 
+        LightInfo* lightInfo;
 		/* Update Manager */
 		roomgame::UpdateManager updateManager_;
 
