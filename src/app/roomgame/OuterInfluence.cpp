@@ -134,7 +134,7 @@ namespace roomgame {
         GridCell* leftLower = grid->getCellAt(0,0);
         GridCell* rightUpper = grid->getCellAt(grid->getNumRows()-1,grid->getNumColumns()-1);
         grid->forEachCellInRange(leftLower, rightUpper, [&](GridCell* cell) {
-            if ((cell->getBuildState() & GridCell::WALL) != 0 && cell->getDistanceTo(tmp) < cellDistance) {
+            if ((cell->getBuildState() & GridCell::WALL) != 0 && cell->getDistanceTo(tmp) < cellDistance && (cell->getBuildState() & GridCell::TEMPORARY) == 0) {
                 cellDistance = cell->getDistanceTo(tmp);
                 closestWallCell = cell;
             }

@@ -61,6 +61,8 @@ RoomSegmentMesh* RoomSegmentMeshPool::getMeshOfType(GLuint type) {
 	std::vector<RoomSegmentMesh*> mesh_variations;
     if ((type&GridCell::TEMPORARY) != 0) {
         type = GridCell::TEMPORARY;
+    } else if ((type&(GridCell::SOURCE|GridCell::INFECTED)) != 0) {
+        type = GridCell::INFECTED;
     } else if ((type&GridCell::CORNER) != 0) {
         type = GridCell::CORNER;
     }

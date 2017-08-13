@@ -50,7 +50,7 @@ namespace viscom {
         meshpool_.addMesh({ GridCell::WALL,},
                             GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/newModels/RoomWall.obj"));
 
-        meshpool_.addMesh({ GridCell::INFECTED },
+        meshpool_.addMesh({ GridCell::INFECTED, GridCell::SOURCE },
             GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/latticeplane.obj"));
 
         meshpool_.updateUniformEveryFrame("t_sec", [this](GLint uloc) {
