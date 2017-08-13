@@ -38,16 +38,6 @@ bool Room::checkValidity(bool firstRoom) {
 
     bool connectedToARoom = false;
 
-    //grid_->forEachCellInRange(leftLowerCorner_, rightUpperCorner_, [&](GridCell* cell) {
-    //    if ((cell->getBuildState() & (GridCell::WALL))!=0) {
-    //        bool deletedANeighbour = false;
-
-    //        deletedANeighbour = grid_->deleteNeighbouringWalls(cell, true);
-    //        if (deletedANeighbour) {
-    //            connectedToARoom = true;
-    //        }
-    //    }
-    //});
     if (firstRoom) {
        connectedToARoom  = true;
     }
@@ -55,7 +45,6 @@ bool Room::checkValidity(bool firstRoom) {
         connectedToARoom = connected;
     }
     isValid = sizeValid && connectedToARoom && !collision;
-    std::cout << firstRoom << sizeValid << connectedToARoom << collision << std::endl;
     if (isValid) {
         validate();
     }

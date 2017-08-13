@@ -7,7 +7,6 @@ GridInteraction::GridInteraction(int touchID, GridCell* start_cell, Room* room) 
 	start_cell_ = start_cell;
 	last_cell_ = start_cell;
 	room_ = room;
-	last_collision_ = Room::CollisionType::NONE;
 }
 
 GridInteraction::~GridInteraction() {
@@ -24,10 +23,6 @@ void GridInteraction::update(glm::dvec2 position) {
 void GridInteraction::setLastCell(GridCell* cell) {
 	last_timestamp_ = glfwGetTime();
 	last_cell_ = cell;
-}
-
-void GridInteraction::setLastCollision(Room::CollisionType coll) {
-	last_collision_ = coll;
 }
 
 bool GridInteraction::testTemporalAndSpatialProximity(GridInteraction* other) {
@@ -49,8 +44,4 @@ int GridInteraction::getTouchID() {
 
 Room* GridInteraction::getRoom() {
 	return room_;
-}
-
-Room::CollisionType GridInteraction::getLastCollision() {
-	return last_collision_;
 }

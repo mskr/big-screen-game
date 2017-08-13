@@ -40,10 +40,6 @@ public:
 	size_t getRowSize();
     void updateCorners(GridCell* startCell, GridCell* endCell);
     void Room::fillRoom(GridCell* startCell, GridCell* endCell, bool temporary);
-
-	enum CollisionType {
-		HORIZONTAL, VERTICAL, BOTH, NONE
-	};
 };
 
 #endif

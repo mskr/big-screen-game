@@ -33,7 +33,7 @@ protected:
     virtual void handleHoveredCell(GridCell*, GridInteraction*);
     virtual void handleRelease(GridInteraction*);
 public:
-    static enum BuildMode {
+    enum BuildMode {
         Additive = 0,
         Replace = 1,
         RemoveSpecific = 2
