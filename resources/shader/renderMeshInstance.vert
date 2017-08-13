@@ -66,22 +66,6 @@ vec2 rotateZ_step90(float x, float y) {
     else {
             return vec2(-x, -y);
     }
-
-
-
-    //switch(buildState) {
-    //	case BSTATE_LEFT_UPPER_CORNER:
-    //	case BSTATE_WALL_LEFT:
-    //		return vec2(y, -x);
-    //	case BSTATE_RIGHT_UPPER_CORNER:
-    //	case BSTATE_WALL_TOP:
-    //		return vec2(-x, -y);
-    //	case BSTATE_RIGHT_LOWER_CORNER:
-    //	case BSTATE_WALL_RIGHT:
-    //		return vec2(-y, x);
-    //	default:
-    //		return vec2(x, y);
-    //}
 }
 
 flat out uint st;

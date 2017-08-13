@@ -71,6 +71,7 @@ namespace viscom {
             glUniform3f(uloc, translation.x, translation.y, translation.z);
         });
 
+
         meshpool_.updateUniformEveryFrame("gridCellSize", [&](GLint uloc) {
             glUniform1f(uloc, GRID_CELL_SIZE_);
         });
@@ -151,6 +152,18 @@ namespace viscom {
 
         /* Init update manager */
         updateManager_.AddUpdateable(outerInfluence_);
+
+        /*Light setup*/
+        glm::vec3 direction = glm::vec3(-1,-1,-4);
+        glm::vec3 ambient = glm::vec3(0.2f, 0.2f, 0.2f);
+        glm::vec3 diffuse = glm::vec3(0.5f, 0.5f, 0.5f);
+        glm::vec3 specular = glm::vec3(1.0f, 1.0f, 1.0f);
+        sun = new DirLight(ambient,diffuse,specular,direction);
+
+        ambient = glm::vec3(0.2f, 0.2f, 0.2f);
+        diffuse = glm::vec3(0.8f, 0.5f, 0.5f);
+        specular = glm::vec3(1.0f, 1.0f, 1.0f);
+        outerInfLights = new PointLight(ambient, diffuse, specular,1.0f,0.14f,0.07f );
     }
 
 
