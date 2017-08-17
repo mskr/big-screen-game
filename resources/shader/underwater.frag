@@ -40,9 +40,11 @@ struct PointLight{
     float linear;
     float quadratic;
 };
-uniform PointLight outerInfLight;
-#define NR_SOURCE_LIGHTS 4  
-uniform PointLight sourceLights[NR_SOURCE_LIGHTS];
+#define NR_OUT_INF_LIGHTS 5  
+uniform PointLight outerInfLights[NR_OUT_INF_LIGHTS];
+#define MAX_NR_SOURCE_LIGHTS 10  
+uniform PointLight sourceLights[MAX_NR_SOURCE_LIGHTS];
+uniform int numSourceLights;
 vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir); 
 /*Material attributes*/
 struct Material {
@@ -118,9 +120,11 @@ void main() {
 	vec3 norm = normalize(vNormal);
 	vec3 viewDir = normalize(viewPos-vPosition);
 	vec3 result = CalcDirLight(dirLight, norm, viewDir);
-	result += CalcPointLight(outerInfLight, norm, vPosition, viewDir);
-	for(int i = 0; i < NR_SOURCE_LIGHTS; i++){
-       result += CalcPointLight(sourceLights[i], norm, vPosition, viewDir); 
+	for(int i = 0; i < NR_OUT_INF_LIGHTS; i++){
+		result += CalcPointLight(outerInfLights[i], norm, vPosition, viewDir);
+	}
+	for(int i = 0; i < numSourceLights; i++){
+		result += CalcPointLight(sourceLights[i], norm, vPosition, viewDir); 
 	}
     color = vec4(result,max(material.alpha,0.9f));            
 	// color.rgb = vec3(0.0,0.1,0.3) + color.rgb * vec3(0.5,0.6,0.1);

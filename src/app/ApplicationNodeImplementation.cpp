@@ -127,7 +127,7 @@ namespace viscom {
         //    GetApplication()->GetGPUProgramManager().GetResource("applyTextureAndShadow",
         //		std::initializer_list<std::string>{ "applyTextureAndShadow.vert", "applyTextureAndShadow.frag" }));
         waterMesh_ = new PostProcessingMesh(
-            GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/newModels/UnderwaterDesert.obj"),
+            GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/textured_4vertexplane/textured_4vertexplane.obj"),
             GetApplication()->GetGPUProgramManager().GetResource("underwater",
                 std::initializer_list<std::string>{ "underwater.vert", "underwater.frag" }));
         
@@ -164,7 +164,17 @@ namespace viscom {
         ambient = glm::vec3(0.01f, 0.01f, 0.01f);
         diffuse = glm::vec3(0.9f, 0.1f, 0.1f);
         specular = glm::vec3(1.0f, .1f, .1f);
-        lightInfo->outerInfLights = new PointLight(ambient, diffuse, specular,1.0f,2.0f,2.0f );
+        lightInfo->outerInfLights = new PointLight(ambient, diffuse, specular,1.0f,20.0f,30.0f );
+        diffuse = glm::vec3(0.1f, 0.1f, 0.9f);
+        specular = glm::vec3(.1f, .1f, 1.0f);
+        lightInfo->sourceLights = new PointLight(ambient, diffuse, specular, 1.0f, 5.0f, 15.0f);
+        lightInfo->infLightPos.push_back(glm::vec3(0));
+        lightInfo->infLightPos.push_back(glm::vec3(0));
+        lightInfo->infLightPos.push_back(glm::vec3(0));
+        lightInfo->infLightPos.push_back(glm::vec3(0));
+        lightInfo->infLightPos.push_back(glm::vec3(0));
+        lightInfo->sourceLightsPos.push_back(glm::vec3(-.5f, -.5f, 0.2f));
+        lightInfo->sourceLightsPos.push_back(glm::vec3(.5f, .5f, 0.2f));
     }
 
 
@@ -194,8 +204,10 @@ namespace viscom {
         //e = glGetError(); printf("%x\n", e);
 
         glm::mat4 viewProj = GetCamera()->GetViewPerspectiveMatrix();
-
-        lightInfo->outerInfLights->position = glm::vec3(outerInfluence_->meshComponent->model_matrix_[3][0], outerInfluence_->meshComponent->model_matrix_[3][1], outerInfluence_->meshComponent->model_matrix_[3][2]);
+        for (int i = 0; i < min(5,outerInfPositions_.size()); i++) {
+            glm::mat4 tmp = outerInfPositions_[i];
+            lightInfo->infLightPos[i] = glm::vec3(tmp[3][0], tmp[3][1], tmp[3][2]);
+        }
         glm::vec3 viewPos = GetCamera()->GetPosition();
 
         //TODO Is the engine matrix really needed here?
