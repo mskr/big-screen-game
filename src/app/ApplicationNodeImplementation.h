@@ -55,6 +55,8 @@ namespace viscom {
 		// ROOMGAME DATA
 		// =============
 
+
+        LightInfo* lightInfo;
 		/* Update Manager */
 		roomgame::UpdateManager updateManager_;
 

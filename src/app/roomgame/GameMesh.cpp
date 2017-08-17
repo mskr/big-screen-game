@@ -7,8 +7,8 @@ ShadowReceivingMesh::ShadowReceivingMesh(std::shared_ptr<viscom::Mesh> mesh, std
 	uloc_shadow_map_ = shader->getUniformLocation("shadowMap");
 }
 
-void ShadowReceivingMesh::render(glm::mat4& vp, glm::mat4& lightspace, GLuint shadowMap, GLint isDebugMode)  {
-	SimpleGameMesh::render([&]() {
+void ShadowReceivingMesh::render(glm::mat4& vp, glm::mat4& lightspace, GLuint shadowMap, GLint isDebugMode, LightInfo* lightInfo, glm::vec3& viewPos)  {
+	SimpleGameMesh::render(vp,1,[&]() {
         glUniformMatrix4fv(uloc_lightspace_matrix_, 1, GL_FALSE, &lightspace[0][0]);
 		// Bind shadow map to texture unit **2** because
 		// the MeshBase super-class already uses 0 (diffuse texture) and 1 (bump map)
@@ -21,7 +21,7 @@ void ShadowReceivingMesh::render(glm::mat4& vp, glm::mat4& lightspace, GLuint sh
 		float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 		glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 		glUniform1i(uloc_shadow_map_, 2);
-	}, vp, isDebugMode);
+	},glm::mat4(1),false,lightInfo,viewPos,isDebugMode);
 }
 
 PostProcessingMesh::PostProcessingMesh(std::shared_ptr<viscom::Mesh> mesh, std::shared_ptr<viscom::GPUProgram> shader) :
@@ -33,8 +33,8 @@ PostProcessingMesh::PostProcessingMesh(std::shared_ptr<viscom::Mesh> mesh, std::
 	uloc_shadow_map_ = shader->getUniformLocation("shadowMap");
 }
 
-void PostProcessingMesh::render(glm::mat4& vp, glm::mat4& lightspace, GLuint shadowMap, GLint isDebugMode)  {
-    SimpleGameMesh::render([&]() {
+void PostProcessingMesh::render(glm::mat4& vp, glm::mat4& lightspace, GLuint shadowMap, GLint isDebugMode, LightInfo* lightInfo, glm::vec3& viewPos)  {
+    SimpleGameMesh::render(vp,1,[&]() {
         glUniformMatrix4fv(uloc_lightspace_matrix_, 1, GL_FALSE, &lightspace[0][0]);
 		// Bind shadow map to texture unit **2** because
 		// the MeshBase super-class already uses 0 (diffuse texture) and 1 (bump map)
@@ -48,5 +48,5 @@ void PostProcessingMesh::render(glm::mat4& vp, glm::mat4& lightspace, GLuint sha
 		glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 		glUniform1i(uloc_shadow_map_, 2);
 		glUniform1f(uloc_time_, time_);
-	}, vp, isDebugMode);
+	},glm::mat4(1),false, lightInfo,viewPos,isDebugMode);
 }

@@ -45,7 +45,7 @@ public:
     InstanceBufferRange addInstanceUnordered_IMMEDIATE_GPU_UPLOAD(Instance); // deprecated because uncompatible with synchronization
 	void removeInstanceUnordered(int offset_instances);
     InstanceBufferRange moveInstancesToRoomOrderedBuffer(std::initializer_list<int> offsets); // (feature not implemented yet)
-	void renderAllInstances(std::function<void(void)> uniformSetter, const glm::mat4& view_projection, GLint isDebugMode);
+	void renderAllInstances(std::function<void(void)> uniformSetter, const glm::mat4& view_projection, GLint isDebugMode, LightInfo* lightInfo = nullptr, glm::vec3& viewPos = glm::vec3(0, 0, 4));
 };
 
 #endif

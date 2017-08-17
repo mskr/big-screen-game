@@ -126,8 +126,8 @@ RoomSegmentMesh::InstanceBufferRange RoomSegmentMesh::moveInstancesToRoomOrdered
 
 
 
-void RoomSegmentMesh::renderAllInstances(std::function<void(void)> uniformSetter, const glm::mat4& view_projection, GLint isDebugMode) {
+void RoomSegmentMesh::renderAllInstances(std::function<void(void)> uniformSetter, const glm::mat4& view_projection, GLint isDebugMode, LightInfo* lightInfo, glm::vec3& viewPos) {
 	//TODO Seperately draw unordered and ordered buffers
 	if (gpu_instance_buffer_.num_instances_ == 0) return;
-	MeshBase::renderInstanced(uniformSetter, view_projection, gpu_instance_buffer_.num_instances_, isDebugMode);
+	MeshBase::render(view_projection, gpu_instance_buffer_.num_instances_,uniformSetter,glm::mat4(1),false,lightInfo,viewPos, isDebugMode);
 }

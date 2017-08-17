@@ -85,25 +85,25 @@ RoomSegmentMesh* RoomSegmentMeshPool::getMeshOfType(GLuint type) {
 	return mesh_variations[variation];
 }
 
-void RoomSegmentMeshPool::renderAllMeshes(glm::mat4& view_projection, GLint isDepthPass, GLint isDebugMode) {
+void RoomSegmentMeshPool::renderAllMeshes(glm::mat4& view_projection, GLint isDepthPass, GLint isDebugMode, LightInfo* lightInfo, glm::vec3& viewPos) {
 	for (GLuint i : render_list_) {
 		for (RoomSegmentMesh* mesh : meshes_[i]) {
 			mesh->renderAllInstances([&]() {
 				for (unsigned int i = 0; i < uniform_locations_.size(); i++) uniform_callbacks_[i](uniform_locations_[i]);
 				glUniform1i(depth_pass_flag_uniform_location_, isDepthPass);
-			}, view_projection, isDebugMode);
+			}, view_projection, isDebugMode, lightInfo, viewPos);
 		}
 	}
 }
 
-void RoomSegmentMeshPool::renderAllMeshesExcept(glm::mat4& view_projection, GLuint type_not_to_render, GLint isDepthPass, GLint isDebugMode) {
+void RoomSegmentMeshPool::renderAllMeshesExcept(glm::mat4& view_projection, GLuint type_not_to_render, GLint isDepthPass, GLint isDebugMode, LightInfo* lightInfo, glm::vec3& viewPos) {
 	for (GLuint i : render_list_) {
 		if ((i & type_not_to_render)!=0) continue;
 		for (RoomSegmentMesh* mesh : meshes_[i]) {
 			mesh->renderAllInstances([&]() {
 				for (unsigned int i = 0; i < uniform_locations_.size(); i++) uniform_callbacks_[i](uniform_locations_[i]);
 				glUniform1i(depth_pass_flag_uniform_location_, isDepthPass);
-			}, view_projection, isDebugMode);
+			}, view_projection, isDebugMode, lightInfo, viewPos);
 		}
 	}
 }
