@@ -129,6 +129,7 @@ void main() {
     // 4) an invalid room, that is too small or too big (st has INVALID bit set)
     // ...
     if((st & INFECTED) > 0U) {
+        color = vec4(1,0,0,1); return;
         float infectednessInterpolatedSpatialTemporal = mix(
             lastCellBuildStateInterpolatedSpatial,
             currCellBuildStateInterpolatedSpatial,
