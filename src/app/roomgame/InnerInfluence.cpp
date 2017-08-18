@@ -35,5 +35,5 @@ bool InnerInfluence::transition(double time) {
 }
 
 void InnerInfluence::spawnAt(GridCell* c) {
-    grid_->buildAt(c->getCol(), c->getRow(), grid_->SIMULATED_STATE);
+    grid_->buildAt(c->getCol(), c->getRow(), grid_->SIMULATED_STATE, InteractiveGrid::BuildMode::Additive);
 }

@@ -6,7 +6,10 @@ class GPUCellularAutomaton;
 
 /* Grid class for cellular automatons.
  * Has InteractiveGrid as base class.
- * Adds possibility to receive changes from user input and cellular automaton.
+ * Inherits functionality of RoomInteractiveGrid and MeshInstanceGrid as well.
+ * Adds possibility to receive changes
+ * a) from user input by overriding buildAt() and
+ * b) from cellular automaton by offering updateCell() function.
 */
 class AutomatonGrid : public MeshInstanceGrid {
 	GPUCellularAutomaton* automaton_;
@@ -25,8 +28,8 @@ public:
 	AutomatonGrid(size_t columns, size_t rows, float height, RoomSegmentMeshPool* meshpool);
 	~AutomatonGrid();
 	void setCellularAutomaton(GPUCellularAutomaton*);
-	void onMeshpoolInitialized() override;
-    void buildAt(size_t col, size_t row, GLuint buildState); // for user changes
+	void onMeshpoolInitialized() override; 
+    void buildAt(size_t col, size_t row, GLuint newState, BuildMode buildMode) override; // for user changes
     void updateCell(GridCell* c, GLuint state, int hp); // for automaton changes
 	void onTransition();
 	void populateCircleAtLastMousePosition(int radius);
