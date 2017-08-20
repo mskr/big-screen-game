@@ -24,15 +24,15 @@ void AutomatonGrid::setCellularAutomaton(GPUCellularAutomaton* automaton) {
 void AutomatonGrid::onMeshpoolInitialized() {
 }
 
-void AutomatonGrid::buildAt(size_t col, size_t row, GLuint newState, BuildMode buildMode) {
+void AutomatonGrid::buildAt(size_t col, size_t row, GLuint buildStateBits, BuildMode buildMode) {
     // Called on user input (grid update -> automaton update)
 
     GridCell* c = getCellAt(col, row);
     if (!c) return;
-    MeshInstanceGrid::buildAt(c, newState, buildMode);
+    MeshInstanceGrid::buildAt(c, buildStateBits, buildMode);
     c->updateHealthPoints(vbo_, GridCell::MAX_HEALTH);
     // Route results to automaton
-    automaton_->updateCell(c, newState, c->getHealthPoints());
+    automaton_->updateCell(c, c->getBuildState(), c->getHealthPoints());
 }
 
 void AutomatonGrid::updateCell(GridCell* c, GLuint state, int hp) {
@@ -44,7 +44,7 @@ void AutomatonGrid::updateCell(GridCell* c, GLuint state, int hp) {
 		return;
 	}
     MeshInstanceGrid::buildAt(c, state, InteractiveGrid::BuildMode::Replace);
-    c->updateHealthPoints(vbo_, hp); // thinking of dynamic outer influence...
+    c->updateHealthPoints(vbo_, hp); // thinking of dynamic inner influence...
 	// a fixed-on-cell health is not very practical
 }
 
