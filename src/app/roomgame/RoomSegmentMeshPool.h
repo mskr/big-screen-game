@@ -12,20 +12,20 @@
 /* Management class for room segment meshes and mesh instance shader
  * Mesh instances of one type can be arbitrary distributed across a grid.
  * There can be several types of meshes (room walls, corners, inner influence etc.).
- * The mesh pool uses build states to identifly mesh types and maps build states to meshes.
+ * The mesh pool maps build states to meshes.
+ * The build state bitfield is treated as simple numeric index into the mesh container.
  * An interactive grid that received a build call uses the pool to get an appropriate mesh for a build state.
+ * Since build state is a bitfield, a filter method is provided, that finds mapped meshes in a given bitfield.
+ * Usage notes:
  * Mesh pool exists on all SGCT nodes
  * Used by nodes to create meshes (each including vertex and instance buffer)
  * Used by MeshInstanceGrid to get appropriate mesh for build state
  * Used by nodes to render all meshes by a single call
 */
 class RoomSegmentMeshPool {
-	// Map build state to multiple mesh variations
-	// (when there is one mesh for multiple build states,
-	// store the same pointer multiple times)
+	// Map build state to mesh variations (different build states can point to the same mesh)
 	std::unordered_map<GLuint, std::vector<RoomSegmentMesh*>> meshes_;
-	// Store build states contiguously for faster rendering
-	// (only store one representative build state for one mesh)
+	// Store a unique build state as key for each mesh
 	std::vector<GLuint> render_list_;
 	// Hold pointers to all meshes to control cleanup
 	std::set<std::shared_ptr<viscom::Mesh>> owned_resources_;
@@ -47,6 +47,8 @@ public:
     void updateUniformEveryFrame(std::string uniform_name, std::function<void(GLint)> update_func);
 	// Function for mesh requests
 	RoomSegmentMesh* getMeshOfType(GLuint type);
+    // Finds mesh types, that are available through getMeshOfType, in given bitfield and invokes callback for each of them
+    void filter(GLuint buildStateBits, std::function<void(GLuint)> callback);
 	// Functions for rendering
 	void renderAllMeshes(glm::mat4& view_projection, GLint isDepthPass = 0, GLint isDebugMode = 0, LightInfo* lightInfo = nullptr, glm::vec3& viewPos = glm::vec3(0, 0, 4));
 	void renderAllMeshesExcept(glm::mat4& view_projection, GLuint type_not_to_render, GLint isDepthPass = 0, GLint isDebugMode = 0, LightInfo* lightInfo = nullptr, glm::vec3& viewPos = glm::vec3(0, 0, 4));

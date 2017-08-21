@@ -1,6 +1,7 @@
 #include "RoomSegmentMeshPool.h"
 
 RoomSegmentMeshPool::RoomSegmentMeshPool(const size_t MAX_INSTANCES) :
+    // Estimate number of instances for room segments to minimize allocation cost (rather questionable heuristic)
 	POOL_ALLOC_BYTES_CORNERS((MAX_INSTANCES / 128 + 1) * sizeof(RoomSegmentMesh::Instance)),
 	POOL_ALLOC_BYTES_WALLS((MAX_INSTANCES / 32 + 1) * sizeof(RoomSegmentMesh::Instance)),
 	POOL_ALLOC_BYTES_FLOORS((MAX_INSTANCES / 16 + 1) * sizeof(RoomSegmentMesh::Instance)),
@@ -47,7 +48,7 @@ void RoomSegmentMeshPool::addMesh(std::vector<GLuint> types, std::shared_ptr<vis
 
 void RoomSegmentMeshPool::addMeshVariations(std::vector<GLuint> types, std::vector<std::shared_ptr<viscom::Mesh>> mesh_variations) {
     // Map possibly multiple meshes to possibly multiple build states
-    // (if one of these build states is requested, a mesh is chosen randomly)
+    // (if one of these build states is requested, a mesh is chosen randomly to create variation)
     for (std::shared_ptr<viscom::Mesh> variation : mesh_variations)
         addMesh(types, variation);
 }
@@ -58,20 +59,8 @@ void RoomSegmentMeshPool::updateUniformEveryFrame(std::string uniform_name, std:
 }
 
 RoomSegmentMesh* RoomSegmentMeshPool::getMeshOfType(GLuint type) {
-	std::vector<RoomSegmentMesh*> mesh_variations;
-    if ((type&GridCell::TEMPORARY) != 0) {
-        type = GridCell::TEMPORARY;
-    } else if ((type&(GridCell::SOURCE|GridCell::INFECTED)) != 0) {
-        type = GridCell::INFECTED;
-    } else if ((type&GridCell::CORNER) != 0) {
-        type = GridCell::CORNER;
-    }
-    else if ((type&GridCell::WALL) != 0) {
-        type = GridCell::WALL;
-    }
-    else if ((type&GridCell::INSIDE_ROOM) != 0) {
-        type = GridCell::INSIDE_ROOM;
-    }
+    // Request mapped mesh(es)
+    std::vector<RoomSegmentMesh*> mesh_variations;
     try {
 		mesh_variations = meshes_.at(type);
 	}
@@ -80,9 +69,21 @@ RoomSegmentMesh* RoomSegmentMeshPool::getMeshOfType(GLuint type) {
 		printf("Pool has no mesh for type %d\n", (int)type);
 		return 0;
 	}
-	srand((unsigned int)time(0));
-	unsigned int variation = rand() % mesh_variations.size();
+    unsigned int variation = 0;
+    if (mesh_variations.size() > 1) {
+        srand((unsigned int)time(0));
+        variation = rand() % mesh_variations.size();
+    }
 	return mesh_variations[variation];
+}
+
+void RoomSegmentMeshPool::filter(GLuint buildStateBits, std::function<void(GLuint)> callback) {
+    // Ignore orientation bits
+    buildStateBits &= ~(GridCell::TOP | GridCell::BOTTOM | GridCell::RIGHT | GridCell::LEFT);
+    // Test every build state that was mapped to a mesh, if it is contained in given build state bits
+    for (std::pair<GLuint, std::vector<RoomSegmentMesh*>> stateMeshMapping : meshes_) {
+        if (stateMeshMapping.first & buildStateBits) callback(stateMeshMapping.first);
+    }
 }
 
 void RoomSegmentMeshPool::renderAllMeshes(glm::mat4& view_projection, GLint isDepthPass, GLint isDebugMode, LightInfo* lightInfo, glm::vec3& viewPos) {

@@ -21,9 +21,6 @@ void AutomatonGrid::setCellularAutomaton(GPUCellularAutomaton* automaton) {
 	automaton_ = automaton;
 }
 
-void AutomatonGrid::onMeshpoolInitialized() {
-}
-
 void AutomatonGrid::buildAt(size_t col, size_t row, GLuint buildStateBits, BuildMode buildMode) {
     // Called on user input (grid update -> automaton update)
 

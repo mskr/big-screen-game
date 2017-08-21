@@ -28,7 +28,6 @@ public:
 	AutomatonGrid(size_t columns, size_t rows, float height, RoomSegmentMeshPool* meshpool);
 	~AutomatonGrid();
 	void setCellularAutomaton(GPUCellularAutomaton*);
-	void onMeshpoolInitialized() override; 
     void buildAt(size_t col, size_t row, GLuint newState, BuildMode buildMode) override; // for user changes
     void updateCell(GridCell* c, GLuint state, int hp); // for automaton changes
 	void onTransition();

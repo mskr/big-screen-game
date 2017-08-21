@@ -17,7 +17,6 @@ public:
 
 	void init(viscom::GPUProgramManager mgr);
 	bool transition(double time);
-    void spawnAt(GridCell* cell);
 };
 
 #endif
