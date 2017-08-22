@@ -59,6 +59,8 @@ void RoomSegmentMeshPool::updateUniformEveryFrame(std::string uniform_name, std:
 }
 
 RoomSegmentMesh* RoomSegmentMeshPool::getMeshOfType(GLuint type) {
+    // Ignore orientation bits
+    type &= ~(GridCell::TOP | GridCell::BOTTOM | GridCell::RIGHT | GridCell::LEFT);
     // Request mapped mesh(es)
     std::vector<RoomSegmentMesh*> mesh_variations;
     try {
@@ -78,11 +80,14 @@ RoomSegmentMesh* RoomSegmentMeshPool::getMeshOfType(GLuint type) {
 }
 
 void RoomSegmentMeshPool::filter(GLuint buildStateBits, std::function<void(GLuint)> callback) {
-    // Ignore orientation bits
-    buildStateBits &= ~(GridCell::TOP | GridCell::BOTTOM | GridCell::RIGHT | GridCell::LEFT);
     // Test every build state that was mapped to a mesh, if it is contained in given build state bits
     for (std::pair<GLuint, std::vector<RoomSegmentMesh*>> stateMeshMapping : meshes_) {
-        if (stateMeshMapping.first & buildStateBits) callback(stateMeshMapping.first);
+        GLuint mappedBuildStateBits = stateMeshMapping.first;
+        if (mappedBuildStateBits & buildStateBits) {
+            // Attach orientation bits to mapped build state, if present in given build state bits
+            GLuint orientationBits = buildStateBits & (GridCell::TOP | GridCell::BOTTOM | GridCell::RIGHT | GridCell::LEFT);
+            callback(mappedBuildStateBits | orientationBits);
+        }
     }
 }
 

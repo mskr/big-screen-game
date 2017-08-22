@@ -64,7 +64,7 @@ vec2 rotateZ_step90(float x, float y) {
         return vec2(x, y);
     }
     else {
-            return vec2(-x, -y);
+        return vec2(-x, -y);
     }
 }
 
@@ -85,9 +85,9 @@ void main() {
     cellCoords += (texCoords.yx - 0.5) * gridCellSize;
     cellCoords /= gridDimensions;
 
-    if((buildState & INFECTED) > EMPTY) {
-        const float WATER_WAVE_LENGTH = 20.0;
-        const float WATER_WAVE_HEIGHT = 40.0;
+    if((buildState & INFECTED) > 0U) {
+        const float WATER_WAVE_LENGTH = 5.0;
+        const float WATER_WAVE_HEIGHT = 10.0;
         float WATER_WAVE_DIRECTION = cellCoords.x;
         //modelMatrix[3][2] += ((1.0 + sin(t_sec * WATER_WAVE_DIRECTION * WATER_WAVE_LENGTH)) / WATER_WAVE_HEIGHT);
     }

@@ -18,6 +18,8 @@ uniform usampler2D inputGrid;
 #define INFECTED 512U
 #define OUTER_INFLUENCE 1024U
 
+#define UINT_MAXVAL 0xFFFFFFFFU //4294967295U
+
 /* Max/min health (should match GridCell::MAX/MIN_HEALTH) */
 #define MAX_HEALTH 100U
 #define MIN_HEALTH 0U
@@ -57,7 +59,9 @@ uvec2 lookup(usampler2D grid, vec2 cell) {
 
 /* Function for saving the result to the other texture */
 void setOutput(uint buildState, uint healthPoints) {
-    outputCell = uvec4(buildState, healthPoints, 0, 0);
+    // Infectedness is intended for UNORM texture access in rendering later
+    uint infectedness = ((buildState & INFECTED) > 0U) ? UINT_MAXVAL : 0U;
+    outputCell = uvec4(buildState, healthPoints, infectedness, 0);
 }
 
 /* Simulation parameters */

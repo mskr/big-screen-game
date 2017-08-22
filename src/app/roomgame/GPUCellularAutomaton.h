@@ -5,8 +5,13 @@
 #include "GPUBuffer.h"
 
 namespace roomgame {
-    /* Minimal version of grid state (build state and health as 32 bit unsigned integers) */
-    const GPUBuffer::Tex GRID_STATE_TEXTURE = { 0, 0, GL_RG32UI, GL_RG_INTEGER, GL_UNSIGNED_INT };
+    /* Minimal version of grid state (32 bit unsigned integers)
+     * Channel R: build state
+     * Channel G: health
+     * Channel B: infected states only */
+    const unsigned int GRID_STATE_TEXTURE_CHANNELS = 3;
+    const GPUBuffer::Tex GRID_STATE_TEXTURE = { 0, 0, GL_RGB32UI, GL_RGB_INTEGER, GL_UNSIGNED_INT };
+    const GPUBuffer::Tex FILTERABLE_GRID_STATE_TEXTURE = { 0, 0, GL_RGB32F, GL_RGB, GL_UNSIGNED_INT };
     using GRID_STATE_ELEMENT = GLuint;
 }
 

@@ -34,13 +34,6 @@ uniform sampler2D last_grid_state;
 /* Coordinates of this fragment on the grid (in texture space) */
 in vec2 cellCoords;
 
-/* Determining "infectedness" of a fragment
-by spatial and temporal interpolation of the infected state number
-and then normalizing
-(the 32 bit uint in the texture are read as unsigned normalized (unorm),
-i.e. 2^32 == 1.0 ===> 2^-23 == 2^9 == 512U == INFECTED) */
-const float INFECTEDNESS_NORMALIZATION_FACTOR = pow(2.0, -23);
-
 uniform float automatonTimeDelta;
 
 /*Directional Lights Parts*/
@@ -115,12 +108,8 @@ void main() {
     float healthNormalized = float(hp) / float(MAX_HEALTH);
 
     // Lookup cell state of this fragment with bilinear interpolation enabled
-    vec2 lastCellStateInterpolatedSpatial = texture(last_grid_state, cellCoords).rg;
-    vec2 currCellStateInterpolatedSpatial = texture(curr_grid_state, cellCoords).rg;
-    float lastCellBuildStateInterpolatedSpatial = lastCellStateInterpolatedSpatial.r;
-    float lastCellHealthInterpolatedSpatial = lastCellStateInterpolatedSpatial.g;
-    float currCellBuildStateInterpolatedSpatial = currCellStateInterpolatedSpatial.r;
-    float currCellHealthInterpolatedSpatial = currCellStateInterpolatedSpatial.g;
+    vec3 last = texture(last_grid_state, cellCoords).rgb;
+    vec3 curr = texture(curr_grid_state, cellCoords).rgb;
 
     // When a mesh instance is rendered on a cell, it can be:
     // 1) a room segment (st has WALL, CORNER or INSIDE_ROOM bit set)
@@ -129,36 +118,32 @@ void main() {
     // 4) an invalid room, that is too small or too big (st has INVALID bit set)
     // ...
     if((st & INFECTED) > 0U) {
-        color = vec4(1,0,0,1); return;
-        float infectednessInterpolatedSpatialTemporal = mix(
-            lastCellBuildStateInterpolatedSpatial,
-            currCellBuildStateInterpolatedSpatial,
-            automatonTimeDelta);
-        float infectedness = infectednessInterpolatedSpatialTemporal 
-            / INFECTEDNESS_NORMALIZATION_FACTOR;
+        // Determining "infectedness" of this fragment 
+        // by spatial and temporal interpolation between
+        // infected (1.0) and not infected (0.0),
+        // which is stored in the blue channel of the grid texture.
+        float infectedness = mix(last.b, curr.b, automatonTimeDelta);
         if(infectedness < 0.6) discard;
-        color = vec4(1,1,1, infectedness);
+        color = vec4(1, 1, 1, healthNormalized * infectedness);
     }
-    else {
-        if((st & TEMPORARY) > 0U){
-            float tmpAlpha = 0.5f;
-            if((st & INVALID) > 0U){
-                color = vec4(1,0,0,tmpAlpha);
-            }else{
-                color = vec4(material.diffuse, tmpAlpha);
-            }
-        }else{
-			vec3 norm = normalize(vNormal);
-			vec3 viewDir = normalize(viewPos-vPosition);
-			vec3 result = CalcDirLight(dirLight, norm, viewDir);
-			for(int i = 0; i < NR_OUT_INF_LIGHTS; i++){
-				result += CalcPointLight(outerInfLights[i], norm, vPosition, viewDir);
-			}
-			for(int i = 0; i < numSourceLights; i++){
-		        result += CalcPointLight(sourceLights[i], norm, vPosition, viewDir); 
-			}
-            color = vec4(result,max(material.alpha,0.97f));            
+    else if((st & TEMPORARY) > 0U) {
+        float tmpAlpha = 0.5f;
+        if((st & INVALID) > 0U) {
+            color = vec4(1,0,0, tmpAlpha);
+        } else {
+            color = vec4(material.diffuse, tmpAlpha);
         }
+    } else {
+		vec3 norm = normalize(vNormal);
+		vec3 viewDir = normalize(viewPos-vPosition);
+		vec3 result = CalcDirLight(dirLight, norm, viewDir);
+		for(int i = 0; i < NR_OUT_INF_LIGHTS; i++){
+			result += CalcPointLight(outerInfLights[i], norm, vPosition, viewDir);
+		}
+		for(int i = 0; i < numSourceLights; i++){
+		    result += CalcPointLight(sourceLights[i], norm, vPosition, viewDir); 
+		}
+        color = vec4(result,max(material.alpha,0.97f));            
     }
 }
 
