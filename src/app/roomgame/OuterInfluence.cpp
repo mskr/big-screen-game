@@ -165,6 +165,7 @@ namespace roomgame {
             distance = glm::length(posDiff);
             mode = RETREAT;
             grid->buildAt(targetCell->getCol(),targetCell->getRow(),GridCell::SOURCE,InteractiveGrid::BuildMode::Additive);
+            grid->addNewSourcePos(currentPos);
             //grid->replaceRoompieceWith(targetCell->getCol(), targetCell->getRow(), GridCell::INSIDE_ROOM);
             //std::cout << "Changed mode to retreat" << std::endl;
         }

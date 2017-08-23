@@ -305,93 +305,108 @@ private:
                 glUniform1f(program_->getUniformLocation((std::string)(outerInfString + "[4]" + pointLightProps[6])), lightInfo->outerInfLights->quadratic);
             }
 
-            //source lights
-            GLint lightNum = (GLint)min(lightInfo->sourceLightsPos.size(), 10);
-            glUniform1i(program_->getUniformLocation((std::string)("numSourceLights")),lightNum );
+            ////source lights
+            
 
-            switch (lightNum) {
-            case 10:
-                glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[9]" + pointLightProps[0])), 1, glm::value_ptr(lightInfo->sourceLightsPos[9]));
-                glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[9]" + pointLightProps[1])), 1, glm::value_ptr(lightInfo->sourceLights->ambient));
-                glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[9]" + pointLightProps[2])), 1, glm::value_ptr(lightInfo->sourceLights->diffuse));
-                glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[9]" + pointLightProps[3])), 1, glm::value_ptr(lightInfo->sourceLights->specular));
-                glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[9]" + pointLightProps[4])), lightInfo->sourceLights->constant);
-                glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[9]" + pointLightProps[5])), lightInfo->sourceLights->linear);
-                glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[9]" + pointLightProps[6])), lightInfo->sourceLights->quadratic);
-            case 9:
-                glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[8]" + pointLightProps[0])), 1, glm::value_ptr(lightInfo->sourceLightsPos[8]));
-                glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[8]" + pointLightProps[1])), 1, glm::value_ptr(lightInfo->sourceLights->ambient));
-                glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[8]" + pointLightProps[2])), 1, glm::value_ptr(lightInfo->sourceLights->diffuse));
-                glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[8]" + pointLightProps[3])), 1, glm::value_ptr(lightInfo->sourceLights->specular));
-                glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[8]" + pointLightProps[4])), lightInfo->sourceLights->constant);
-                glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[8]" + pointLightProps[5])), lightInfo->sourceLights->linear);
-                glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[8]" + pointLightProps[6])), lightInfo->sourceLights->quadratic);
-            case 8:
-                glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[7]" + pointLightProps[0])), 1, glm::value_ptr(lightInfo->sourceLightsPos[7]));
-                glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[7]" + pointLightProps[1])), 1, glm::value_ptr(lightInfo->sourceLights->ambient));
-                glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[7]" + pointLightProps[2])), 1, glm::value_ptr(lightInfo->sourceLights->diffuse));
-                glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[7]" + pointLightProps[3])), 1, glm::value_ptr(lightInfo->sourceLights->specular));
-                glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[7]" + pointLightProps[4])), lightInfo->sourceLights->constant);
-                glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[7]" + pointLightProps[5])), lightInfo->sourceLights->linear);
-                glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[7]" + pointLightProps[6])), lightInfo->sourceLights->quadratic);
-            case 7:
-                glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[6]" + pointLightProps[0])), 1, glm::value_ptr(lightInfo->sourceLightsPos[6]));
-                glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[6]" + pointLightProps[1])), 1, glm::value_ptr(lightInfo->sourceLights->ambient));
-                glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[6]" + pointLightProps[2])), 1, glm::value_ptr(lightInfo->sourceLights->diffuse));
-                glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[6]" + pointLightProps[3])), 1, glm::value_ptr(lightInfo->sourceLights->specular));
-                glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[6]" + pointLightProps[4])), lightInfo->sourceLights->constant);
-                glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[6]" + pointLightProps[5])), lightInfo->sourceLights->linear);
-                glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[6]" + pointLightProps[6])), lightInfo->sourceLights->quadratic);
-            case 6:
-                glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[5]" + pointLightProps[0])), 1, glm::value_ptr(lightInfo->sourceLightsPos[5]));
-                glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[5]" + pointLightProps[1])), 1, glm::value_ptr(lightInfo->sourceLights->ambient));
-                glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[5]" + pointLightProps[2])), 1, glm::value_ptr(lightInfo->sourceLights->diffuse));
-                glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[5]" + pointLightProps[3])), 1, glm::value_ptr(lightInfo->sourceLights->specular));
-                glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[5]" + pointLightProps[4])), lightInfo->sourceLights->constant);
-                glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[5]" + pointLightProps[5])), lightInfo->sourceLights->linear);
-                glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[5]" + pointLightProps[6])), lightInfo->sourceLights->quadratic);
-            case 5:
-                glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[4]" + pointLightProps[0])), 1, glm::value_ptr(lightInfo->sourceLightsPos[4]));
-                glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[4]" + pointLightProps[1])), 1, glm::value_ptr(lightInfo->sourceLights->ambient));
-                glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[4]" + pointLightProps[2])), 1, glm::value_ptr(lightInfo->sourceLights->diffuse));
-                glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[4]" + pointLightProps[3])), 1, glm::value_ptr(lightInfo->sourceLights->specular));
-                glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[4]" + pointLightProps[4])), lightInfo->sourceLights->constant);
-                glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[4]" + pointLightProps[5])), lightInfo->sourceLights->linear);
-                glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[4]" + pointLightProps[6])), lightInfo->sourceLights->quadratic);
-            case 4:
-                glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[3]" + pointLightProps[0])), 1, glm::value_ptr(lightInfo->sourceLightsPos[3]));
-                glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[3]" + pointLightProps[1])), 1, glm::value_ptr(lightInfo->sourceLights->ambient));
-                glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[3]" + pointLightProps[2])), 1, glm::value_ptr(lightInfo->sourceLights->diffuse));
-                glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[3]" + pointLightProps[3])), 1, glm::value_ptr(lightInfo->sourceLights->specular));
-                glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[3]" + pointLightProps[4])), lightInfo->sourceLights->constant);
-                glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[3]" + pointLightProps[5])), lightInfo->sourceLights->linear);
-                glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[3]" + pointLightProps[6])), lightInfo->sourceLights->quadratic);
-            case 3:
-                glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[2]" + pointLightProps[0])), 1, glm::value_ptr(lightInfo->sourceLightsPos[2]));
-                glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[2]" + pointLightProps[1])), 1, glm::value_ptr(lightInfo->sourceLights->ambient));
-                glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[2]" + pointLightProps[2])), 1, glm::value_ptr(lightInfo->sourceLights->diffuse));
-                glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[2]" + pointLightProps[3])), 1, glm::value_ptr(lightInfo->sourceLights->specular));
-                glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[2]" + pointLightProps[4])), lightInfo->sourceLights->constant);
-                glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[2]" + pointLightProps[5])), lightInfo->sourceLights->linear);
-                glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[2]" + pointLightProps[6])), lightInfo->sourceLights->quadratic);
-            case 2:
-                glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[1]" + pointLightProps[0])), 1, glm::value_ptr(lightInfo->sourceLightsPos[1]));
-                glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[1]" + pointLightProps[1])), 1, glm::value_ptr(lightInfo->sourceLights->ambient));
-                glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[1]" + pointLightProps[2])), 1, glm::value_ptr(lightInfo->sourceLights->diffuse));
-                glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[1]" + pointLightProps[3])), 1, glm::value_ptr(lightInfo->sourceLights->specular));
-                glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[1]" + pointLightProps[4])), lightInfo->sourceLights->constant);
-                glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[1]" + pointLightProps[5])), lightInfo->sourceLights->linear);
-                glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[1]" + pointLightProps[6])), lightInfo->sourceLights->quadratic);
-            case 1:
-                glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[0]" + pointLightProps[0])), 1, glm::value_ptr(lightInfo->sourceLightsPos[0]));
-                glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[0]" + pointLightProps[1])), 1, glm::value_ptr(lightInfo->sourceLights->ambient));
-                glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[0]" + pointLightProps[2])), 1, glm::value_ptr(lightInfo->sourceLights->diffuse));
-                glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[0]" + pointLightProps[3])), 1, glm::value_ptr(lightInfo->sourceLights->specular));
-                glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[0]" + pointLightProps[4])), lightInfo->sourceLights->constant);
-                glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[0]" + pointLightProps[5])), lightInfo->sourceLights->linear);
-                glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[0]" + pointLightProps[6])), lightInfo->sourceLights->quadratic);
-                break;
+            for (int i = 0; i < 10; i++) {
+                std::string number = "" + std::to_string(i);
+                std::string loc = sourceString + "[" + number + "]";
+                glUniform3fv(program_->getUniformLocation(loc + pointLightProps[1]), 1, glm::value_ptr(lightInfo->sourceLights->ambient));
+                glUniform3fv(program_->getUniformLocation(loc + pointLightProps[2]), 1, glm::value_ptr(lightInfo->sourceLights->diffuse));
+                glUniform3fv(program_->getUniformLocation(loc + pointLightProps[3]), 1, glm::value_ptr(lightInfo->sourceLights->specular));
+                glUniform1f(program_->getUniformLocation(loc + pointLightProps[4]), lightInfo->sourceLights->constant);
+                glUniform1f(program_->getUniformLocation(loc + pointLightProps[5]), lightInfo->sourceLights->linear);
+                glUniform1f(program_->getUniformLocation(loc + pointLightProps[6]), lightInfo->sourceLights->quadratic);
             }
+
+            
+            
+            //GLint lightNum = (GLint)min(lightInfo->sourceLightsPos.size(), 10);
+            //glUniform1i(program_->getUniformLocation((std::string)("numSourceLights")),lightNum );
+
+            //switch (lightNum) {
+            //case 10:
+            //    glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[9]" + pointLightProps[0])), 1, glm::value_ptr(lightInfo->sourceLightsPos[9]));
+            //    glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[9]" + pointLightProps[1])), 1, glm::value_ptr(lightInfo->sourceLights->ambient));
+            //    glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[9]" + pointLightProps[2])), 1, glm::value_ptr(lightInfo->sourceLights->diffuse));
+            //    glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[9]" + pointLightProps[3])), 1, glm::value_ptr(lightInfo->sourceLights->specular));
+            //    glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[9]" + pointLightProps[4])), lightInfo->sourceLights->constant);
+            //    glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[9]" + pointLightProps[5])), lightInfo->sourceLights->linear);
+            //    glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[9]" + pointLightProps[6])), lightInfo->sourceLights->quadratic);
+            //case 9:
+            //    glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[8]" + pointLightProps[0])), 1, glm::value_ptr(lightInfo->sourceLightsPos[8]));
+            //    glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[8]" + pointLightProps[1])), 1, glm::value_ptr(lightInfo->sourceLights->ambient));
+            //    glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[8]" + pointLightProps[2])), 1, glm::value_ptr(lightInfo->sourceLights->diffuse));
+            //    glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[8]" + pointLightProps[3])), 1, glm::value_ptr(lightInfo->sourceLights->specular));
+            //    glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[8]" + pointLightProps[4])), lightInfo->sourceLights->constant);
+            //    glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[8]" + pointLightProps[5])), lightInfo->sourceLights->linear);
+            //    glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[8]" + pointLightProps[6])), lightInfo->sourceLights->quadratic);
+            //case 8:
+            //    glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[7]" + pointLightProps[0])), 1, glm::value_ptr(lightInfo->sourceLightsPos[7]));
+            //    glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[7]" + pointLightProps[1])), 1, glm::value_ptr(lightInfo->sourceLights->ambient));
+            //    glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[7]" + pointLightProps[2])), 1, glm::value_ptr(lightInfo->sourceLights->diffuse));
+            //    glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[7]" + pointLightProps[3])), 1, glm::value_ptr(lightInfo->sourceLights->specular));
+            //    glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[7]" + pointLightProps[4])), lightInfo->sourceLights->constant);
+            //    glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[7]" + pointLightProps[5])), lightInfo->sourceLights->linear);
+            //    glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[7]" + pointLightProps[6])), lightInfo->sourceLights->quadratic);
+            //case 7:
+            //    glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[6]" + pointLightProps[0])), 1, glm::value_ptr(lightInfo->sourceLightsPos[6]));
+            //    glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[6]" + pointLightProps[1])), 1, glm::value_ptr(lightInfo->sourceLights->ambient));
+            //    glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[6]" + pointLightProps[2])), 1, glm::value_ptr(lightInfo->sourceLights->diffuse));
+            //    glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[6]" + pointLightProps[3])), 1, glm::value_ptr(lightInfo->sourceLights->specular));
+            //    glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[6]" + pointLightProps[4])), lightInfo->sourceLights->constant);
+            //    glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[6]" + pointLightProps[5])), lightInfo->sourceLights->linear);
+            //    glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[6]" + pointLightProps[6])), lightInfo->sourceLights->quadratic);
+            //case 6:
+            //    glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[5]" + pointLightProps[0])), 1, glm::value_ptr(lightInfo->sourceLightsPos[5]));
+            //    glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[5]" + pointLightProps[1])), 1, glm::value_ptr(lightInfo->sourceLights->ambient));
+            //    glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[5]" + pointLightProps[2])), 1, glm::value_ptr(lightInfo->sourceLights->diffuse));
+            //    glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[5]" + pointLightProps[3])), 1, glm::value_ptr(lightInfo->sourceLights->specular));
+            //    glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[5]" + pointLightProps[4])), lightInfo->sourceLights->constant);
+            //    glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[5]" + pointLightProps[5])), lightInfo->sourceLights->linear);
+            //    glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[5]" + pointLightProps[6])), lightInfo->sourceLights->quadratic);
+            //case 5:
+            //    glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[4]" + pointLightProps[0])), 1, glm::value_ptr(lightInfo->sourceLightsPos[4]));
+            //    glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[4]" + pointLightProps[1])), 1, glm::value_ptr(lightInfo->sourceLights->ambient));
+            //    glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[4]" + pointLightProps[2])), 1, glm::value_ptr(lightInfo->sourceLights->diffuse));
+            //    glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[4]" + pointLightProps[3])), 1, glm::value_ptr(lightInfo->sourceLights->specular));
+            //    glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[4]" + pointLightProps[4])), lightInfo->sourceLights->constant);
+            //    glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[4]" + pointLightProps[5])), lightInfo->sourceLights->linear);
+            //    glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[4]" + pointLightProps[6])), lightInfo->sourceLights->quadratic);
+            //case 4:
+            //    glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[3]" + pointLightProps[0])), 1, glm::value_ptr(lightInfo->sourceLightsPos[3]));
+            //    glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[3]" + pointLightProps[1])), 1, glm::value_ptr(lightInfo->sourceLights->ambient));
+            //    glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[3]" + pointLightProps[2])), 1, glm::value_ptr(lightInfo->sourceLights->diffuse));
+            //    glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[3]" + pointLightProps[3])), 1, glm::value_ptr(lightInfo->sourceLights->specular));
+            //    glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[3]" + pointLightProps[4])), lightInfo->sourceLights->constant);
+            //    glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[3]" + pointLightProps[5])), lightInfo->sourceLights->linear);
+            //    glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[3]" + pointLightProps[6])), lightInfo->sourceLights->quadratic);
+            //case 3:
+            //    glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[2]" + pointLightProps[0])), 1, glm::value_ptr(lightInfo->sourceLightsPos[2]));
+            //    glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[2]" + pointLightProps[1])), 1, glm::value_ptr(lightInfo->sourceLights->ambient));
+            //    glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[2]" + pointLightProps[2])), 1, glm::value_ptr(lightInfo->sourceLights->diffuse));
+            //    glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[2]" + pointLightProps[3])), 1, glm::value_ptr(lightInfo->sourceLights->specular));
+            //    glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[2]" + pointLightProps[4])), lightInfo->sourceLights->constant);
+            //    glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[2]" + pointLightProps[5])), lightInfo->sourceLights->linear);
+            //    glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[2]" + pointLightProps[6])), lightInfo->sourceLights->quadratic);
+            //case 2:
+            //    glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[1]" + pointLightProps[0])), 1, glm::value_ptr(lightInfo->sourceLightsPos[1]));
+            //    glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[1]" + pointLightProps[1])), 1, glm::value_ptr(lightInfo->sourceLights->ambient));
+            //    glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[1]" + pointLightProps[2])), 1, glm::value_ptr(lightInfo->sourceLights->diffuse));
+            //    glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[1]" + pointLightProps[3])), 1, glm::value_ptr(lightInfo->sourceLights->specular));
+            //    glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[1]" + pointLightProps[4])), lightInfo->sourceLights->constant);
+            //    glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[1]" + pointLightProps[5])), lightInfo->sourceLights->linear);
+            //    glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[1]" + pointLightProps[6])), lightInfo->sourceLights->quadratic);
+            //case 1:
+            //    glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[0]" + pointLightProps[0])), 1, glm::value_ptr(lightInfo->sourceLightsPos[0]));
+            //    glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[0]" + pointLightProps[1])), 1, glm::value_ptr(lightInfo->sourceLights->ambient));
+            //    glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[0]" + pointLightProps[2])), 1, glm::value_ptr(lightInfo->sourceLights->diffuse));
+            //    glUniform3fv(program_->getUniformLocation((std::string)(sourceString + "[0]" + pointLightProps[3])), 1, glm::value_ptr(lightInfo->sourceLights->specular));
+            //    glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[0]" + pointLightProps[4])), lightInfo->sourceLights->constant);
+            //    glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[0]" + pointLightProps[5])), lightInfo->sourceLights->linear);
+            //    glUniform1f(program_->getUniformLocation((std::string)(sourceString + "[0]" + pointLightProps[6])), lightInfo->sourceLights->quadratic);
+            //    break;
+            //}
         }
 	}
 };

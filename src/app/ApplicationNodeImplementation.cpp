@@ -39,7 +39,11 @@ namespace viscom {
 
         /* Init mesh pool (mesh and shader resources need to be loaded on all nodes) */
 
-        meshpool_.loadShader(GetApplication()->GetGPUProgramManager());
+        instanceShader_ = GetApplication()->GetGPUProgramManager().GetResource("renderMeshInstance",
+            std::initializer_list<std::string>{ "renderMeshInstance.vert", "renderMeshInstance.frag" });
+
+
+        meshpool_.loadShader(GetApplication()->GetGPUProgramManager(),instanceShader_);
 
         meshpool_.addMesh({ GridCell::INSIDE_ROOM, GridCell::TEMPORARY },
                             GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/newModels/RoomFloor.obj"));
@@ -105,6 +109,7 @@ namespace viscom {
             glUniform1i(uloc, 1);
         });
 
+
         /* Init outer influence */
         std::shared_ptr<viscom::GPUProgram> outerInfShader = GetApplication()->GetGPUProgramManager().GetResource("stuff",
             std::initializer_list<std::string>{ "applyTextureAndShadow.vert", "OuterInfl.frag" });
@@ -126,10 +131,11 @@ namespace viscom {
         //    GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/textured_4vertexplane/textured_4vertexplane.obj"),
         //    GetApplication()->GetGPUProgramManager().GetResource("applyTextureAndShadow",
         //		std::initializer_list<std::string>{ "applyTextureAndShadow.vert", "applyTextureAndShadow.frag" }));
+        terrainShader_ = GetApplication()->GetGPUProgramManager().GetResource("underwater",
+            std::initializer_list<std::string>{ "underwater.vert", "underwater.frag" });
         waterMesh_ = new PostProcessingMesh(
             GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/textured_4vertexplane/textured_4vertexplane.obj"),
-            GetApplication()->GetGPUProgramManager().GetResource("underwater",
-                std::initializer_list<std::string>{ "underwater.vert", "underwater.frag" }));
+            terrainShader_);
         
         waterMesh_->scale = 1.0f;
         //backgroundMesh_->transform(glm::scale(glm::translate(glm::mat4(1), 
@@ -167,14 +173,14 @@ namespace viscom {
         lightInfo->outerInfLights = new PointLight(ambient, diffuse, specular,1.0f,20.0f,30.0f );
         diffuse = glm::vec3(0.1f, 0.1f, 0.9f);
         specular = glm::vec3(.1f, .1f, 1.0f);
-        lightInfo->sourceLights = new PointLight(ambient, diffuse, specular, 1.0f, 5.0f, 15.0f);
+        lightInfo->sourceLights = new PointLight(ambient, diffuse, specular, 1.0f, 15.0f, 20.f);
         lightInfo->infLightPos.push_back(glm::vec3(0));
         lightInfo->infLightPos.push_back(glm::vec3(0));
         lightInfo->infLightPos.push_back(glm::vec3(0));
         lightInfo->infLightPos.push_back(glm::vec3(0));
         lightInfo->infLightPos.push_back(glm::vec3(0));
-        lightInfo->sourceLightsPos.push_back(glm::vec3(-.5f, -.5f, 0.2f));
-        lightInfo->sourceLightsPos.push_back(glm::vec3(.5f, .5f, 0.2f));
+//        lightInfo->sourceLightsPos.push_back(glm::vec3(-.5f, -.5f, 0.2f));
+//        lightInfo->sourceLightsPos.push_back(glm::vec3(.5f, .5f, 0.2f));
     }
 
 
@@ -224,6 +230,7 @@ namespace viscom {
             //glDisable(GL_DEPTH_TEST);
             meshpool_.renderAllMeshes(viewProj, 0, (render_mode_ == RenderMode::DBG) ? 1 : 0, lightInfo, viewPos);
             glm::mat4 influPos = outerInfluence_->meshComponent->model_matrix_;
+            
             if (outerInfPositions_.size() > 40) {
                 outerInfPositions_.resize(40);
             }

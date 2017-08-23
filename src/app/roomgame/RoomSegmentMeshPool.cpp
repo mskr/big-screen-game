@@ -19,9 +19,8 @@ void RoomSegmentMeshPool::cleanup() {
     owned_resources_.clear();
 }
 
-void RoomSegmentMeshPool::loadShader(viscom::GPUProgramManager mgr) {
-    shader_ = mgr.GetResource("renderMeshInstance",
-        std::initializer_list<std::string>{ "renderMeshInstance.vert", "renderMeshInstance.frag" });
+void RoomSegmentMeshPool::loadShader(viscom::GPUProgramManager mgr, std::shared_ptr<viscom::GPUProgram> instanceShader) {
+    shader_ = instanceShader;
     depth_pass_flag_uniform_location_ = shader_->getUniformLocation("isDepthPass");
     debug_mode_flag_uniform_location_ = shader_->getUniformLocation("isDebugMode");
 }

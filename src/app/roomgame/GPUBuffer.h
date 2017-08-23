@@ -37,7 +37,7 @@ public:
     void bind_data(GLsizeiptr bytes, const GLvoid* pointer);
     // Create empty 2D texture without mipmap
     static GLuint alloc_texture2D(GLsizei w, GLsizei h, GLint sized_format, GLenum format, GLenum type);
-    static GLuint alloc_immutable_format_texture2D(GLsizei w, GLsizei h, GLint sized_format);
+    static GLuint alloc_immutable_format_texture2D(GLsizei w, GLsizei h, GLint sized_format, GLenum format, GLenum type);
 
 };
 

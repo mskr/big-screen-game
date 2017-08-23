@@ -62,6 +62,9 @@ namespace viscom {
 
         std::vector<glm::mat4> outerInfPositions_;
 
+        std::shared_ptr<viscom::GPUProgram> instanceShader_;
+        std::shared_ptr<viscom::GPUProgram> terrainShader_;
+
 		/* Grid parameters (constant on all nodes) */
 		const int GRID_COLS_ = 64;
 		const int GRID_ROWS_ = 64;

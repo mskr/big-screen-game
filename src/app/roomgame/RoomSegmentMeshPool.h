@@ -40,7 +40,7 @@ public:
 	RoomSegmentMeshPool(const size_t MAX_INSTANCES);
 	~RoomSegmentMeshPool();
 	// Functions for initialization
-	void loadShader(viscom::GPUProgramManager mgr);
+	void loadShader(viscom::GPUProgramManager mgr, std::shared_ptr<viscom::GPUProgram> instanceShader);
 	void addMesh(std::vector<GLuint> types, std::shared_ptr<viscom::Mesh> mesh);
 	void addMeshVariations(std::vector<GLuint> types, std::vector<std::shared_ptr<viscom::Mesh>> mesh_variations);
     // Function for uniform shader data
