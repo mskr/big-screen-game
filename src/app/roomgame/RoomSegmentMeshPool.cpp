@@ -59,7 +59,7 @@ void RoomSegmentMeshPool::updateUniformEveryFrame(std::string uniform_name, std:
 }
 
 RoomSegmentMesh* RoomSegmentMeshPool::getMeshOfType(GLuint type) {
-    // Ignore orientation bits
+    // Ignore orientation bits (so that walls and corners can be added once and reused)
     type &= ~(GridCell::TOP | GridCell::BOTTOM | GridCell::RIGHT | GridCell::LEFT);
     // Request mapped mesh(es)
     std::vector<RoomSegmentMesh*> mesh_variations;
@@ -80,15 +80,23 @@ RoomSegmentMesh* RoomSegmentMeshPool::getMeshOfType(GLuint type) {
 }
 
 void RoomSegmentMeshPool::filter(GLuint buildStateBits, std::function<void(GLuint)> callback) {
-    // Test every build state that was mapped to a mesh, if it is contained in given build state bits
+    // Aggregate buildstate bits of all mesh mappings, that overlap with the filter
+    // Example 1: If meshpool has one mesh for buildstates A and B,
+    //            A|B is formed and the overlap with buildStateBits returned in callback
+    // Example 2: If meshpool has different meshes for buildstates A and B,
+    //            callback is called twice with an overlap of each builstate with buildStateBits
+    std::unordered_map<RoomSegmentMesh*, GLuint> aggregatedBuildStates;
     for (std::pair<GLuint, std::vector<RoomSegmentMesh*>> stateMeshMapping : meshes_) {
         GLuint mappedBuildStateBits = stateMeshMapping.first;
-        if (mappedBuildStateBits & buildStateBits) {
-            // Attach orientation bits to mapped build state, if present in given build state bits
-            GLuint orientationBits = buildStateBits & (GridCell::TOP | GridCell::BOTTOM | GridCell::RIGHT | GridCell::LEFT);
-            callback(mappedBuildStateBits | orientationBits);
-        }
+        GLuint overlap = mappedBuildStateBits & buildStateBits;
+        if (overlap)
+            for (RoomSegmentMesh* mappedMesh : stateMeshMapping.second)
+                aggregatedBuildStates[mappedMesh] |= overlap; // aggregation
     }
+    // Attach present orientation bits (so that shader can rotate room segments)
+    GLuint orientationBits = buildStateBits & (GridCell::TOP | GridCell::BOTTOM | GridCell::RIGHT | GridCell::LEFT);
+    for(std::pair<RoomSegmentMesh*, GLuint> aggBuildStateBits : aggregatedBuildStates)
+        callback(aggBuildStateBits.second | orientationBits);
 }
 
 void RoomSegmentMeshPool::renderAllMeshes(glm::mat4& view_projection, GLint isDepthPass, GLint isDebugMode, LightInfo* lightInfo, glm::vec3& viewPos) {

@@ -16,8 +16,11 @@ void MeshInstanceGrid::addInstanceAt(GridCell* c, GLuint buildStateBits) {
     instance.health = c->getHealthPoints();
     // get a mesh instance for all given buildstate bits that have a mapping in the meshpool
     meshpool_->filter(buildStateBits, [&](GLuint renderableBuildState) {
-        instance.buildState = renderableBuildState;
+        instance.buildState = renderableBuildState; // helps differentiating 2 meshes on 1 cell in shader
         RoomSegmentMesh* mesh = meshpool_->getMeshOfType(renderableBuildState);
+        if (!mesh) {
+            return;
+        }
         RoomSegmentMesh::InstanceBufferRange bufrange = mesh->addInstanceUnordered(instance);
         c->pushMeshInstance(bufrange);
     });

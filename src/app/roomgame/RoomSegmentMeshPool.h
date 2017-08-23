@@ -41,13 +41,15 @@ public:
 	~RoomSegmentMeshPool();
 	// Functions for initialization
 	void loadShader(viscom::GPUProgramManager mgr);
+    // Map a mesh to (multiple) build states, or (multiple) comibinations
+    // (note: if actually occuring combinations are forgotten, getMesh will fail, except combinations with orientation bits, which are ignored)
 	void addMesh(std::vector<GLuint> types, std::shared_ptr<viscom::Mesh> mesh);
 	void addMeshVariations(std::vector<GLuint> types, std::vector<std::shared_ptr<viscom::Mesh>> mesh_variations);
     // Function for uniform shader data
     void updateUniformEveryFrame(std::string uniform_name, std::function<void(GLint)> update_func);
-	// Function for mesh requests
+	// Get mapped mesh from build state (since build state is treated as simple index, combinations must match exactly)
 	RoomSegmentMesh* getMeshOfType(GLuint type);
-    // Finds mesh types, that are available through getMeshOfType, in given bitfield and invokes callback for each of them
+    // Finds overlaps of given buildstate bits with available mesh mappings and calls back for each mesh
     void filter(GLuint buildStateBits, std::function<void(GLuint)> callback);
 	// Functions for rendering
 	void renderAllMeshes(glm::mat4& view_projection, GLint isDepthPass = 0, GLint isDebugMode = 0, LightInfo* lightInfo = nullptr, glm::vec3& viewPos = glm::vec3(0, 0, 4));

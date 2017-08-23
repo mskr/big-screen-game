@@ -48,7 +48,7 @@ namespace viscom {
             GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/newModels/RoomCorner.obj"));
         meshpool_.addMesh({ GridCell::WALL },
             GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/newModels/RoomWall.obj"));
-        meshpool_.addMesh({ GridCell::INFECTED, GridCell::SOURCE, GridCell::TEMPORARY, GridCell::INVALID },
+        meshpool_.addMesh({ GridCell::INVALID|GridCell::TEMPORARY, GridCell::TEMPORARY, GridCell::INFECTED, GridCell::SOURCE, GridCell::SOURCE|GridCell::INFECTED },
             GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/newModels/InnerInfluence.obj"));
 
         meshpool_.updateUniformEveryFrame("t_sec", [this](GLint uloc) {
@@ -74,8 +74,14 @@ namespace viscom {
             glUniform1f(uloc, GRID_CELL_SIZE_);
         });
 
-        current_grid_state_texture_.id = GPUBuffer::alloc_texture2D(GRID_COLS_, GRID_ROWS_, GL_RG32F, GL_RG, GL_UNSIGNED_INT);
-        last_grid_state_texture_.id = GPUBuffer::alloc_texture2D(GRID_COLS_, GRID_ROWS_, GL_RG32F, GL_RG, GL_UNSIGNED_INT);
+        current_grid_state_texture_.id = GPUBuffer::alloc_texture2D(GRID_COLS_, GRID_ROWS_, 
+            roomgame::FILTERABLE_GRID_STATE_TEXTURE.sized_format, 
+            roomgame::FILTERABLE_GRID_STATE_TEXTURE.format, 
+            roomgame::FILTERABLE_GRID_STATE_TEXTURE.datatype);
+        last_grid_state_texture_.id = GPUBuffer::alloc_texture2D(GRID_COLS_, GRID_ROWS_,
+            roomgame::FILTERABLE_GRID_STATE_TEXTURE.sized_format,
+            roomgame::FILTERABLE_GRID_STATE_TEXTURE.format,
+            roomgame::FILTERABLE_GRID_STATE_TEXTURE.datatype);
 
         meshpool_.updateUniformEveryFrame("curr_grid_state", [&](GLint uloc) {
             GLuint texture_unit = GL_TEXTURE0 + 0;
