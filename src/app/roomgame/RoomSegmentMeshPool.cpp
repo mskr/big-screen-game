@@ -88,10 +88,10 @@ void RoomSegmentMeshPool::filter(GLuint buildStateBits, std::function<void(GLuin
     std::unordered_map<RoomSegmentMesh*, GLuint> aggregatedBuildStates;
     for (std::pair<GLuint, std::vector<RoomSegmentMesh*>> stateMeshMapping : meshes_) {
         GLuint mappedBuildStateBits = stateMeshMapping.first;
+        RoomSegmentMesh* mappedMesh = stateMeshMapping.second[0];
         GLuint overlap = mappedBuildStateBits & buildStateBits;
         if (overlap)
-            for (RoomSegmentMesh* mappedMesh : stateMeshMapping.second)
-                aggregatedBuildStates[mappedMesh] |= overlap; // aggregation
+            aggregatedBuildStates[mappedMesh] |= overlap; // aggregation
     }
     // Attach present orientation bits (so that shader can rotate room segments)
     GLuint orientationBits = buildStateBits & (GridCell::TOP | GridCell::BOTTOM | GridCell::RIGHT | GridCell::LEFT);

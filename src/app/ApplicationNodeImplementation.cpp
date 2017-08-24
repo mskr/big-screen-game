@@ -48,7 +48,8 @@ namespace viscom {
             GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/newModels/RoomCorner.obj"));
         meshpool_.addMesh({ GridCell::WALL },
             GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/newModels/RoomWall.obj"));
-        meshpool_.addMesh({ GridCell::INVALID|GridCell::TEMPORARY, GridCell::TEMPORARY, GridCell::INFECTED, GridCell::SOURCE, GridCell::SOURCE|GridCell::INFECTED },
+        meshpool_.addMesh({ GridCell::INVALID|GridCell::TEMPORARY, GridCell::TEMPORARY, 
+            GridCell::INFECTED, GridCell::SOURCE, GridCell::SOURCE|GridCell::INFECTED },
             GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/newModels/InnerInfluence.obj"));
 
         meshpool_.updateUniformEveryFrame("t_sec", [this](GLint uloc) {
