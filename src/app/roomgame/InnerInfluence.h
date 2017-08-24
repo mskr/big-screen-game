@@ -8,12 +8,15 @@
  * Infections are initialized by attacking outer influence.
 */
 class InnerInfluence : public GPUCellularAutomaton {
+    unsigned int num_transitions_;
+    const unsigned int NUM_DIRECTIONS_;
 public:
-	GLint uloc_FLOW_DIRECTION; glm::ivec2 FLOW_DIRECTION;
+	GLint uloc_FLOW_DIRECTION; glm::ivec2* FLOW_DIRECTION;
     GLint uloc_CRITICAL_VALUE; GLint CRITICAL_VALUE;
     GLint uloc_FLOW_SPEED; GLuint FLOW_SPEED;
 
     InnerInfluence(AutomatonGrid* grid, double transition_time);
+    ~InnerInfluence();
 
 	void init(viscom::GPUProgramManager mgr);
 	bool transition(double time);
