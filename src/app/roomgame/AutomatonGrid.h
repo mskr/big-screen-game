@@ -29,6 +29,7 @@ public:
 	~AutomatonGrid();
 	void setCellularAutomaton(GPUCellularAutomaton*);
     void buildAt(size_t col, size_t row, GLuint newState, BuildMode buildMode) override; // for user changes
+    void buildAt(size_t col, size_t row, std::function<void(GridCell*)> callback) override; // -"-
     void updateCell(GridCell* c, GLuint state, int hp); // for automaton changes
 	void onTransition();
 	void populateCircleAtLastMousePosition(int radius);

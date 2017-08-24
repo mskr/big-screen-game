@@ -32,6 +32,16 @@ void AutomatonGrid::buildAt(size_t col, size_t row, GLuint buildStateBits, Build
     automaton_->updateCell(c, c->getBuildState(), c->getHealthPoints());
 }
 
+void AutomatonGrid::buildAt(size_t col, size_t row, std::function<void(GridCell*)> callback) {
+    // Called on user input (grid update -> automaton update)
+
+    GridCell* c = getCellAt(col, row);
+    if (!c) return;
+    MeshInstanceGrid::buildAt(c, callback);
+    // Route results to automaton
+    automaton_->updateCell(c, c->getBuildState(), c->getHealthPoints());
+}
+
 void AutomatonGrid::updateCell(GridCell* c, GLuint state, int hp) {
 	// Called on automaton transitions (automaton update -> grid update)
 	if (c->getBuildState() == SIMULATED_STATE && state == GridCell::EMPTY) {
