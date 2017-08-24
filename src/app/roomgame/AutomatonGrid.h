@@ -23,14 +23,24 @@ class AutomatonGrid : public MeshInstanceGrid {
 			wait_count_(wait_count), target_(target), to_(to), next_(0) {}
 	};
 	DelayedUpdate* delayed_update_list_;
+
+    // Update grid only (called from cellular automaton)
+    void updateGridAt(GridCell* c, GLuint state, GLuint hp);
+    friend GPUCellularAutomaton; // allow private access
+
+    // Update automaton (called from user input or outer influence through buildAt)
+    void updateAutomatonAt(GridCell* c, GLuint state, GLuint hp);
+
 public:
     static const GLuint SIMULATED_STATE = GridCell::INFECTED;
 	AutomatonGrid(size_t columns, size_t rows, float height, RoomSegmentMeshPool* meshpool);
 	~AutomatonGrid();
 	void setCellularAutomaton(GPUCellularAutomaton*);
-    void buildAt(size_t col, size_t row, GLuint newState, BuildMode buildMode) override; // for user changes
-    void buildAt(size_t col, size_t row, std::function<void(GridCell*)> callback) override; // -"-
-    void updateCell(GridCell* c, GLuint state, int hp); // for automaton changes
+
+    // Public interface for modifying the grid (adds mesh instance + updates automaton)
+    void buildAt(size_t col, size_t row, GLuint newState, BuildMode buildMode) override;
+    void buildAt(size_t col, size_t row, std::function<void(GridCell*)> callback) override;
+
 	void onTransition();
 	void populateCircleAtLastMousePosition(int radius);
 };

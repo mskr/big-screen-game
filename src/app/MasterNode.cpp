@@ -16,7 +16,7 @@ namespace viscom {
     MasterNode::MasterNode(ApplicationNodeInternal* appNode) :
         ApplicationNodeImplementation{ appNode },
         grid_(GRID_COLS_, GRID_ROWS_, GRID_HEIGHT_, &meshpool_),
-        cellular_automaton_(&grid_, 0.5),
+        cellular_automaton_(&grid_, 0.2),
         interaction_mode_(InteractionMode::GRID)
     {
         grid_state_ = {};
