@@ -109,6 +109,10 @@ void main() {
     int left_gradient = int(left_fluid) - int(fluid);
     int right_gradient = int(right_fluid) - int(fluid);
 
+    // prevent flow to/from non-infected cells
+    if((left_bstate & INFECTED) == 0U) left_gradient = 0;
+    if((right_bstate & INFECTED) == 0U) right_gradient = 0;
+
     // CASE 1: cell is SOURCE (& WALL)
     if((bstate & SOURCE) > 0U) {
         // constantly decrease health, while player repairs
