@@ -124,7 +124,10 @@ void main() {
         // which is stored in the blue channel of the grid texture.
         float infectedness = mix(last.b, curr.b, automatonTimeDelta);
         if(infectedness < 0.6) discard;
-        color = vec4(1, 1, 1, healthNormalized * infectedness);
+        const float MAXHEALTH_NORMFACTOR = 21474836.47;
+        float fluid = mix(1.0 - last.g * MAXHEALTH_NORMFACTOR, 
+            1.0 - curr.g * MAXHEALTH_NORMFACTOR, automatonTimeDelta);
+        color = vec4(1, 1, 1, fluid * infectedness);
     }
     else if((st & TEMPORARY) > 0U) {
         float tmpAlpha = 0.5f;
