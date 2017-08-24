@@ -108,8 +108,8 @@ void main() {
     float healthNormalized = float(hp) / float(MAX_HEALTH);
 
     // Lookup cell state of this fragment with bilinear interpolation enabled
-    vec3 last = texture(last_grid_state, cellCoords).rgb;
-    vec3 curr = texture(curr_grid_state, cellCoords).rgb;
+    vec4 last = texture(last_grid_state, cellCoords).rgba;
+    vec4 curr = texture(curr_grid_state, cellCoords).rgba;
 
     // When a mesh instance is rendered on a cell, it can be:
     // 1) a room segment (st has WALL, CORNER or INSIDE_ROOM bit set)
@@ -123,11 +123,9 @@ void main() {
         // infected (1.0) and not infected (0.0),
         // which is stored in the blue channel of the grid texture.
         float infectedness = mix(last.b, curr.b, automatonTimeDelta);
-        if(infectedness < 0.6) discard;
-        const float MAXHEALTH_NORMFACTOR = 21474836.47;
-        float fluid = mix(1.0 - last.g * MAXHEALTH_NORMFACTOR, 
-            1.0 - curr.g * MAXHEALTH_NORMFACTOR, automatonTimeDelta);
-        color = vec4(1, 1, 1, fluid * infectedness);
+        if(infectedness < 0.7) discard;
+        float fluid = mix(1.0 - last.a, 1.0 - curr.a, automatonTimeDelta);
+        color = vec4(vec3(.1,.5,.1) + fluid * infectedness * vec3(.1,.5,.1), 1);
     }
     else if((st & TEMPORARY) > 0U) {
         float tmpAlpha = 0.5f;

@@ -113,11 +113,14 @@ void GPUCellularAutomaton::copyFromTextureToGrid(int pair_index) {
     }
 }
 
-void GPUCellularAutomaton::updateCell(GridCell* c, GLuint buildState, GLint hp) {
+void GPUCellularAutomaton::updateCell(GridCell* c, GLuint buildState, GLuint hp) {
     if (!is_initialized_) return;
     // Upload possibly new build state, health and "is infected?"-UNORM
-    roomgame::GRID_STATE_ELEMENT data[roomgame::GRID_STATE_TEXTURE_CHANNELS] = 
-        { buildState, (GLuint)hp, (buildState & GridCell::INFECTED) ? 0xFFFFFFFFU : 0 };
+    roomgame::GRID_STATE_ELEMENT data[roomgame::GRID_STATE_TEXTURE_CHANNELS] = {
+        buildState, 
+        hp, 
+        (buildState & GridCell::INFECTED) ? 0xFFFFFFFFU : 0,
+        (roomgame::GRID_STATE_ELEMENT)((float(hp) / float(GridCell::MAX_HEALTH)) * 0xFFFFFFFFU) };
     glBindTexture(GL_TEXTURE_2D, texture_pair_[current_read_index_].id);
     glTexSubImage2D(GL_TEXTURE_2D, 0, (GLint)c->getCol(), (GLint)c->getRow(), 1, 1,
         texture_pair_[0].format, texture_pair_[0].datatype, data);

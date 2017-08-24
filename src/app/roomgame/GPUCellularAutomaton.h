@@ -9,9 +9,9 @@ namespace roomgame {
      * Channel R: build state
      * Channel G: health
      * Channel B: infected states only */
-    const unsigned int GRID_STATE_TEXTURE_CHANNELS = 3;
-    const GPUBuffer::Tex GRID_STATE_TEXTURE = { 0, 0, GL_RGB32UI, GL_RGB_INTEGER, GL_UNSIGNED_INT };
-    const GPUBuffer::Tex FILTERABLE_GRID_STATE_TEXTURE = { 0, 0, GL_RGB32F, GL_RGB, GL_UNSIGNED_INT };
+    const unsigned int GRID_STATE_TEXTURE_CHANNELS = 4;
+    const GPUBuffer::Tex GRID_STATE_TEXTURE = { 0, 0, GL_RGBA32UI, GL_RGBA_INTEGER, GL_UNSIGNED_INT };
+    const GPUBuffer::Tex FILTERABLE_GRID_STATE_TEXTURE = { 0, 0, GL_RGBA32F, GL_RGBA, GL_UNSIGNED_INT };
     using GRID_STATE_ELEMENT = GLuint;
 }
 
@@ -49,7 +49,7 @@ private:
     void copyFromTextureToGrid(int tex_index);
 public:
     GPUCellularAutomaton(AutomatonGrid* grid, double transition_time);
-    void updateCell(GridCell* c, GLuint state, GLint hp);
+    void updateCell(GridCell* c, GLuint state, GLuint hp);
     virtual void init(viscom::GPUProgramManager mgr);
     virtual bool transition(double time); // return false if it is not time yet
     void cleanup();

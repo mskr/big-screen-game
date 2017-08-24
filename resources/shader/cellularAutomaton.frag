@@ -63,7 +63,9 @@ void setOutput(uint buildState, int signedHealth) {
     uint healthPoints = uint(clamp(signedHealth, int(MIN_HEALTH), int(MAX_HEALTH)));
     // Infectedness is intended for filtered texture access in rendering later
     uint infectedness = ((buildState & INFECTED) > 0U) ? UINT_MAXVAL : 0U;
-    outputCell = uvec4(buildState, healthPoints, infectedness, 0);
+    // Store normalized health in A channel
+    uint hpUNORM = uint(float(healthPoints) / float(MAX_HEALTH) * float(UINT_MAXVAL));
+    outputCell = uvec4(buildState, healthPoints, infectedness, hpUNORM);
 }
 
 /* Simulation parameters */

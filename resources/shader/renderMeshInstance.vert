@@ -18,6 +18,10 @@
 #define INFECTED 512U
 #define OUTER_INFLUENCE 1024U
 
+/* Build state and health for the whole grid (bilinear interpolation enabled) */
+uniform sampler2D curr_grid_state;
+uniform sampler2D last_grid_state;
+
 // Vertex attribs
 layout(location = 0) in vec3 position;
 layout(location = 1) in vec3 normal;
@@ -85,14 +89,22 @@ void main() {
     cellCoords += (texCoords.yx - 0.5) * gridCellSize;
     cellCoords /= gridDimensions;
 
+    vec3 pos = position;
+
     if((buildState & INFECTED) > 0U) {
+        /*
         const float WATER_WAVE_LENGTH = 5.0;
         const float WATER_WAVE_HEIGHT = 10.0;
         float WATER_WAVE_DIRECTION = cellCoords.x;
-        //modelMatrix[3][2] += ((1.0 + sin(t_sec * WATER_WAVE_DIRECTION * WATER_WAVE_LENGTH)) / WATER_WAVE_HEIGHT);
+        modelMatrix[3][2] += ((1.0 + sin(t_sec * WATER_WAVE_DIRECTION * WATER_WAVE_LENGTH)) / WATER_WAVE_HEIGHT);
+        */
+        vec4 last = texture(last_grid_state, cellCoords).rgba;
+        vec4 curr = texture(curr_grid_state, cellCoords).rgba;
+        float fluid = mix(1.0 - last.a, 1.0 - curr.a, automatonTimeDelta);
+        pos.y += fluid;
     }
 
-    vec4 posV4 = modelMatrix * subMeshLocalMatrix * vec4(rotateZ_step90(position.x, -position.z), position.y, 1);
+    vec4 posV4 = modelMatrix * subMeshLocalMatrix * vec4(rotateZ_step90(pos.x, -pos.z), pos.y, 1);
     vPosition = vec3(posV4);
     vNormal = vec3(rotateZ_step90(normal.x, -normal.z), normal.y); //TODO incorporate sin wave
     vTexCoords = texCoords;
