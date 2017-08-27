@@ -18,6 +18,8 @@ uniform usampler2D inputGrid;
 #define INFECTED 512U
 #define OUTER_INFLUENCE 1024U
 
+#define UINT_MAXVAL 0xFFFFFFFFU //4294967295U
+
 /* Max/min health (should match GridCell::MAX/MIN_HEALTH) */
 #define MAX_HEALTH 100U
 #define MIN_HEALTH 0U
@@ -56,14 +58,18 @@ uvec2 lookup(usampler2D grid, vec2 cell) {
 }
 
 /* Function for saving the result to the other texture */
-void setOutput(uint buildState, uint healthPoints) {
-    outputCell = uvec4(buildState, healthPoints, 0, 0);
+void setOutput(uint buildState, int signedHealth) {
+    // Clamp health and convert to unsigned
+    uint healthPoints = uint(clamp(signedHealth, int(MIN_HEALTH), int(MAX_HEALTH)));
+    // Infectedness is intended for filtered texture access in rendering later
+    uint infectedness = ((buildState & INFECTED) > 0U) ? UINT_MAXVAL : 0U;
+    // Store normalized health in A channel
+    uint hpUNORM = uint(float(healthPoints) / float(MAX_HEALTH) * float(UINT_MAXVAL));
+    outputCell = uvec4(buildState, healthPoints, infectedness, hpUNORM);
 }
 
 /* Simulation parameters */
 /* adapted from http://www2.econ.iastate.edu/tesfatsi/SandPileModel.pdf */
-// consider 4 or 8 neighbors?
-#define NUM_DIRECTIONS 4
 // flow direction rotates per time step
 uniform ivec2 FLOW_DIRECTION;
 // threshold where the fluid begins to flow
@@ -71,11 +77,8 @@ uniform int CRITICAL_VALUE; //TODO test whether uint works with unary minus
 // amount of fluid a lower cell receives from collapsing neighbor
 uniform uint FLOW_SPEED;
 //TODO Think about avalanches. Will it work with a parallel setup?
-// * Considering only one neighbor might not be correct
-//   * A cell only knows if it gives/receives fluid from e.g. left side
-//   * The cell on the left side only compares against its left side too
-//   * They can never exchange fluid
-// * Try to consider two neighbors swapping horizontal/vertical!
+
+const uint INFECTABLE = INSIDE_ROOM | WALL | CORNER;
 
 
 
@@ -83,8 +86,8 @@ uniform uint FLOW_SPEED;
 /******************** MAIN *************************/
 void main() {
     uvec2 cell = lookup(inputGrid, pixel);
-    uvec2 nbor_cell = lookup(inputGrid, pixel + 
-        vec2(-FLOW_DIRECTION.x * pxsize.x, -FLOW_DIRECTION.y * pxsize.y));
+    uvec2 left_nbor = lookup(inputGrid, pixel - FLOW_DIRECTION * pxsize);
+    uvec2 right_nbor = lookup(inputGrid, pixel + FLOW_DIRECTION * pxsize);
 
     // BACKGROUND STORY:
     // a room got attacked and is now infected
@@ -96,44 +99,64 @@ void main() {
     uint health = cell[1];
     uint fluid = MAX_HEALTH - health;
 
-    uint nbor_bstate = nbor_cell[0];
-    uint nbor_health = nbor_cell[1];
-    uint nbor_fluid = MAX_HEALTH - nbor_health;
+    uint left_bstate = left_nbor[0];
+    uint left_health = left_nbor[1];
+    uint left_fluid = MAX_HEALTH - left_health;
+
+    uint right_bstate = right_nbor[0];
+    uint right_health = right_nbor[1];
+    uint right_fluid = MAX_HEALTH - right_health;
 
     // fluid gradient: positive=>incoming, negative=>outgoing flow
-    int fluid_gradient = int(nbor_fluid - fluid);
+    int left_gradient = int(left_fluid) - int(fluid);
+    int right_gradient = int(right_fluid) - int(fluid);
+
+    // prevent flow to/from non-infected cells
+    if((left_bstate & INFECTED) == 0U) left_gradient = 0;
+    if((right_bstate & INFECTED) == 0U) right_gradient = 0;
 
     // CASE 1: cell is SOURCE (& WALL)
     if((bstate & SOURCE) > 0U) {
         // constantly decrease health, while player repairs
-        setOutput(bstate | INFECTED, clamp(health - FLOW_SPEED, MIN_HEALTH, MAX_HEALTH));
+        int result = int(health) - int(FLOW_SPEED);
+        setOutput(bstate | INFECTED, result);
         return;
     }
 
-    // CASE 2: cell is INFECTED (& INSIDE_ROOM)
+    // CASE 2: cell is INFECTED
     else if((bstate & INFECTED) > 0U) {
         // compute flow assuming that fluid flows "down hill"
-        if(fluid_gradient > CRITICAL_VALUE) { // incoming
-            setOutput(bstate, clamp(health - FLOW_SPEED, MIN_HEALTH, MAX_HEALTH));
-            return;
-        }
-        else if(fluid_gradient < -CRITICAL_VALUE) { // outgoing
-            setOutput(bstate, clamp(health + FLOW_SPEED, MIN_HEALTH, MAX_HEALTH));
+        int result = int(health);
+        if(left_gradient > CRITICAL_VALUE) // incoming from left
+            result -= int(FLOW_SPEED);
+        else if(left_gradient < -CRITICAL_VALUE) // outgoing to left
+            result += int(FLOW_SPEED);
+        if(right_gradient > CRITICAL_VALUE) // incoming from right
+            result -= int(FLOW_SPEED);
+        else if(right_gradient < -CRITICAL_VALUE) // outgoing to right
+            result += int(FLOW_SPEED);
+        if(result != int(health)) {
+            setOutput(bstate, result);
             return;
         }
     }
 
-    // CASE 3: cell is INSIDE_ROOM
-    else if((bstate & INSIDE_ROOM) > 0U) {
+    // CASE 3: cell is INFECTABLE
+    else if((bstate & INFECTABLE) > 0U) {
         // decide whether this cell gets infected
-        if(fluid_gradient > CRITICAL_VALUE) {
-            setOutput(bstate | INFECTED, health);
+        int result = int(health);
+        if(left_gradient > CRITICAL_VALUE)
+            result -= int(FLOW_SPEED);
+        if(right_gradient > CRITICAL_VALUE)
+            result -= int(FLOW_SPEED);
+        if(result != int(health)) {
+            setOutput(bstate | INFECTED, result);
             return;
         }
     }
 
-    //CASE 4: cell is EMPTY or far from INFECTED
-    setOutput(bstate, health);
+    //CASE 4: cell is EMPTY or some room segment that can't get infected
+    setOutput(bstate, int(health));
 }
 
 

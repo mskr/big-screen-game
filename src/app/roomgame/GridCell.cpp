@@ -67,17 +67,13 @@ void GridCell::updateHealthPoints(GLuint vbo, unsigned int hp) {
 	if (vertex_.build_state != EMPTY) {
         // If the cell is not empty it should have a reference to its mesh instance in an instance buffer
         // Otherwise there went something WRONG when a MeshInstanceGrid called buildAt on this cell!
-		RoomSegmentMesh::Instance::updateHealth(
-			mesh_instance_.buffer_->id_,
-			mesh_instance_.offset_instances_,
-			vertex_.health_points);
+        for(RoomSegmentMesh::InstanceBufferRange& mesh_instance : mesh_instances_)
+		    RoomSegmentMesh::Instance::updateHealth(
+			    mesh_instance.buffer_->id_,
+			    mesh_instance.offset_instances_,
+			    vertex_.health_points);
 	}
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
-}
-
-
-void GridCell::setMeshInstance(RoomSegmentMesh::InstanceBufferRange mesh_instance) {
-	mesh_instance_ = mesh_instance;
 }
 
 void GridCell::setVertexBufferOffset(GLintptr o) {
@@ -198,9 +194,15 @@ float GridCell::getDistanceTo(GridCell* other) {
 	return glm::distance(glm::vec2(col_idx_, row_idx_), glm::vec2(other->getCol(), other->getRow()));
 }
 
-RoomSegmentMesh::InstanceBufferRange GridCell::getMeshInstance() {
-	if (vertex_.build_state  != EMPTY)
-		return mesh_instance_;
-	else
-		return RoomSegmentMesh::InstanceBufferRange();
+void GridCell::pushMeshInstance(RoomSegmentMesh::InstanceBufferRange mesh_instance) {
+    mesh_instances_.push_back(mesh_instance);
+}
+
+RoomSegmentMesh::InstanceBufferRange GridCell::popMeshInstance() {
+    RoomSegmentMesh::InstanceBufferRange bufrange;
+    if (!mesh_instances_.empty()) {
+        bufrange = mesh_instances_.back();
+        mesh_instances_.pop_back();
+    }
+    return bufrange;
 }

@@ -10,6 +10,7 @@
 
 #include "core/ApplicationNodeInternal.h"
 #include "core/ApplicationNodeBase.h"
+#include "core/camera/ArcballCamera.h"
 
 #include "app/roomgame/AutomatonGrid.h"
 #include "app/roomgame/RoomSegmentMeshPool.h"
@@ -19,7 +20,7 @@
 #include "app/roomgame/UpdateManager.h"
 #include "app/roomgame/OuterInfluence.h"
 #include "app/roomgame/GPUBuffer.h"
-#include "roomgame\GPUCellularAutomaton.h"
+#include "app/roomgame/GPUCellularAutomaton.h"
 
 namespace viscom {
 
@@ -115,6 +116,9 @@ namespace viscom {
 				return t_in_sec - last_t_in_sec;
 			}
 		} clock_;
+
+        /*  */
+        viscom::ArcballCamera camera_;
 
 		/* Quad for debug-visualizing offscreen textures */
 		struct Quad {

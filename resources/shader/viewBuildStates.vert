@@ -1,14 +1,14 @@
 #version 330 core
 
 layout(location = 0) in vec2 position;
-layout(location = 1) in int buildState;
-layout(location = 2) in int healthPoints;
+layout(location = 1) in uint buildState;
+layout(location = 2) in uint healthPoints;
 
 uniform mat4 MVP;
 
 flat out vec2 fPosition;
-flat out int fBuildState;
-flat out int fHealthPoints;
+flat out uint fBuildState;
+flat out uint fHealthPoints;
 
 void main()
 {

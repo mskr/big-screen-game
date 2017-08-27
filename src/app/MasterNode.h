@@ -44,8 +44,6 @@ namespace viscom {
 
         /* Controls inner influence, i.e. room infection */
         InnerInfluence cellular_automaton_;
-
-        //	DragAndZoomCamera camera_;
     
         /* Interaction modes: GRID: build rooms, CAMERA: move camera,
         AUTOMATON: define init state for testing automaton rules */
@@ -112,16 +110,20 @@ namespace viscom {
         /* Currently not used */
         bool CharCallback(unsigned int character, int mods) override;
 
+        /* Please comment */
         bool AddTuioCursor(TUIO::TuioCursor *tcur) override;
         bool UpdateTuioCursor(TUIO::TuioCursor *tcur) override;
         bool RemoveTuioCursor(TUIO::TuioCursor *tcur) override;
 
+        /* Please comment */
         bool handleInputBuffer();
 
+        /* Please comment */
         glm::vec2 GetCirclePos(glm::vec2 center, float radius, int angle);
         int viewAngle = 90;
         float range = 4;
     private:
+        /* Please comment */
         std::mutex mtx;
         std::vector<input> inputBuffer;
     };

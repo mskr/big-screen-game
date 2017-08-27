@@ -26,7 +26,8 @@ namespace viscom {
         clock_{ 0.0 },
         updateManager_(),
         current_grid_state_texture_(roomgame::GRID_STATE_TEXTURE),
-        last_grid_state_texture_(roomgame::GRID_STATE_TEXTURE)
+        last_grid_state_texture_(roomgame::GRID_STATE_TEXTURE),
+        camera_(glm::vec3(0,0,10), (viscom::CameraHelper&)(*GetCamera()))
     {
         outerInfluence_ = std::make_shared<roomgame::OuterInfluence>();
     }
@@ -41,17 +42,15 @@ namespace viscom {
 
         meshpool_.loadShader(GetApplication()->GetGPUProgramManager());
 
-        meshpool_.addMesh({ GridCell::INSIDE_ROOM, GridCell::TEMPORARY },
-                            GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/newModels/RoomFloor.obj"));
-
+        meshpool_.addMesh({ GridCell::INSIDE_ROOM },
+            GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/newModels/RoomFloor.obj"));
         meshpool_.addMesh({ GridCell::CORNER },
-                            GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/newModels/RoomCorner.obj"));
-
-        meshpool_.addMesh({ GridCell::WALL,},
-                            GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/newModels/RoomWall.obj"));
-
-        meshpool_.addMesh({ GridCell::INFECTED, GridCell::SOURCE },
-            GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/latticeplane.obj"));
+            GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/newModels/RoomCorner.obj"));
+        meshpool_.addMesh({ GridCell::WALL },
+            GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/newModels/RoomWall.obj"));
+        meshpool_.addMesh({ GridCell::INVALID|GridCell::TEMPORARY, GridCell::TEMPORARY, 
+            GridCell::INFECTED, GridCell::SOURCE, GridCell::SOURCE|GridCell::INFECTED },
+            GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/newModels/InnerInfluence.obj"));
 
         meshpool_.updateUniformEveryFrame("t_sec", [this](GLint uloc) {
             glUniform1f(uloc, (float)clock_.t_in_sec);
@@ -76,8 +75,14 @@ namespace viscom {
             glUniform1f(uloc, GRID_CELL_SIZE_);
         });
 
-        current_grid_state_texture_.id = GPUBuffer::alloc_texture2D(GRID_COLS_, GRID_ROWS_, GL_RG32F, GL_RG, GL_UNSIGNED_INT);
-        last_grid_state_texture_.id = GPUBuffer::alloc_texture2D(GRID_COLS_, GRID_ROWS_, GL_RG32F, GL_RG, GL_UNSIGNED_INT);
+        current_grid_state_texture_.id = GPUBuffer::alloc_texture2D(GRID_COLS_, GRID_ROWS_, 
+            roomgame::FILTERABLE_GRID_STATE_TEXTURE.sized_format, 
+            roomgame::FILTERABLE_GRID_STATE_TEXTURE.format, 
+            roomgame::FILTERABLE_GRID_STATE_TEXTURE.datatype);
+        last_grid_state_texture_.id = GPUBuffer::alloc_texture2D(GRID_COLS_, GRID_ROWS_,
+            roomgame::FILTERABLE_GRID_STATE_TEXTURE.sized_format,
+            roomgame::FILTERABLE_GRID_STATE_TEXTURE.format,
+            roomgame::FILTERABLE_GRID_STATE_TEXTURE.datatype);
 
         meshpool_.updateUniformEveryFrame("curr_grid_state", [&](GLint uloc) {
             GLuint texture_unit = GL_TEXTURE0 + 0;
@@ -146,10 +151,6 @@ namespace viscom {
         shadowMap_ = new ShadowMap(1024, 1024);
         shadowMap_->setLightMatrix(glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0), glm::vec3(0, 1, 0)));
 
-        /* Set Up the camera */
-        GetCamera()->SetPosition(glm::vec3(0, 0, 0));
-        GetApplication()->GetEngine()->setNearAndFarClippingPlanes(0.1f, 100.0f);
-
         /* Init update manager */
         updateManager_.AddUpdateable(outerInfluence_);
 
@@ -180,6 +181,7 @@ namespace viscom {
 
     void ApplicationNodeImplementation::UpdateFrame(double currentTime, double elapsedTime)
     {
+        camera_.UpdateCamera(elapsedTime, this);
         clock_.set(currentTime);
         waterMesh_->setTime(currentTime);
     }
