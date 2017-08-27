@@ -21,7 +21,7 @@ void RoomInteractiveGrid::handleTouchedCell(int touchID, GridCell* touchedCell) 
     }
     // check if infected or source
     else if (touchedCell->getBuildState() & (GridCell::SOURCE | GridCell::INFECTED)) {
-        std::cout << "Touched infected cell" << std::endl;
+        //std::cout << "Touched infected cell" << std::endl;
         GLuint north = touchedCell->getNorthNeighbor()->getBuildState();
         GLuint east = touchedCell->getEastNeighbor()->getBuildState();
         GLuint south = touchedCell->getSouthNeighbor()->getBuildState();
@@ -33,27 +33,27 @@ void RoomInteractiveGrid::handleTouchedCell(int touchID, GridCell* touchedCell) 
         GLuint updatedHealth = min(currentHealth + ((GridCell::MAX_HEALTH - GridCell::MIN_HEALTH) / 4),GridCell::MAX_HEALTH);
 
         if ((north & test) & (south & test) & (east & test) & (west & test) ) {
-            std::cout << "Cell is in the middle of 4 infected cells" << std::endl;
+            //std::cout << "Cell is in the middle of 4 infected cells" << std::endl;
             return;
         }
         else if (touchedCell->getBuildState() & GridCell::SOURCE) {
             if ((north & test) | (south & test) | (east & test) | (west & test)) {
-                std::cout << "Try to cure Source Cell but there are infected cells nerby" << std::endl;
+                //std::cout << "Try to cure Source Cell but there are infected cells nerby" << std::endl;
             }
             else {
-                std::cout << "Cure source Cell" << std::endl;
+                //std::cout << "Cure source Cell" << std::endl;
                 touchedCell->updateHealthPoints(vbo_, updatedHealth);
                 if (currentHealth >= GridCell::MAX_HEALTH) {
-                    touchedCell->removeBuildState(vbo_, GridCell::SOURCE, false);
+                    buildAt(touchedCell->getCol(), touchedCell->getRow(), GridCell::SOURCE | GridCell::INFECTED, InteractiveGrid::BuildMode::RemoveSpecific);
                 }
                 
             }
         }
         else {
-            std::cout << "Cure infected Cell" << std::endl;
+            //std::cout << "Cure infected Cell" << std::endl;
             touchedCell->updateHealthPoints(vbo_, updatedHealth);
             if (currentHealth >= GridCell::MAX_HEALTH) {
-                touchedCell->removeBuildState(vbo_, GridCell::INFECTED, false);
+                buildAt(touchedCell->getCol(), touchedCell->getRow(), GridCell::INFECTED, InteractiveGrid::BuildMode::RemoveSpecific);
             }
         }
         
