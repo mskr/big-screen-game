@@ -47,6 +47,7 @@ public:
     static const GLuint SOURCE = 256;
     static const GLuint INFECTED = 512;
     static const GLuint OUTER_INFLUENCE = 1024;
+    static const GLuint TEMPORARY = 2048;
 
 	static const unsigned int MAX_HEALTH = 100;
 	static const unsigned int MIN_HEALTH = 0;
@@ -86,9 +87,11 @@ private:
 public:
 	GridCell(float x, float y, size_t col_idx, size_t row_idx);
 	~GridCell() = default;
-    void removeBuildState(GLuint vbo, unsigned int s, bool makeEmpty);
-    void addBuildState(GLuint vbo, unsigned int s);
-    void andBuildStateWith(GLuint vbo, unsigned int s);
+    void updateBuildState(GLuint vbo);
+    //void removeBuildState(GLuint vbo, unsigned int s, bool makeEmpty);
+    //void addBuildState(GLuint vbo, unsigned int s);
+    //void andBuildStateWith(GLuint vbo, unsigned int s);
+    void setBuildState(unsigned int state);
     void updateHealthPoints(GLuint vbo, unsigned int hp);
 	void setMeshInstance(RoomSegmentMesh::InstanceBufferRange mesh_instance);
 	static void setVertexAttribPointer();

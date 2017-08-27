@@ -125,12 +125,16 @@ namespace roomgame {
         ndcCoords = ndcCoords / ndcCoords.w;
         ndcCoords = glm::vec4(grid->pushNDCinsideGrid(glm::vec2(ndcCoords.x, ndcCoords.y)), ndcCoords.z, ndcCoords.w);
         GridCell* tmp = grid->getCellAt(glm::vec2(ndcCoords.x, ndcCoords.y));
+        if (tmp == nullptr) {
+            std::cout << "nullptr when choosing target" << std::endl;
+            return;
+        }
         float cellDistance = 9999.0f;
         GridCell* closestWallCell = nullptr;
         GridCell* leftLower = grid->getCellAt(0,0);
         GridCell* rightUpper = grid->getCellAt(grid->getNumRows()-1,grid->getNumColumns()-1);
         grid->forEachCellInRange(leftLower, rightUpper, [&](GridCell* cell) {
-            if ((cell->getBuildState() & GridCell::WALL) != 0 && cell->getDistanceTo(tmp) < cellDistance) {
+            if ((cell->getBuildState() & GridCell::WALL) != 0 && cell->getDistanceTo(tmp) < cellDistance && (cell->getBuildState() & GridCell::TEMPORARY) == 0) {
                 cellDistance = cell->getDistanceTo(tmp);
                 closestWallCell = cell;
             }
@@ -160,7 +164,7 @@ namespace roomgame {
             posDiff = targetPosition - currentPos;
             distance = glm::length(posDiff);
             mode = RETREAT;
-            grid->buildAt(targetCell->getCol(),targetCell->getRow(),GridCell::SOURCE);
+            grid->buildAt(targetCell->getCol(),targetCell->getRow(),GridCell::SOURCE,InteractiveGrid::BuildMode::Additive);
             //grid->replaceRoompieceWith(targetCell->getCol(), targetCell->getRow(), GridCell::INSIDE_ROOM);
             //std::cout << "Changed mode to retreat" << std::endl;
         }

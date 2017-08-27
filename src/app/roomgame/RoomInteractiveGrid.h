@@ -15,9 +15,12 @@ class RoomInteractiveGrid : public InteractiveGrid {
 	void handleHoveredCell(GridCell*, GridInteraction*) override;
 	void handleRelease(GridInteraction*) override;
 public:
-	RoomInteractiveGrid(size_t columns, size_t rows, float height);
+    bool checkRoomPosition(Room* newRoom);
+    RoomInteractiveGrid(size_t columns, size_t rows, float height);
 	~RoomInteractiveGrid();
-	Room::CollisionType resizeRoomUntilCollision(Room* room, GridCell* startCell, GridCell* lastCell, GridCell* currentCell);
+private:
+    bool firstRoom = true;
+    void checkConnection(Room* newRoom, int lengthX, int lengthY, int posX, int posY);
 };
 
 #endif

@@ -49,7 +49,7 @@ namespace viscom {
         // grid state sync only when automaton changed it
         if (automaton_has_transitioned_) {
             synchronized_grid_state_.setVal(std::vector<roomgame::GRID_STATE_ELEMENT>(cellular_automaton_.getGridBuffer(),
-                cellular_automaton_.getGridBuffer() + cellular_automaton_.getGridBufferSize()));
+                cellular_automaton_.getGridBuffer() + cellular_automaton_.getGridBufferElements()));
         }
     }
 
@@ -300,7 +300,7 @@ namespace viscom {
         mtx.lock();
         inputBuffer.push_back(input{ INPUT_ADD,tcur->getX(),tcur->getY(), tcur->getCursorID() });
         mtx.unlock();
-        std::cout << "add    cur  " << tcur->getCursorID() << " (" << tcur->getSessionID() << "/" << tcur->getTuioSourceID() << ") " << tcur->getX() << " " << tcur->getY() << std::endl;
+        //std::cout << "add    cur  " << tcur->getCursorID() << " (" << tcur->getSessionID() << "/" << tcur->getTuioSourceID() << ") " << tcur->getX() << " " << tcur->getY() << std::endl;
         return true;
     }
 
@@ -309,8 +309,8 @@ namespace viscom {
         mtx.lock();
         inputBuffer.push_back(input{ INPUT_UPDATE,tcur->getX(),tcur->getY(), tcur->getCursorID() });
         mtx.unlock();
-        std::cout << "set    cur  " << tcur->getCursorID() << " (" << tcur->getSessionID() << "/" << tcur->getTuioSourceID() << ") " << tcur->getX() << " " << tcur->getY()
-            << " " << tcur->getMotionSpeed() << " " << tcur->getMotionAccel() << " " << std::endl;
+        //std::cout << "set    cur  " << tcur->getCursorID() << " (" << tcur->getSessionID() << "/" << tcur->getTuioSourceID() << ") " << tcur->getX() << " " << tcur->getY()
+        //    << " " << tcur->getMotionSpeed() << " " << tcur->getMotionAccel() << " " << std::endl;
         return true;
     }
 
@@ -319,16 +319,16 @@ namespace viscom {
         mtx.lock();
         inputBuffer.push_back(input{ INPUT_REMOVE,tcur->getX(),tcur->getY(), tcur->getCursorID() });
         mtx.unlock();
-        std::cout << "delete cur  " << tcur->getCursorID() << " (" << tcur->getSessionID() << "/" << tcur->getTuioSourceID() << ")" << std::endl;
+        //std::cout << "delete cur  " << tcur->getCursorID() << " (" << tcur->getSessionID() << "/" << tcur->getTuioSourceID() << ")" << std::endl;
         return true;
     }
 
     bool MasterNode::handleInputBuffer() {
         if (mtx.try_lock()) {
+            //std::cout << "DEBUG: working on input with size " << inputBuffer.size() << std::endl;
             for (int i = 0; i < inputBuffer.size(); i++) {
                 input tmp = inputBuffer.at(i);
                 viscom::math::Line3<float> ray = GetCamera()->GetPickRay({ tmp.x,tmp.y });
-                
                 if (tmp.type == INPUT_UPDATE) {
                     grid_.onMouseMove(tmp.id, ray[0], ray[1]);
                 }
@@ -345,6 +345,9 @@ namespace viscom {
             mtx.unlock();
             return true;
         }
-        else return false;
+        else {
+            std::cout << "could not lock" << std::endl;
+            return false;
+        }
     }
 }

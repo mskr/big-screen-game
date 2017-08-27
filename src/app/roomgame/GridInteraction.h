@@ -20,19 +20,16 @@ class GridInteraction {
 	GridCell* last_cell_;
 	GridCell* start_cell_;
 	Room* room_;
-	Room::CollisionType last_collision_;
 public:
 	GridInteraction(int touchID, GridCell* start_cell, Room* room);
 	~GridInteraction();
 	void update(glm::dvec2 position);
 	void setLastCell(GridCell* cell);
-	void setLastCollision(Room::CollisionType coll);
 	bool testTemporalAndSpatialProximity(GridInteraction* other);
 	GridCell* getStartCell();
 	GridCell* getLastCell();
 	int getTouchID();
 	Room* getRoom();
-	Room::CollisionType getLastCollision();
 };
 
 #endif

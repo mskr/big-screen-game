@@ -42,8 +42,9 @@ void GPUCellularAutomaton::init(viscom::GPUProgramManager mgr) {
     framebuffer_pair_[0] = new GPUBuffer(cols, rows, { &texture_pair_[0] });
     framebuffer_pair_[1] = new GPUBuffer(cols, rows, { &texture_pair_[1] });
     // Allocate temporary client buffer to transfer pixels from and to
-    sizeof_tmp_client_buffer_ = cols * rows * 2 * sizeof(GLuint); // consider pixel format and datatype
+    sizeof_tmp_client_buffer_ = cols * rows * 2 * sizeof(roomgame::GRID_STATE_ELEMENT); // consider pixel format and datatype
     tmp_client_buffer_ = (roomgame::GRID_STATE_ELEMENT*)malloc(sizeof_tmp_client_buffer_);
+    for (size_t i = 0; i < cols * rows * 2; i++) tmp_client_buffer_[i] = 0;
     if (!tmp_client_buffer_) throw std::runtime_error("");
     // Get initial state of grid
     copyFromGridToTexture(0);
@@ -173,6 +174,10 @@ bool GPUCellularAutomaton::isInitialized() {
 
 size_t GPUCellularAutomaton::getGridBufferSize() {
     return sizeof_tmp_client_buffer_;
+}
+
+size_t GPUCellularAutomaton::getGridBufferElements() {
+    return sizeof_tmp_client_buffer_ / sizeof(roomgame::GRID_STATE_ELEMENT);
 }
 
 roomgame::GRID_STATE_ELEMENT* GPUCellularAutomaton::getGridBuffer() {

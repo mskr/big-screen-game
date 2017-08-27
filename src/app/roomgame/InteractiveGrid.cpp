@@ -187,9 +187,11 @@ GridCell* InteractiveGrid::pickCell(glm::vec3 rayStartPoint, glm::vec3 rayInterm
     glm::vec3 gridRight = getWorldCoordinates(cells_[getNumColumns()-1][0].getPosition())- gridLeftLowerCorner;
     glm::vec3 gridTop = getWorldCoordinates(cells_[0][getNumRows() - 1].getPosition())- gridLeftLowerCorner;
 
-    gridLeftLowerCorner = glm::vec3(-2, -2, -4);
-    gridRight = glm::vec3(4, 0, 0);
-    gridTop = glm::vec3(0, 4, 0);
+
+
+    gridLeftLowerCorner = glm::vec3(-1, -1, 0);
+    gridRight = glm::vec3(2, 0, 0);
+    gridTop = glm::vec3(0, 2, 0);
     //    glm::vec3 gridRight = glm::vec3(translation_.x + cell_size_ * getNumColumns() / 2.0f, 0, center.z);
 //	glm::vec3 gridTop = glm::vec3(0.0f, translation_.y + height_units_ / 2.0f, center.z);
 	m[1] = gridRight;
@@ -200,12 +202,9 @@ GridCell* InteractiveGrid::pickCell(glm::vec3 rayStartPoint, glm::vec3 rayInterm
     //std::cout << "rayIntermediatePoint: " << rayIntermediatePoint.x << "/" << rayIntermediatePoint.y << "/" << rayIntermediatePoint.z << std::endl;
     //std::cout << "gridTop: " << gridTop.x << "/" << gridTop.y << "/" << gridTop.z << std::endl;
     //std::cout << "gridRight: " << gridRight.x << "/" << gridRight.y << "/" << gridRight.z << std::endl;
-    std::cout << "Intersection: " << intersection.x << "/" << intersection.y << "/" << intersection.z << std::endl;
+    //std::cout << "Intersection: " << intersection.x << "/" << intersection.y << "/" << intersection.z << std::endl;
     //std::cout << "Lower Left: " << gridLeftLowerCorner.x << "/" << gridLeftLowerCorner.y << "/" << gridLeftLowerCorner.z << std::endl;
 
-
-//    size_t row = (size_t)glm::round((intersection.z / 2.0f + 0.5f) * getNumRows());
-//    size_t col = (size_t)glm::round((intersection.y / 2.0f + 0.5f) * getNumColumns());
     size_t row = (size_t)glm::round(intersection.z * getNumRows());
     size_t col = (size_t)glm::round(intersection.y * getNumColumns());
 
@@ -300,18 +299,23 @@ void InteractiveGrid::onMouseMove(int touchID, glm::vec3 rayStartPoint, glm::vec
 }
 
 
-void InteractiveGrid::buildAt(size_t col, size_t row, GLuint buildState) {
-	GridCell* maybeCell = getCellAt(col, row);
-	if (!maybeCell) return;
-	if (maybeCell->getBuildState() == buildState) return;
-	maybeCell->addBuildState(vbo_, buildState);
+void InteractiveGrid::buildAt(size_t col, size_t row, std::function<void(GridCell*)> callback) {
+    std::cout << "Called the wrong buildAt" << std::endl;
+    //   GridCell* maybeCell = getCellAt(col, row);
+    //if (!maybeCell) return;
+    //if (maybeCell->getBuildState() == buildState) return;
+    //maybeCell->addBuildState(vbo_, buildState);
 }
 
-void InteractiveGrid::replaceRoompieceWith(size_t col, size_t row, GLuint buildState) {
-    std::cout << "Called the wrong replaceRoompieceWith" << std::endl;
+void InteractiveGrid::buildAt(size_t col, size_t row, GLuint state, BuildMode buildMode) {
+    std::cout << "Called the wrong buildAt" << std::endl;
+    //   GridCell* maybeCell = getCellAt(col, row);
+    //if (!maybeCell) return;
+    //if (maybeCell->getBuildState() == buildState) return;
+    //maybeCell->addBuildState(vbo_, buildState);
 }
 
-void InteractiveGrid::deleteNeighbouringWalls(GridCell* cell) {
+bool InteractiveGrid::deleteNeighbouringWalls(GridCell* cell, bool simulate) {
     GLuint cellState = cell->getBuildState();
     if ((cellState & GridCell::WALL) != 0) {
         GridCell* neighbour = nullptr;
@@ -319,7 +323,7 @@ void InteractiveGrid::deleteNeighbouringWalls(GridCell* cell) {
         if ((cellState & GridCell::RIGHT) != 0) {
             neighbour = cell->getEastNeighbor();
             if (neighbour == nullptr) {
-                return;
+                return false;
             }
             neighbourCellState = neighbour->getBuildState();
             if ((neighbourCellState & GridCell::WALL) == 0) {
@@ -329,7 +333,7 @@ void InteractiveGrid::deleteNeighbouringWalls(GridCell* cell) {
         else if ((cellState & GridCell::LEFT) != 0) {
             neighbour = cell->getWestNeighbor();
             if (neighbour == nullptr) {
-                return;
+                return false;
             }
             neighbourCellState = neighbour->getBuildState();
             if ((neighbourCellState & GridCell::WALL) == 0) {
@@ -339,7 +343,7 @@ void InteractiveGrid::deleteNeighbouringWalls(GridCell* cell) {
         else if ((cellState & GridCell::TOP) != 0) {
             neighbour = cell->getNorthNeighbor();
             if (neighbour == nullptr) {
-                return;
+                return false;
             }
             neighbourCellState = neighbour->getBuildState();
             if ((neighbourCellState & GridCell::WALL) == 0) {
@@ -349,7 +353,7 @@ void InteractiveGrid::deleteNeighbouringWalls(GridCell* cell) {
         else if ((cellState & GridCell::BOTTOM) != 0) {
             neighbour = cell->getSouthNeighbor();
             if (neighbour == nullptr) {
-                return;
+                return false;
             }
             neighbourCellState = neighbour->getBuildState();
             if ((neighbourCellState & GridCell::WALL) == 0) {
@@ -357,10 +361,25 @@ void InteractiveGrid::deleteNeighbouringWalls(GridCell* cell) {
             }
         }
         if (neighbour != nullptr) {
-            replaceRoompieceWith(cell->getCol(), cell->getRow(), GridCell::INSIDE_ROOM);
-            replaceRoompieceWith(neighbour->getCol(), neighbour->getRow(), GridCell::INSIDE_ROOM);
+            if (simulate) {
+                return true;
+            }
+            buildAt(cell->getCol(), cell->getRow(), [&](GridCell* c) {
+                GLuint old = c->getBuildState();
+                GLuint modified = old & (GridCell::EMPTY | GridCell::INVALID | GridCell::SOURCE | GridCell::INFECTED | GridCell::OUTER_INFLUENCE);
+                modified |= GridCell::INSIDE_ROOM;
+                c->setBuildState(modified);
+            });
+            buildAt(neighbour->getCol(), neighbour->getRow(), [&](GridCell* c) {
+                GLuint old = c->getBuildState();
+                GLuint modified = old & (GridCell::EMPTY | GridCell::INVALID | GridCell::SOURCE | GridCell::INFECTED | GridCell::OUTER_INFLUENCE);
+                modified |= GridCell::INSIDE_ROOM;
+                c->setBuildState(modified);
+            });
+            return true;
         }
     }
+    return false;
 }
 
 
@@ -422,25 +441,15 @@ size_t InteractiveGrid::getNumCells() {
 
 void InteractiveGrid::handleTouchedCell(int touchID, GridCell* c) {
 	// Debug stuff here, extending classes should add logic
-	std::cout << "INTERACTION START " << "id=" << touchID << " "
-		<< "cell=(" << c->getCol() << ", " << c->getRow() << ")" << std::endl;
-	interactions_.push_back(new GridInteraction(-42, c, 0));
+    return;
 }
 
 void InteractiveGrid::handleRelease(GridInteraction* in) {
 	// Debug stuff here, extending classes should add logic
-	std::cout << "INTERACTION END " << "id=" << in->getTouchID() << " "
-		<< "start_cell=(" << in->getStartCell()->getCol() << ", " << in->getStartCell()->getRow() << ") "
-		<< "last_cell=(" << in->getLastCell()->getCol() << ", " << in->getLastCell()->getRow() << ")"
-		<< std::endl;
-	if (in->getTouchID() == -42) interactions_.remove(in);
+    return;
 }
 
 void InteractiveGrid::handleHoveredCell(GridCell* c, GridInteraction* in) {
 	// Debug stuff here, extending classes should add logic
-	std::cout << "INTERACTION ONGOING " << "id=" << in->getTouchID() << " "
-		<< "start_cell=(" << in->getStartCell()->getCol() << ", " << in->getStartCell()->getRow() << ") "
-		<< "last_cell=(" << in->getLastCell()->getCol() << ", " << in->getLastCell()->getRow() << ") "
-		<< "current_cell=(" << c->getCol() << ", " << c->getRow() << ")"
-		<< std::endl;
+    return;
 }

@@ -41,17 +41,16 @@ namespace viscom {
 
         meshpool_.loadShader(GetApplication()->GetGPUProgramManager());
 
-        meshpool_.addMesh({ GridCell::INSIDE_ROOM },
+        meshpool_.addMesh({ GridCell::INSIDE_ROOM, GridCell::TEMPORARY },
                             GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/newModels/RoomFloor.obj"));
 
-        meshpool_.addMesh({ GridCell::CORNER,
-                            GridCell::INVALID },
+        meshpool_.addMesh({ GridCell::CORNER },
                             GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/newModels/RoomCorner.obj"));
 
         meshpool_.addMesh({ GridCell::WALL,},
                             GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/newModels/RoomWall.obj"));
 
-        meshpool_.addMesh({ GridCell::INFECTED },
+        meshpool_.addMesh({ GridCell::INFECTED, GridCell::SOURCE },
             GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/latticeplane.obj"));
 
         meshpool_.updateUniformEveryFrame("t_sec", [this](GLint uloc) {
@@ -71,6 +70,7 @@ namespace viscom {
             glm::vec3 translation = grid_translation_;
             glUniform3f(uloc, translation.x, translation.y, translation.z);
         });
+
 
         meshpool_.updateUniformEveryFrame("gridCellSize", [&](GLint uloc) {
             glUniform1f(uloc, GRID_CELL_SIZE_);
@@ -131,13 +131,15 @@ namespace viscom {
             GetApplication()->GetGPUProgramManager().GetResource("underwater",
                 std::initializer_list<std::string>{ "underwater.vert", "underwater.frag" }));
         
+        waterMesh_->scale = 1.0f;
         //backgroundMesh_->transform(glm::scale(glm::translate(glm::mat4(1), 
-        waterMesh_->transform(glm::scale(glm::translate(glm::mat4(1),
-            glm::vec3(
-                0,
-                -(GRID_HEIGHT_/GRID_ROWS_), /* position background mesh exactly under grid */
-                -0.001f/*TODO better remove the z bias and use thicker meshes*/)), 
-            glm::vec3(1.0f)));
+        //waterMesh_->transform(glm::scale(glm::translate(glm::mat4(1),
+        //    glm::vec3(
+        //        0,
+        //        -(GRID_HEIGHT_/GRID_ROWS_), /* position background mesh exactly under grid */
+        //        -0.001f/*TODO better remove the z bias and use thicker meshes*/)), 
+        //    glm::vec3(1.0f)));
+        //waterMesh_->transform(glm::translate(glm::vec3(0, 0, -0.4f)));
 
         /* Allocate offscreen framebuffer for shadow map */
 
@@ -150,6 +152,29 @@ namespace viscom {
 
         /* Init update manager */
         updateManager_.AddUpdateable(outerInfluence_);
+
+        /*Light setup*/
+        lightInfo = new LightInfo();
+        glm::vec3 direction = glm::vec3(-1,-1,-4);
+        glm::vec3 ambient = glm::vec3(0.2f, 0.2f, 0.2f);
+        glm::vec3 diffuse = glm::vec3(0.5f, 0.5f, 0.5f);
+        glm::vec3 specular = glm::vec3(1.0f, 1.0f, 1.0f);
+        lightInfo->sun = new DirLight(ambient,diffuse,specular,direction);
+
+        ambient = glm::vec3(0.01f, 0.01f, 0.01f);
+        diffuse = glm::vec3(0.9f, 0.1f, 0.1f);
+        specular = glm::vec3(1.0f, .1f, .1f);
+        lightInfo->outerInfLights = new PointLight(ambient, diffuse, specular,1.0f,20.0f,30.0f );
+        diffuse = glm::vec3(0.1f, 0.1f, 0.9f);
+        specular = glm::vec3(.1f, .1f, 1.0f);
+        lightInfo->sourceLights = new PointLight(ambient, diffuse, specular, 1.0f, 5.0f, 15.0f);
+        lightInfo->infLightPos.push_back(glm::vec3(0));
+        lightInfo->infLightPos.push_back(glm::vec3(0));
+        lightInfo->infLightPos.push_back(glm::vec3(0));
+        lightInfo->infLightPos.push_back(glm::vec3(0));
+        lightInfo->infLightPos.push_back(glm::vec3(0));
+        lightInfo->sourceLightsPos.push_back(glm::vec3(-.5f, -.5f, 0.2f));
+        lightInfo->sourceLightsPos.push_back(glm::vec3(.5f, .5f, 0.2f));
     }
 
 
@@ -179,19 +204,25 @@ namespace viscom {
         //e = glGetError(); printf("%x\n", e);
 
         glm::mat4 viewProj = GetCamera()->GetViewPerspectiveMatrix();
+        for (int i = 0; i < min(5,outerInfPositions_.size()); i++) {
+            glm::mat4 tmp = outerInfPositions_[i];
+            lightInfo->infLightPos[i] = glm::vec3(tmp[3][0], tmp[3][1], tmp[3][2]);
+        }
+        glm::vec3 viewPos = GetCamera()->GetPosition();
 
         //TODO Is the engine matrix really needed here?
         glm::mat4 lightspace = shadowMap_->getLightMatrix();
 
         shadowMap_->DrawToFBO([&]() {
-            meshpool_.renderAllMeshesExcept(lightspace, GridCell::OUTER_INFLUENCE, 1);
+            meshpool_.renderAllMeshesExcept(lightspace, GridCell::OUTER_INFLUENCE, 1, (render_mode_ == RenderMode::DBG) ? 1 : 0,lightInfo,viewPos);
         });
 
         fbo.DrawToFBO([&]() {
             //backgroundMesh_->render(viewProj, lightspace, shadowMap_->get(), (render_mode_ == RenderMode::DBG) ? 1 : 0);
-            waterMesh_->render(viewProj, lightspace, shadowMap_->get(), (render_mode_ == RenderMode::DBG) ? 1 : 0);
+            waterMesh_->render(viewProj, lightspace, shadowMap_->get(), (render_mode_ == RenderMode::DBG) ? 1 : 0,lightInfo,viewPos);
             glEnable(GL_BLEND); glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            meshpool_.renderAllMeshes(viewProj, 0, (render_mode_ == RenderMode::DBG) ? 1 : 0);
+            //glDisable(GL_DEPTH_TEST);
+            meshpool_.renderAllMeshes(viewProj, 0, (render_mode_ == RenderMode::DBG) ? 1 : 0, lightInfo, viewPos);
             glm::mat4 influPos = outerInfluence_->meshComponent->model_matrix_;
             if (outerInfPositions_.size() > 40) {
                 outerInfPositions_.resize(40);
@@ -201,13 +232,13 @@ namespace viscom {
                     outerInfluence_->meshComponent->scale -= 0.01f;
                 }
                 outerInfluence_->meshComponent->model_matrix_ = outerInfPositions_[i];
-                outerInfluence_->meshComponent->render(viewProj);
+                outerInfluence_->meshComponent->render(viewProj,1,nullptr,glm::mat4(1),false,lightInfo,viewPos, (render_mode_ == RenderMode::DBG) ? 1 : 0);
             }
             outerInfluence_->meshComponent->scale = 0.1f;
             for (int i = 0; i < outerInfluence_->meshComponent->influencePositions_.size(); i++) {
                 outerInfluence_->meshComponent->model_matrix_ = outerInfluence_->meshComponent->influencePositions_[i];
                 outerInfPositions_.insert(outerInfPositions_.begin(),outerInfluence_->meshComponent->influencePositions_[i]);
-                outerInfluence_->meshComponent->render(viewProj);
+                outerInfluence_->meshComponent->render(viewProj, 1, nullptr, glm::mat4(1), false, lightInfo, viewPos, (render_mode_ == RenderMode::DBG) ? 1 : 0);
             }
             outerInfluence_->meshComponent->model_matrix_ = influPos;
             glDisable(GL_BLEND);
