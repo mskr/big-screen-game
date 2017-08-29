@@ -43,6 +43,7 @@ namespace viscom {
         instanceShader_ = GetApplication()->GetGPUProgramManager().GetResource("renderMeshInstance",
             std::initializer_list<std::string>{ "renderMeshInstance.vert", "renderMeshInstance.frag" });
 
+
         meshpool_.loadShader(GetApplication()->GetGPUProgramManager(),instanceShader_);
 
         meshpool_.addMesh({ GridCell::INSIDE_ROOM },
@@ -138,8 +139,14 @@ namespace viscom {
         terrainShader_ = GetApplication()->GetGPUProgramManager().GetResource("underwater",
             std::initializer_list<std::string>{ "underwater.vert", "underwater.frag" });
         waterMesh_ = new PostProcessingMesh(
-            GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/newModels/desert.obj"),
+<<<<<<< HEAD
+            GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/textured_4vertexplane/textured_4vertexplane.obj"),
             terrainShader_);
+=======
+            GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/newModels/desert.obj"),
+            GetApplication()->GetGPUProgramManager().GetResource("underwater",
+                std::initializer_list<std::string>{ "underwater.vert", "underwater.frag" }));
+>>>>>>> develop
         
         waterMesh_->scale = glm::vec3(0.5f,0.5f,0.5f);
 

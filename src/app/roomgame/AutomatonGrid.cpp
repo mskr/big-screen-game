@@ -21,30 +21,53 @@ void AutomatonGrid::setCellularAutomaton(GPUCellularAutomaton* automaton) {
 	automaton_ = automaton;
 }
 
-void AutomatonGrid::onMeshpoolInitialized() {
+
+void AutomatonGrid::updateAutomatonAt(GridCell* c, GLuint state, GLuint hp) {
+    // When the outer influences creates a source, set full fluid level, i.e. zero health
+    if (c->getBuildState() & GridCell::SOURCE) {
+        c->updateHealthPoints(vbo_, GridCell::MIN_HEALTH); //TODO TEST
+    }
+    automaton_->updateCell(c, c->getBuildState(), c->getHealthPoints());
 }
 
-void AutomatonGrid::buildAt(size_t col, size_t row, GLuint state) {
-    // Called on user input (grid update -> automaton update)
+void AutomatonGrid::buildAt(size_t col, size_t row, GLuint buildStateBits, BuildMode buildMode) {
+    // Called from user input or outer influence (grid update -> automaton update)
 
     GridCell* c = getCellAt(col, row);
     if (!c) return;
-    MeshInstanceGrid::buildAt(c, state,InteractiveGrid::BuildMode::Additive);
+    // First update the grid
+    MeshInstanceGrid::buildAt(c, buildStateBits, buildMode);
     c->updateHealthPoints(vbo_, GridCell::MAX_HEALTH);
     // Route results to automaton
-    automaton_->updateCell(c, state, c->getHealthPoints());
+    updateAutomatonAt(c, c->getBuildState(), c->getHealthPoints());
 }
 
-void AutomatonGrid::updateCell(GridCell* c, GLuint state, int hp) {
+void AutomatonGrid::buildAt(size_t col, size_t row, std::function<void(GridCell*)> callback) {
+    // Called from user input or outer influence (grid update -> automaton update)
+
+    GridCell* c = getCellAt(col, row);
+    if (!c) return;
+    // First update the grid
+    MeshInstanceGrid::buildAt(c, callback);
+    c->updateHealthPoints(vbo_, GridCell::MAX_HEALTH);
+    // Route results to automaton
+    automaton_->updateCell(c, c->getBuildState(), c->getHealthPoints());
+}
+
+void AutomatonGrid::updateGridAt(GridCell* c, GLuint state, GLuint hp) {
 	// Called on automaton transitions (automaton update -> grid update)
-	if (c->getBuildState() == SIMULATED_STATE && state == GridCell::EMPTY) {
+
+    // Delay removals of the simulated state mesh to play remove-animation
+	if ((c->getBuildState() & SIMULATED_STATE) && !(state & SIMULATED_STATE)) {
 		DelayedUpdate* tmp = delayed_update_list_;
 		delayed_update_list_ = new DelayedUpdate(1, c, state);
 		delayed_update_list_->next_ = tmp;
 		return;
 	}
-    MeshInstanceGrid::buildAt(c, state, InteractiveGrid::BuildMode::Additive);
-    c->updateHealthPoints(vbo_, hp); // thinking of dynamic outer influence...
+
+    // Do instant update for all other cases
+    MeshInstanceGrid::buildAt(c, state, InteractiveGrid::BuildMode::Replace);
+    c->updateHealthPoints(vbo_, hp); // thinking of dynamic inner influence...
 	// a fixed-on-cell health is not very practical
 }
 
@@ -88,7 +111,7 @@ void AutomatonGrid::populateCircleAtLastMousePosition(int radius) {
             GridCell* c = getCellAt(startCell->getCol() + x, startCell->getRow() + y);
             if (!c) continue;
             if (c->getDistanceTo(startCell) > radius) continue;
-            buildAt(c->getCol(), c->getRow(), SIMULATED_STATE);
+            buildAt(c->getCol(), c->getRow(), SIMULATED_STATE, BuildMode::Additive);
         }
     }
 }

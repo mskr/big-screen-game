@@ -42,9 +42,11 @@ void GPUCellularAutomaton::init(viscom::GPUProgramManager mgr) {
     framebuffer_pair_[0] = new GPUBuffer(cols, rows, { &texture_pair_[0] });
     framebuffer_pair_[1] = new GPUBuffer(cols, rows, { &texture_pair_[1] });
     // Allocate temporary client buffer to transfer pixels from and to
-    sizeof_tmp_client_buffer_ = cols * rows * 2 * sizeof(roomgame::GRID_STATE_ELEMENT); // consider pixel format and datatype
+    sizeof_tmp_client_buffer_ = cols * rows * 
+        roomgame::GRID_STATE_TEXTURE_CHANNELS * sizeof(roomgame::GRID_STATE_ELEMENT);
     tmp_client_buffer_ = (roomgame::GRID_STATE_ELEMENT*)malloc(sizeof_tmp_client_buffer_);
-    for (size_t i = 0; i < cols * rows * 2; i++) tmp_client_buffer_[i] = 0;
+    for (size_t i = 0; i < cols * rows * roomgame::GRID_STATE_TEXTURE_CHANNELS; i++) 
+        tmp_client_buffer_[i] = 0;
     if (!tmp_client_buffer_) throw std::runtime_error("");
     // Get initial state of grid
     copyFromGridToTexture(0);
@@ -75,11 +77,12 @@ void GPUCellularAutomaton::init(viscom::GPUProgramManager mgr) {
 void GPUCellularAutomaton::copyFromGridToTexture(int pair_index) {
     size_t rows = grid_->getNumColumns();
     size_t cols = grid_->getNumRows();
+    const unsigned int N_CH = roomgame::GRID_STATE_TEXTURE_CHANNELS;
     for (unsigned int x = 0; x < cols; x++) {
-        for (unsigned int y = 0; y < rows*2 - 1; y+=2) {
-            GridCell* c = grid_->getCellAt(y/2, x);
-            tmp_client_buffer_[x*2*rows + y] = (roomgame::GRID_STATE_ELEMENT) c->getBuildState();
-            tmp_client_buffer_[x*2*rows + y + 1] = (roomgame::GRID_STATE_ELEMENT) c->getHealthPoints();
+        for (unsigned int y = 0; y < rows * N_CH - 1; y += N_CH) {
+            GridCell* c = grid_->getCellAt(y / N_CH, x);
+            tmp_client_buffer_[x * N_CH * rows + y] = (roomgame::GRID_STATE_ELEMENT) c->getBuildState();
+            tmp_client_buffer_[x * N_CH * rows + y + 1] = (roomgame::GRID_STATE_ELEMENT) c->getHealthPoints();
         }
     }
     glBindTexture(GL_TEXTURE_2D, texture_pair_[pair_index].id);
@@ -90,28 +93,34 @@ void GPUCellularAutomaton::copyFromGridToTexture(int pair_index) {
 void GPUCellularAutomaton::copyFromTextureToGrid(int pair_index) {
     size_t rows = grid_->getNumColumns();
     size_t cols = grid_->getNumRows();
+    const unsigned int N_CH = roomgame::GRID_STATE_TEXTURE_CHANNELS;
     // download texture
     glBindTexture(GL_TEXTURE_2D, texture_pair_[pair_index].id);
     glGetTexImage(GL_TEXTURE_2D, 0, texture_pair_[pair_index].format,
         texture_pair_[pair_index].datatype, tmp_client_buffer_);
     // iterate over contents
     for (unsigned int x = 0; x < cols; x++) {
-        for (unsigned int y = 0; y < rows*2 - 1; y+=2) {
-            GLuint state = (GLuint) tmp_client_buffer_[x*2*rows + y];
-            int hp = (int) tmp_client_buffer_[x*2*rows + y + 1];
-            GridCell* c = grid_->getCellAt(y / 2, x);
+        for (unsigned int y = 0; y < rows * N_CH - 1; y += N_CH) {
+            GLuint state = (GLuint) tmp_client_buffer_[x * N_CH * rows + y];
+            int hp = (int) tmp_client_buffer_[x * N_CH * rows + y + 1];
+            GridCell* c = grid_->getCellAt(y / N_CH, x);
             // something changed?
             if (c->getBuildState() == state && c->getHealthPoints() == hp)
                 continue;
             // then update CPU side
-            grid_->updateCell(c, state, hp);
+            grid_->updateGridAt(c, state, hp);
         }
     }
 }
 
-void GPUCellularAutomaton::updateCell(GridCell* c, GLuint buildState, GLint hp) {
+void GPUCellularAutomaton::updateCell(GridCell* c, GLuint buildState, GLuint hp) {
     if (!is_initialized_) return;
-    GLuint data[2] = { buildState, (GLuint)hp };
+    // Upload possibly new build state, health and "is infected?"-UNORM
+    roomgame::GRID_STATE_ELEMENT data[roomgame::GRID_STATE_TEXTURE_CHANNELS] = {
+        buildState, 
+        hp, 
+        (buildState & GridCell::INFECTED) ? 0xFFFFFFFFU : 0,
+        (roomgame::GRID_STATE_ELEMENT)((float(hp) / float(GridCell::MAX_HEALTH)) * 0xFFFFFFFFU) };
     glBindTexture(GL_TEXTURE_2D, texture_pair_[current_read_index_].id);
     glTexSubImage2D(GL_TEXTURE_2D, 0, (GLint)c->getCol(), (GLint)c->getRow(), 1, 1,
         texture_pair_[0].format, texture_pair_[0].datatype, data);

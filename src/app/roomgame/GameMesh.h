@@ -424,7 +424,7 @@ protected:
 	std::shared_ptr<viscom::GPUProgram> shader_resource_;
 	glm::mat4 model_matrix_;
 public:
-    float scale;
+    glm::vec3 scale;
     SimpleGameMesh(std::shared_ptr<viscom::Mesh> mesh, std::shared_ptr<viscom::GPUProgram> shader) :
 		MeshBase(mesh.get(), shader.get()),
 		mesh_resource_(mesh), shader_resource_(shader)
@@ -436,15 +436,14 @@ public:
         const glm::mat4& vpMatrix,
         GLsizei numInstances = 1,
         std::function<void(void)> outsideUniformSetter = nullptr,
-        const glm::mat4& modelMatrix = glm::mat4(1),
         bool overrideBump = false,
         LightInfo* lightInfo = nullptr,
         glm::vec3& viewPos = glm::vec3(0, 0, 4),
         GLint isDebugMode = 0
     ) {
-        this->transform(glm::scale(glm::vec3(scale, scale, scale)));
-        MeshBase::render(vpMatrix, numInstances, outsideUniformSetter, modelMatrix, overrideBump, lightInfo, viewPos, isDebugMode);
-        this->transform(glm::scale(glm::vec3(1 / scale, 1 / scale, 1 / scale)));
+        this->transform(glm::scale(scale));
+        MeshBase::render(vpMatrix, numInstances, outsideUniformSetter, this->model_matrix_, overrideBump, lightInfo, viewPos, isDebugMode);
+        this->transform(glm::scale(glm::vec3(1 / scale.x, 1 / scale.y, 1 / scale.z)));
     }
 };
 

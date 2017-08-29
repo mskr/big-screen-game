@@ -12,12 +12,52 @@ RoomInteractiveGrid::~RoomInteractiveGrid() {
 
 void RoomInteractiveGrid::handleTouchedCell(int touchID, GridCell* touchedCell) {
     // is the touched cell still empty?
-    if (touchedCell->getBuildState() != GridCell::EMPTY) return;
     // ...then start room creation
-    Room* room = new Room(touchedCell, touchedCell, this);
-    interactions_.push_back(new GridInteraction(touchID, touchedCell, room));
-    room->updateCorners(touchedCell, touchedCell);
-    buildAt(touchedCell->getCol(), touchedCell->getRow(), GridCell::INVALID | GridCell::TEMPORARY, InteractiveGrid::BuildMode::Additive); // room covering one cell is invalid
+    if (touchedCell->getBuildState() == GridCell::EMPTY) {
+        Room* room = new Room(touchedCell, touchedCell, this);
+        interactions_.push_back(new GridInteraction(touchID, touchedCell, room));
+        room->updateCorners(touchedCell, touchedCell);
+        buildAt(touchedCell->getCol(), touchedCell->getRow(), GridCell::INVALID | GridCell::TEMPORARY, InteractiveGrid::BuildMode::Additive); // room covering one cell is invalid
+    }
+    // check if infected or source
+    else if (touchedCell->getBuildState() & (GridCell::SOURCE | GridCell::INFECTED)) {
+        //std::cout << "Touched infected cell" << std::endl;
+        GLuint north = touchedCell->getNorthNeighbor()->getBuildState();
+        GLuint east = touchedCell->getEastNeighbor()->getBuildState();
+        GLuint south = touchedCell->getSouthNeighbor()->getBuildState();
+        GLuint west = touchedCell->getWestNeighbor()->getBuildState();
+
+        GLuint test = GridCell::SOURCE | GridCell::INFECTED;
+
+        GLuint currentHealth = touchedCell->getHealthPoints();
+        GLuint updatedHealth = min(currentHealth + ((GridCell::MAX_HEALTH - GridCell::MIN_HEALTH) / 4),GridCell::MAX_HEALTH);
+
+        if ((north & test) & (south & test) & (east & test) & (west & test) ) {
+            //std::cout << "Cell is in the middle of 4 infected cells" << std::endl;
+            return;
+        }
+        else if (touchedCell->getBuildState() & GridCell::SOURCE) {
+            if ((north & test) | (south & test) | (east & test) | (west & test)) {
+                //std::cout << "Try to cure Source Cell but there are infected cells nerby" << std::endl;
+            }
+            else {
+                //std::cout << "Cure source Cell" << std::endl;
+                touchedCell->updateHealthPoints(vbo_, updatedHealth);
+                if (currentHealth >= GridCell::MAX_HEALTH) {
+                    buildAt(touchedCell->getCol(), touchedCell->getRow(), GridCell::SOURCE | GridCell::INFECTED, InteractiveGrid::BuildMode::RemoveSpecific);
+                }
+                
+            }
+        }
+        else {
+            //std::cout << "Cure infected Cell" << std::endl;
+            touchedCell->updateHealthPoints(vbo_, updatedHealth);
+            if (currentHealth >= GridCell::MAX_HEALTH) {
+                buildAt(touchedCell->getCol(), touchedCell->getRow(), GridCell::INFECTED, InteractiveGrid::BuildMode::RemoveSpecific);
+            }
+        }
+        
+    }
 }
 
 void RoomInteractiveGrid::checkConnection(Room* newRoom, int lengthX, int lengthY, int posX, int posY) {

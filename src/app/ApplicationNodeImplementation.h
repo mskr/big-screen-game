@@ -10,6 +10,7 @@
 
 #include "core/ApplicationNodeInternal.h"
 #include "core/ApplicationNodeBase.h"
+#include "core/camera/ArcballCamera.h"
 
 #include "app/roomgame/AutomatonGrid.h"
 #include "app/roomgame/RoomSegmentMeshPool.h"
@@ -19,7 +20,7 @@
 #include "app/roomgame/UpdateManager.h"
 #include "app/roomgame/OuterInfluence.h"
 #include "app/roomgame/GPUBuffer.h"
-#include "roomgame\GPUCellularAutomaton.h"
+#include "app/roomgame/GPUCellularAutomaton.h"
 
 namespace viscom {
 
@@ -66,9 +67,9 @@ namespace viscom {
         std::shared_ptr<viscom::GPUProgram> terrainShader_;
 
 		/* Grid parameters (constant on all nodes) */
-		const int GRID_COLS_ = 64;
-		const int GRID_ROWS_ = 64;
-		const float GRID_HEIGHT_ = 2.0f;
+		const int GRID_COLS_ = 128;
+		const int GRID_ROWS_ = 128;
+		const float GRID_HEIGHT_ = 10.0f;
 		const float GRID_CELL_SIZE_ = GRID_HEIGHT_ / GRID_ROWS_;
 		const float GRID_WIDTH_ = GRID_COLS_ * GRID_CELL_SIZE_;
 
@@ -118,6 +119,9 @@ namespace viscom {
 				return t_in_sec - last_t_in_sec;
 			}
 		} clock_;
+
+        /*  */
+        viscom::ArcballCamera camera_;
 
 		/* Quad for debug-visualizing offscreen textures */
 		struct Quad {

@@ -10,7 +10,7 @@
  * Supports debug rendering of grid cells as GL_POINTS.
  * Holds offset into a vertex buffer with a vertex for each grid cell.
  * The vertex buffer is owned by the grid.
- * Holds reference to a mesh instance.
+ * Holds references mesh instances that reside on the cell.
  * Only on the CPU side, the grid cell...
  * ... holds neighbor cells.
  * ... holds its own column and row in the containing grid.
@@ -82,8 +82,7 @@ private:
 	GridCell* westNeighbor;
 	size_t col_idx_;
 	size_t row_idx_;
-    RoomSegmentMesh::InstanceBufferRange mesh_instance_;
-	bool isSource_ = false;
+    std::list<RoomSegmentMesh::InstanceBufferRange> mesh_instances_;
 public:
 	GridCell(float x, float y, size_t col_idx, size_t row_idx);
 	~GridCell() = default;
@@ -93,7 +92,6 @@ public:
     //void andBuildStateWith(GLuint vbo, unsigned int s);
     void setBuildState(unsigned int state);
     void updateHealthPoints(GLuint vbo, unsigned int hp);
-	void setMeshInstance(RoomSegmentMesh::InstanceBufferRange mesh_instance);
 	static void setVertexAttribPointer();
 	void setVertexBufferOffset(GLintptr o);
 	void setNorthNeighbor(GridCell* N);
@@ -121,7 +119,8 @@ public:
 	size_t getColDistanceTo(GridCell* other);
 	size_t getRowDistanceTo(GridCell* other);
 	float getDistanceTo(GridCell* other);
-    RoomSegmentMesh::InstanceBufferRange getMeshInstance();
+    void pushMeshInstance(RoomSegmentMesh::InstanceBufferRange mesh_instance);
+    RoomSegmentMesh::InstanceBufferRange popMeshInstance();
 };
 
 #endif

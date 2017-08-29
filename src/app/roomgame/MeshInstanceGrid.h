@@ -24,7 +24,6 @@ public:
     virtual void buildAt(size_t col, size_t row, std::function<void(GridCell*)> callback) override;
     void buildAt(GridCell*, GLuint newState, BuildMode buildMode);
     void buildAt(GridCell*, std::function<void(GridCell*)> callback);
-    virtual void onMeshpoolInitialized();
 };
 
 #endif

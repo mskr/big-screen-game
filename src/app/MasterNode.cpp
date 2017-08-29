@@ -16,7 +16,7 @@ namespace viscom {
     MasterNode::MasterNode(ApplicationNodeInternal* appNode) :
         ApplicationNodeImplementation{ appNode },
         grid_(GRID_COLS_, GRID_ROWS_, GRID_HEIGHT_, &meshpool_),
-        cellular_automaton_(&grid_, 0.5),
+        cellular_automaton_(&grid_, 0.2),
         interaction_mode_(InteractionMode::GRID)
     {
         grid_state_ = {};
@@ -48,7 +48,8 @@ namespace viscom {
         synchronized_automaton_has_transitioned_.setVal(automaton_has_transitioned_);
         // grid state sync only when automaton changed it
         if (automaton_has_transitioned_) {
-            synchronized_grid_state_.setVal(std::vector<roomgame::GRID_STATE_ELEMENT>(cellular_automaton_.getGridBuffer(),
+            synchronized_grid_state_.setVal(std::vector<roomgame::GRID_STATE_ELEMENT>(
+                cellular_automaton_.getGridBuffer(),
                 cellular_automaton_.getGridBuffer() + cellular_automaton_.getGridBufferElements()));
         }
     }
@@ -89,18 +90,21 @@ namespace viscom {
                 // Grid state: type UINT has to be converted to UNORM to make use of bilinear interpolation when rendering
                 glBindTexture(GL_TEXTURE_2D, last_grid_state_texture_.id);
                 glTexImage2D(GL_TEXTURE_2D, 0,
-                    GL_RG32F, // 32 bit UNORM means 1.0F == 2^31 == 4294967296U (=> 1.0/(2^22) == 2^9 == 512U == INFECTED)
+                    // 32 bit UNORM means 1.0F is represented by (2^31 - 1)U
+                    roomgame::FILTERABLE_GRID_STATE_TEXTURE.sized_format,
                     GRID_COLS_, GRID_ROWS_, 0,
-                    GL_RG, // no "_INTEGER" postfix means data is treated as NORM and sampling delivers float
-                    GL_UNSIGNED_INT, // pixel data points to integers treated as UNORM
+                    // no "_INTEGER" postfix means data is treated as NORM and sampling delivers float
+                    roomgame::FILTERABLE_GRID_STATE_TEXTURE.format,
+                    // pixel data points to integers treated as UNORM
+                    roomgame::FILTERABLE_GRID_STATE_TEXTURE.datatype,
                     grid_state_.data());
                 grid_state_ = synchronized_grid_state_.getVal(); // fetch new grid state
                 glBindTexture(GL_TEXTURE_2D, current_grid_state_texture_.id);
                 glTexImage2D(GL_TEXTURE_2D, 0,
-                    GL_RG32F, // 32 bit UNORM means 1.0F == 2^31 == 4294967296U (=> 1.0/(2^22) == 2^9 == 512U == INFECTED)
+                    roomgame::FILTERABLE_GRID_STATE_TEXTURE.sized_format,
                     GRID_COLS_, GRID_ROWS_, 0,
-                    GL_RG, // no "_INTEGER" postfix means data is treated as NORM and sampling delivers float
-                    GL_UNSIGNED_INT, // pixel data points to integers treated as UNORM
+                    roomgame::FILTERABLE_GRID_STATE_TEXTURE.format,
+                    roomgame::FILTERABLE_GRID_STATE_TEXTURE.datatype,
                     grid_state_.data());
             }
         }
@@ -172,7 +176,6 @@ namespace viscom {
 
     /* Switch input modes by keyboard on master
      * [C] key down: camera control mode
-     * [V] key hit: tilt camera 45 degrees
      * [S] key hit: switch between interacting with automaton state or building rooms
      * [D] key down: debug render mode
     */
@@ -189,13 +192,6 @@ namespace viscom {
             }
         }
         else if (interaction_mode_ == InteractionMode::CAMERA) {
-            /* I thought this was the position of the gridmesh...
-            glm::vec3 gridPos = glm::vec3(
-                0,
-                -(GRID_HEIGHT_ / GRID_ROWS_), // position background mesh exactly under grid
-                -0.001f); //TODO better remove the z bias and use thicker meshes
-                */
-                //but this seems to be the real one
             glm::vec3 gridPos = grid_.grid_center_;
 
             int right = key == GLFW_KEY_D ? 1 : 0;
@@ -247,6 +243,9 @@ namespace viscom {
             else if (interaction_mode_ == InteractionMode::AUTOMATON) {
                 if (action == GLFW_PRESS) grid_.populateCircleAtLastMousePosition(1);
             }
+            else if (interaction_mode_ == InteractionMode::CAMERA) {
+//                camera_.HandleMouse(button, action, 0, this);
+            }
         }
 #ifndef VISCOM_CLIENTGUI
         ImGui_ImplGlfwGL3_MouseButtonCallback(button, action, 0);
@@ -276,6 +275,7 @@ namespace viscom {
                 GetCamera()->SetPosition(GetCamera()->GetPosition() + camToGrid*change);
                 range = glm::distance(GetCamera()->GetPosition(), grid_.grid_center_);
             }
+//            camera_.HandleMouse(0, 0, (float)yoffset, this);
         }
 #ifndef VISCOM_CLIENTGUI
         ImGui_ImplGlfwGL3_ScrollCallback(xoffset, yoffset);

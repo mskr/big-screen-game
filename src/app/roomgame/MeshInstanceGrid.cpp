@@ -5,25 +5,33 @@ MeshInstanceGrid::MeshInstanceGrid(size_t columns, size_t rows, float height, Ro
 {
 
 }
+
 /* Called only on master (resulting instance buffer is synced) */
-void MeshInstanceGrid::addInstanceAt(GridCell* c, GLuint st) {
-	RoomSegmentMesh* mesh = meshpool_->getMeshOfType(st);
-	if (!mesh) return;
-	RoomSegmentMesh::Instance instance;
-    instance.scale = cell_size_/ 1.98f; // assume model extends [-1,1]^3
-	instance.translation = translation_; // grid translation
-	instance.translation += glm::vec3(c->getPosition(), 0.0f); // + relative cell translation
-    instance.translation += glm::vec3(cell_size_ / 2.0f, -cell_size_ / 2.0f, 0.0f); // with origin in middle of cell
-	instance.buildState = st;
-	instance.health = c->getHealthPoints();
-	c->setMeshInstance(mesh->addInstanceUnordered(instance));
+void MeshInstanceGrid::addInstanceAt(GridCell* c, GLuint buildStateBits) {
+    RoomSegmentMesh::Instance instance;
+    instance.scale = cell_size_ / 1.98f; // assume model extends [-1,1]^3
+    instance.translation = translation_; // grid translation
+    instance.translation += glm::vec3(c->getPosition(), 0.0f); // + relative cell translation
+    instance.translation += glm::vec3(cell_size_ / 2.0f, -cell_size_ / 2.0f, 0.0f); // + origin to middle of cell
+    instance.health = c->getHealthPoints();
+    // get a mesh instance for all given buildstate bits that have a mapping in the meshpool
+    meshpool_->filter(buildStateBits, [&](GLuint renderableBuildState) {
+        instance.buildState = renderableBuildState; // helps differentiating 2 meshes on 1 cell in shader
+        RoomSegmentMesh* mesh = meshpool_->getMeshOfType(renderableBuildState);
+        if (!mesh) {
+            return;
+        }
+        RoomSegmentMesh::InstanceBufferRange bufrange = mesh->addInstanceUnordered(instance);
+        c->pushMeshInstance(bufrange);
+    });
 }
 
 /* Called only on master (resulting instance buffer is synced) */
 void MeshInstanceGrid::removeInstanceAt(GridCell* c) {
-    RoomSegmentMesh::InstanceBufferRange bufferRange = c->getMeshInstance();
-	if (bufferRange.mesh_)
-		bufferRange.mesh_->removeInstanceUnordered(bufferRange.offset_instances_);
+    RoomSegmentMesh::InstanceBufferRange bufrange;
+    while ((bufrange = c->popMeshInstance()).mesh_) {
+        bufrange.mesh_->removeInstanceUnordered(bufrange.offset_instances_);
+    }
 }
 
 void MeshInstanceGrid::buildAt(GridCell* c, std::function<void(GridCell*)> callback) {
@@ -75,8 +83,4 @@ void MeshInstanceGrid::buildAt(size_t col, size_t row, std::function<void(GridCe
 void MeshInstanceGrid::buildAt(size_t col, size_t row, GLuint newState, BuildMode buildMode) {
     GridCell* maybeCell = getCellAt(col, row);
     if (maybeCell) buildAt(maybeCell, newState, buildMode);
-}
-
-void MeshInstanceGrid::onMeshpoolInitialized() {
-
 }
