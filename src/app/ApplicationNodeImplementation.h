@@ -64,9 +64,9 @@ namespace viscom {
         std::vector<glm::mat4> outerInfPositions_;
 
 		/* Grid parameters (constant on all nodes) */
-		const int GRID_COLS_ = 64;
-		const int GRID_ROWS_ = 64;
-		const float GRID_HEIGHT_ = 2.0f;
+		const int GRID_COLS_ = 128;
+		const int GRID_ROWS_ = 128;
+		const float GRID_HEIGHT_ = 10.0f;
 		const float GRID_CELL_SIZE_ = GRID_HEIGHT_ / GRID_ROWS_;
 		const float GRID_WIDTH_ = GRID_COLS_ * GRID_CELL_SIZE_;
 

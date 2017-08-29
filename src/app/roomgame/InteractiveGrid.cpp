@@ -23,7 +23,7 @@ InteractiveGrid::InteractiveGrid(size_t columns, size_t rows, float height) {
 		}
 	}
 	mvp_uniform_location_ = -1;
-	translation_ = glm::vec3(0);
+	translation_ = glm::vec3(-4,-4,0);
 	num_vertices_ = 0;
 	last_view_projection_ = glm::mat4(1);
 }
@@ -187,13 +187,6 @@ GridCell* InteractiveGrid::pickCell(glm::vec3 rayStartPoint, glm::vec3 rayInterm
     glm::vec3 gridRight = getWorldCoordinates(cells_[getNumColumns()-1][0].getPosition())- gridLeftLowerCorner;
     glm::vec3 gridTop = getWorldCoordinates(cells_[0][getNumRows() - 1].getPosition())- gridLeftLowerCorner;
 
-
-
-    gridLeftLowerCorner = glm::vec3(-1, -1, 0);
-    gridRight = glm::vec3(2, 0, 0);
-    gridTop = glm::vec3(0, 2, 0);
-    //    glm::vec3 gridRight = glm::vec3(translation_.x + cell_size_ * getNumColumns() / 2.0f, 0, center.z);
-//	glm::vec3 gridTop = glm::vec3(0.0f, translation_.y + height_units_ / 2.0f, center.z);
 	m[1] = gridRight;
 	m[2] = gridTop;
 

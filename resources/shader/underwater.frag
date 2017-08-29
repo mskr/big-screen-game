@@ -126,11 +126,11 @@ void main() {
 	for(int i = 0; i < numSourceLights; i++){
 		result += CalcPointLight(sourceLights[i], norm, vPosition, viewDir); 
 	}
-    color = vec4(result,max(material.alpha,0.9f));            
+    color = vec4(result,max(material.alpha,0.9f));
 	// color.rgb = vec3(0.0,0.1,0.3) + color.rgb * vec3(0.5,0.6,0.1);
 	// color *= visibility(thisFragment);
-	if(texture(shadowMap, thisFragment.xy).r < (thisFragment.z - DEPTH_BIAS))
-		color *= 0.5;
+//	if(texture(shadowMap, thisFragment.xy).r < (thisFragment.z - DEPTH_BIAS))
+//		color *= 0.5;
 
 }
 
@@ -142,8 +142,8 @@ vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir){
 	vec3 reflectDir = reflect(-lightDir, normal);
 	float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.specularExponent);
 	//combine
-	vec3 ambient = light.ambient * material.ambient;
-	vec3 diffuse = light.diffuse * diff * material.diffuse*texture(material.diffuseTex,vTexCoords).xyz;
+	vec3 ambient = light.ambient * material.diffuse;
+	vec3 diffuse = light.diffuse * diff * material.diffuse;
 	vec3 specular = light.specular * spec * material.specular;
 	return (ambient + diffuse + specular);
 }
@@ -161,7 +161,7 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
     float attenuation = 1.0 / (light.constant + light.linear * distance + 
   			     light.quadratic * (distance * distance));    
 	//combine
-	vec3 ambient = light.ambient * material.ambient;
+	vec3 ambient = light.ambient * material.diffuse;
 	vec3 diffuse = light.diffuse * diff * material.diffuse;
 	vec3 specular = light.specular * spec * material.specular;
     ambient  *= attenuation;

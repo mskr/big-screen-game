@@ -21,7 +21,7 @@ void ShadowReceivingMesh::render(glm::mat4& vp, glm::mat4& lightspace, GLuint sh
 		float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 		glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 		glUniform1i(uloc_shadow_map_, 2);
-	},glm::mat4(1),false,lightInfo,viewPos,isDebugMode);
+	},false,lightInfo,viewPos,isDebugMode);
 }
 
 PostProcessingMesh::PostProcessingMesh(std::shared_ptr<viscom::Mesh> mesh, std::shared_ptr<viscom::GPUProgram> shader) :
@@ -48,5 +48,5 @@ void PostProcessingMesh::render(glm::mat4& vp, glm::mat4& lightspace, GLuint sha
 		glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 		glUniform1i(uloc_shadow_map_, 2);
 		glUniform1f(uloc_time_, time_);
-	},glm::mat4(1),false, lightInfo,viewPos,isDebugMode);
+	},false, lightInfo,viewPos,isDebugMode);
 }

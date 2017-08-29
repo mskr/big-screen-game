@@ -27,7 +27,7 @@ namespace viscom {
         updateManager_(),
         current_grid_state_texture_(roomgame::GRID_STATE_TEXTURE),
         last_grid_state_texture_(roomgame::GRID_STATE_TEXTURE),
-        camera_(glm::vec3(0,0,10), (viscom::CameraHelper&)(*GetCamera()))
+        camera_(glm::vec3(0,0,4), (viscom::CameraHelper&)(*GetCamera()))
     {
         outerInfluence_ = std::make_shared<roomgame::OuterInfluence>();
     }
@@ -132,19 +132,11 @@ namespace viscom {
         //    GetApplication()->GetGPUProgramManager().GetResource("applyTextureAndShadow",
         //		std::initializer_list<std::string>{ "applyTextureAndShadow.vert", "applyTextureAndShadow.frag" }));
         waterMesh_ = new PostProcessingMesh(
-            GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/textured_4vertexplane/textured_4vertexplane.obj"),
+            GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/newModels/desert.obj"),
             GetApplication()->GetGPUProgramManager().GetResource("underwater",
                 std::initializer_list<std::string>{ "underwater.vert", "underwater.frag" }));
         
-        waterMesh_->scale = 1.0f;
-        //backgroundMesh_->transform(glm::scale(glm::translate(glm::mat4(1), 
-        //waterMesh_->transform(glm::scale(glm::translate(glm::mat4(1),
-        //    glm::vec3(
-        //        0,
-        //        -(GRID_HEIGHT_/GRID_ROWS_), /* position background mesh exactly under grid */
-        //        -0.001f/*TODO better remove the z bias and use thicker meshes*/)), 
-        //    glm::vec3(1.0f)));
-        //waterMesh_->transform(glm::translate(glm::vec3(0, 0, -0.4f)));
+        waterMesh_->scale = glm::vec3(0.5f,0.5f,0.5f);
 
         /* Allocate offscreen framebuffer for shadow map */
 
@@ -181,7 +173,7 @@ namespace viscom {
 
     void ApplicationNodeImplementation::UpdateFrame(double currentTime, double elapsedTime)
     {
-        camera_.UpdateCamera(elapsedTime, this);
+//        camera_.UpdateCamera(elapsedTime, this);
         clock_.set(currentTime);
         waterMesh_->setTime(currentTime);
     }
@@ -223,7 +215,6 @@ namespace viscom {
             //backgroundMesh_->render(viewProj, lightspace, shadowMap_->get(), (render_mode_ == RenderMode::DBG) ? 1 : 0);
             waterMesh_->render(viewProj, lightspace, shadowMap_->get(), (render_mode_ == RenderMode::DBG) ? 1 : 0,lightInfo,viewPos);
             glEnable(GL_BLEND); glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            //glDisable(GL_DEPTH_TEST);
             meshpool_.renderAllMeshes(viewProj, 0, (render_mode_ == RenderMode::DBG) ? 1 : 0, lightInfo, viewPos);
             glm::mat4 influPos = outerInfluence_->meshComponent->model_matrix_;
             if (outerInfPositions_.size() > 40) {

@@ -192,13 +192,6 @@ namespace viscom {
             }
         }
         else if (interaction_mode_ == InteractionMode::CAMERA) {
-            /* I thought this was the position of the gridmesh...
-            glm::vec3 gridPos = glm::vec3(
-                0,
-                -(GRID_HEIGHT_ / GRID_ROWS_), // position background mesh exactly under grid
-                -0.001f); //TODO better remove the z bias and use thicker meshes
-                */
-                //but this seems to be the real one
             glm::vec3 gridPos = grid_.grid_center_;
 
             int right = key == GLFW_KEY_D ? 1 : 0;
@@ -251,7 +244,7 @@ namespace viscom {
                 if (action == GLFW_PRESS) grid_.populateCircleAtLastMousePosition(1);
             }
             else if (interaction_mode_ == InteractionMode::CAMERA) {
-                camera_.HandleMouse(button, action, 0, this);
+//                camera_.HandleMouse(button, action, 0, this);
             }
         }
 #ifndef VISCOM_CLIENTGUI
@@ -276,13 +269,13 @@ namespace viscom {
     /* Mouse scroll events are used to zoom, when in camera mode */
     bool MasterNode::MouseScrollCallback(double xoffset, double yoffset) {
         if (interaction_mode_ == InteractionMode::CAMERA) {
-            /*float change = (float)yoffset*0.1f;
+            float change = (float)yoffset*0.1f;
             glm::vec3 camToGrid = GetCamera()->GetPosition() - grid_.grid_center_;
             if (glm::length(camToGrid) > 0.5 || yoffset > 0) {
                 GetCamera()->SetPosition(GetCamera()->GetPosition() + camToGrid*change);
                 range = glm::distance(GetCamera()->GetPosition(), grid_.grid_center_);
-            }*/
-            camera_.HandleMouse(0, 0, (float)yoffset, this);
+            }
+//            camera_.HandleMouse(0, 0, (float)yoffset, this);
         }
 #ifndef VISCOM_CLIENTGUI
         ImGui_ImplGlfwGL3_ScrollCallback(xoffset, yoffset);
