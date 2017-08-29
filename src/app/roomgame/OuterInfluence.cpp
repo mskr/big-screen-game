@@ -70,9 +70,9 @@ namespace roomgame {
 	//Change Position
 	void OuterInfluence::Move() {
         if(mode==PATROL){
-            meshComponent->transform(glm::translate(glm::vec3(-10, 0, 0)));
+            meshComponent->transform(glm::translate(glm::vec3(-30, 0, 0)));
             meshComponent->transform(glm::rotate(glm::radians(speed*ROT_SPEED_MULTIPLIER*(float)deltaTime), glm::vec3(0, 0, 1)));
-            meshComponent->transform(glm::translate(glm::vec3(10, 0, 0)));
+            meshComponent->transform(glm::translate(glm::vec3(30, 0, 0)));
         }
         else{
             meshComponent->transform(glm::inverse(meshComponent->model_matrix_) * glm::translate((posDiff)*(speed*(float)deltaTime)) * meshComponent->model_matrix_);
@@ -134,7 +134,7 @@ namespace roomgame {
         GridCell* leftLower = grid->getCellAt(0,0);
         GridCell* rightUpper = grid->getCellAt(grid->getNumRows()-1,grid->getNumColumns()-1);
         grid->forEachCellInRange(leftLower, rightUpper, [&](GridCell* cell) {
-            if ((cell->getBuildState() & GridCell::WALL) != 0 && cell->getDistanceTo(tmp) < cellDistance && (cell->getBuildState() & GridCell::TEMPORARY) == 0) {
+            if ((cell->getBuildState() & GridCell::WALL) != 0 && cell->getDistanceTo(tmp) < cellDistance && (cell->getBuildState() & (GridCell::TEMPORARY|GridCell::SOURCE)) == 0) {
                 cellDistance = cell->getDistanceTo(tmp);
                 closestWallCell = cell;
             }
@@ -165,9 +165,8 @@ namespace roomgame {
             distance = glm::length(posDiff);
             mode = RETREAT;
             grid->buildAt(targetCell->getCol(),targetCell->getRow(),GridCell::SOURCE,InteractiveGrid::BuildMode::Additive);
-            grid->addNewSourcePos(currentPos);
-            //grid->replaceRoompieceWith(targetCell->getCol(), targetCell->getRow(), GridCell::INSIDE_ROOM);
-            //std::cout << "Changed mode to retreat" << std::endl;
+            glm::vec3 wPos = grid->getWorldCoordinates(targetCell->getPosition());
+            meshComponent->sourcePositions_.push_back(wPos);
         }
 	}
 

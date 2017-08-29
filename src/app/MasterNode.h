@@ -120,8 +120,8 @@ namespace viscom {
 
         /* Please comment */
         glm::vec2 GetCirclePos(glm::vec2 center, float radius, int angle);
-        int viewAngle = 90;
-        float range = 4;
+        int viewAngle = 125;
+        float range = 10;
     private:
         /* Please comment */
         std::mutex mtx;

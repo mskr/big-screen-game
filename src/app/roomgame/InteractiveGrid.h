@@ -41,18 +41,8 @@ public:
         RemoveSpecific = 2
     };
     glm::vec3 grid_center_;
-    std::vector<glm::vec3> sourcePositions_;
     GLuint vao_, vbo_;
-    std::string outerInfString = "outerInfLights";
-    std::string sourceString = "sourceLights";
 
-    void addNewSourcePos(glm::vec3 pos) {
-        sourcePositions_.push_back(pos);
-        glUseProgram(instanceShader_->getProgramId());
-        uploadSourcePos(pos, instanceShader_);
-        glUseProgram(terrainShader_->getProgramId());
-        uploadSourcePos(pos, terrainShader_);
-    }
 
     /* Computes cell positions by iteratively adding (height/rows, height/rows) to (-1, -1) */
     InteractiveGrid(size_t columns, size_t rows, float height);
@@ -114,14 +104,6 @@ public:
     virtual void buildAt(size_t col, size_t row, std::function<void(GridCell*)> callback);
     bool deleteNeighbouringWalls(GridCell* cell, bool simulate);
 
-private:
-    void uploadSourcePos(glm::vec3 pos, std::shared_ptr<viscom::GPUProgram> shad) {
-        GLint lightNum = (GLint)min(sourcePositions_.size(), 10);
-        glUniform1i(shad->getUniformLocation((std::string)("numSourceLights")), lightNum);
-        std::string number = "" + std::to_string(sourcePositions_.size() - 1);
-        std::string loc = sourceString + "[" + number + "].position";
-        glUniform3fv(shad->getUniformLocation(loc), 1, glm::value_ptr(pos));
-    }
 
 
 };

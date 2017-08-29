@@ -36,6 +36,12 @@ namespace viscom {
         cellular_automaton_.init(GetApplication()->GetGPUProgramManager());
 
         outerInfluence_->grid = &grid_;
+        glm::vec3 gridPos = grid_.grid_center_;
+        glm::vec2 pos = GetCirclePos(glm::vec2(gridPos.y, gridPos.z), range, viewAngle);
+        GetCamera()->SetPosition(glm::vec3(0, pos.x, pos.y));
+        glm::quat lookDir = glm::toQuat(glm::lookAt(GetCamera()->GetPosition(), gridPos, glm::vec3(0, 1, 0)));
+        GetCamera()->SetOrientation(lookDir);
+
     }
 
     /* Sync step 1: Master sets values of shared objects to the values of corresponding non-shared objects */
@@ -209,6 +215,7 @@ namespace viscom {
                 viewAngle = glm::clamp(viewAngle, 90, 170);
                 glm::vec2 pos = GetCirclePos(glm::vec2(gridPos.y, gridPos.z), range, viewAngle);
                 GetCamera()->SetPosition(glm::vec3(0, pos.x, pos.y));
+                std::cout << range << "/" << viewAngle << std::endl;
             }
             glm::quat lookDir = glm::toQuat(glm::lookAt(GetCamera()->GetPosition(), gridPos, glm::vec3(0, 1, 0)));
             GetCamera()->SetOrientation(lookDir);

@@ -173,5 +173,8 @@ namespace viscom {
 				glEnable(GL_DEPTH_TEST);
 			}
 		} screenfilling_quad_;
+        private:
+            void updateSourcePos(std::vector<glm::vec3> sourcePositions);
+            void uploadSourcePos(std::shared_ptr<viscom::GPUProgram> shad, std::vector<glm::vec3> sourcePositions);
 	};
 }
