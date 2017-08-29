@@ -63,6 +63,9 @@ namespace viscom {
 
         std::vector<glm::mat4> outerInfPositions_;
 
+        std::shared_ptr<viscom::GPUProgram> instanceShader_;
+        std::shared_ptr<viscom::GPUProgram> terrainShader_;
+
 		/* Grid parameters (constant on all nodes) */
 		const int GRID_COLS_ = 128;
 		const int GRID_ROWS_ = 128;
@@ -170,5 +173,8 @@ namespace viscom {
 				glEnable(GL_DEPTH_TEST);
 			}
 		} screenfilling_quad_;
+        private:
+            void updateSourcePos(std::vector<glm::vec3> sourcePositions);
+            void uploadSourcePos(std::shared_ptr<viscom::GPUProgram> shad, std::vector<glm::vec3> sourcePositions);
 	};
 }

@@ -20,7 +20,7 @@ GPUBuffer::GPUBuffer(GLsizei w, GLsizei h, std::initializer_list<Tex*> tex_attac
     int num_depth_attachments = 0;
     int num_stencil_attachments = 0;
     for (Tex* tex : tex_attachments) {
-        tex->id = alloc_immutable_format_texture2D(w, h, tex->sized_format);
+        tex->id = alloc_immutable_format_texture2D(w, h, tex->sized_format, tex->format,tex->attachmentType);
         GLenum attachment_type = tex->attachmentType;
         glFramebufferTexture2D(GL_FRAMEBUFFER, attachment_type, GL_TEXTURE_2D, tex->id, 0);
         // Count attachments
@@ -103,16 +103,19 @@ GLuint GPUBuffer::alloc_texture2D(GLsizei w, GLsizei h, GLint sized_format, GLen
     glBindTexture(GL_TEXTURE_2D, tex);
     // format and type are irrelevant here because they refer to passed pixel data, which is 0 here
     // still they have to be compatible with sized_format, i.e. the format in which pixel data is converted by GL
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
     glTexImage2D(GL_TEXTURE_2D, 0, sized_format, w, h, 0, format, type, 0);
     return tex;
 }
 
-GLuint GPUBuffer::alloc_immutable_format_texture2D(GLsizei w, GLsizei h, GLint sized_format) {
+GLuint GPUBuffer::alloc_immutable_format_texture2D(GLsizei w, GLsizei h, GLint sized_format, GLenum format, GLenum type) {
     GLuint tex;
     glGenTextures(1, &tex);
     glBindTexture(GL_TEXTURE_2D, tex);
     // glTexStorage specifies an immutable-format texture,
     // which means glTexImage cannot be called because it might alter format (glTexSubImage is possible anyway)
     glTexStorage2D(GL_TEXTURE_2D, 1, sized_format, w, h);
+    glTexSubImage2D(GL_TEXTURE_2D,0,0,0,w,h, format, type, 0);
     return tex;
 }

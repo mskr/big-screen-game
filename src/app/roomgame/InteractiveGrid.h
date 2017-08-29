@@ -21,6 +21,8 @@ protected:
     std::vector<std::vector<GridCell>> cells_;
     // Render-related members
     std::shared_ptr<viscom::GPUProgram> shader_;
+    std::shared_ptr<viscom::GPUProgram> instanceShader_;
+    std::shared_ptr<viscom::GPUProgram> terrainShader_;
     GLint mvp_uniform_location_;
     glm::vec3 translation_;
     GLsizei num_vertices_;
@@ -77,7 +79,7 @@ public:
 
     // Render functions
     void uploadVertexData();
-    virtual void loadShader(viscom::GPUProgramManager mgr);
+    virtual void loadShader(viscom::GPUProgramManager mgr, std::shared_ptr<viscom::GPUProgram> inst, std::shared_ptr<viscom::GPUProgram> terrain);
     void onFrame();
     void cleanup();
 
@@ -101,6 +103,9 @@ public:
     virtual void buildAt(size_t col, size_t row, GLuint newState, BuildMode buildMode);
     virtual void buildAt(size_t col, size_t row, std::function<void(GridCell*)> callback);
     bool deleteNeighbouringWalls(GridCell* cell, bool simulate);
+
+
+
 };
 
 #endif
