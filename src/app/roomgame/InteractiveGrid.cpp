@@ -246,7 +246,8 @@ void InteractiveGrid::onFrame() {
 	glBindVertexArray(vao_);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_);
 	glUseProgram(shader_->getProgramId());
-	last_view_projection_[3] += glm::vec4(translation_, 0);
+    last_view_projection_ = glm::translate(last_view_projection_, translation_);
+    
 	glUniformMatrix4fv(mvp_uniform_location_, 1, GL_FALSE, glm::value_ptr(last_view_projection_));
 	glDrawArrays(GL_POINTS, 0, num_vertices_);
 	glEnable(GL_DEPTH_TEST);
