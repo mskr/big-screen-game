@@ -30,7 +30,7 @@ namespace viscom {
     void MasterNode::InitOpenGL() {
         ApplicationNodeImplementation::InitOpenGL();
         
-        grid_.loadShader(GetApplication()->GetGPUProgramManager(),instanceShader_,terrainShader_); // for viewing build states...
+        grid_.loadShader(GetApplication()->GetGPUProgramManager()); // for viewing build states...
         grid_.uploadVertexData(); // ...for debug purposes
 
         cellular_automaton_.init(GetApplication()->GetGPUProgramManager());

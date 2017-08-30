@@ -56,13 +56,16 @@ namespace viscom {
 		// ROOMGAME DATA
 		// =============
 
-
+        /*  */
         LightInfo* lightInfo;
+
 		/* Update Manager */
 		roomgame::UpdateManager updateManager_;
 
+        /*  */
         std::vector<glm::mat4> outerInfPositions_;
 
+        /*  */
         std::shared_ptr<viscom::GPUProgram> instanceShader_;
         std::shared_ptr<viscom::GPUProgram> terrainShader_;
 

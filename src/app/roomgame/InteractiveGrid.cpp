@@ -232,16 +232,10 @@ void InteractiveGrid::uploadVertexData() {
 }
 
 
-void InteractiveGrid::loadShader(viscom::GPUProgramManager mgr, std::shared_ptr<viscom::GPUProgram> inst, std::shared_ptr<viscom::GPUProgram> terrain) {
+void InteractiveGrid::loadShader(viscom::GPUProgramManager mgr) {
 	glEnable(GL_PROGRAM_POINT_SIZE);
 	shader_ = mgr.GetResource("viewBuildStates",
 		std::initializer_list<std::string>{ "viewBuildStates.vert", "viewBuildStates.frag" });
-    instanceShader_ = inst;
-    terrainShader_ = terrain;
-    //instanceShader_ = mgr.GetResource("renderMeshInstance",
-    //    std::initializer_list<std::string>{ "renderMeshInstance.vert", "renderMeshInstance.frag" });
-    //terrainShader_ = mgr.GetResource("underwater",
-    //    std::initializer_list<std::string>{ "underwater.vert", "underwater.frag" });
     mvp_uniform_location_ = shader_->getUniformLocation("MVP");
 }
 
@@ -252,7 +246,8 @@ void InteractiveGrid::onFrame() {
 	glBindVertexArray(vao_);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_);
 	glUseProgram(shader_->getProgramId());
-	last_view_projection_[3] += glm::vec4(translation_, 0);
+    last_view_projection_ = glm::translate(last_view_projection_, translation_);
+    
 	glUniformMatrix4fv(mvp_uniform_location_, 1, GL_FALSE, glm::value_ptr(last_view_projection_));
 	glDrawArrays(GL_POINTS, 0, num_vertices_);
 	glEnable(GL_DEPTH_TEST);
