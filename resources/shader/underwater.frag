@@ -127,6 +127,11 @@ void main() {
 		result += CalcPointLight(sourceLights[i], norm, vPosition, viewDir); 
 	}
     color = vec4(result,max(material.alpha,0.9f));
+
+    // blue fog for the underwater effect
+    color += pow(distance(vPosition,viewPos)*0.8f,4) * 0.001f * vec4(0.0f,0.15f,0.25f,0.0f);
+
+
 	// color.rgb = vec3(0.0,0.1,0.3) + color.rgb * vec3(0.5,0.6,0.1);
 	// color *= visibility(thisFragment);
 //	if(texture(shadowMap, thisFragment.xy).r < (thisFragment.z - DEPTH_BIAS))
