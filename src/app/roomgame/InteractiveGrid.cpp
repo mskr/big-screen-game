@@ -232,16 +232,10 @@ void InteractiveGrid::uploadVertexData() {
 }
 
 
-void InteractiveGrid::loadShader(viscom::GPUProgramManager mgr, std::shared_ptr<viscom::GPUProgram> inst, std::shared_ptr<viscom::GPUProgram> terrain) {
+void InteractiveGrid::loadShader(viscom::GPUProgramManager mgr) {
 	glEnable(GL_PROGRAM_POINT_SIZE);
 	shader_ = mgr.GetResource("viewBuildStates",
 		std::initializer_list<std::string>{ "viewBuildStates.vert", "viewBuildStates.frag" });
-    instanceShader_ = inst;
-    terrainShader_ = terrain;
-    //instanceShader_ = mgr.GetResource("renderMeshInstance",
-    //    std::initializer_list<std::string>{ "renderMeshInstance.vert", "renderMeshInstance.frag" });
-    //terrainShader_ = mgr.GetResource("underwater",
-    //    std::initializer_list<std::string>{ "underwater.vert", "underwater.frag" });
     mvp_uniform_location_ = shader_->getUniformLocation("MVP");
 }
 

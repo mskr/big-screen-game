@@ -21,8 +21,6 @@ protected:
     std::vector<std::vector<GridCell>> cells_;
     // Render-related members
     std::shared_ptr<viscom::GPUProgram> shader_;
-    std::shared_ptr<viscom::GPUProgram> instanceShader_;
-    std::shared_ptr<viscom::GPUProgram> terrainShader_;
     GLint mvp_uniform_location_;
     glm::vec3 translation_;
     GLsizei num_vertices_;
@@ -79,7 +77,7 @@ public:
 
     // Render functions
     void uploadVertexData();
-    virtual void loadShader(viscom::GPUProgramManager mgr, std::shared_ptr<viscom::GPUProgram> inst, std::shared_ptr<viscom::GPUProgram> terrain);
+    virtual void loadShader(viscom::GPUProgramManager);
     void onFrame();
     void cleanup();
 
