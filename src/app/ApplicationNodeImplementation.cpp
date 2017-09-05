@@ -16,6 +16,10 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <stb_image.h>
+#include <assimp\Importer.hpp>
+#include <assimp\scene.h>
+#include <assimp\postprocess.h>
 
 namespace viscom {
 
@@ -141,6 +145,20 @@ namespace viscom {
             GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/newModels/desert.obj"),
             terrainShader_);
         
+
+        //std::shared_ptr<Texture> texCaustics = GetApplication()->GetTextureManager().GetResource("/textures/caustics.png");
+        //glUseProgram(terrainShader_->getProgramId);
+
+        
+        glUseProgram(terrainShader_->getProgramId());
+        auto texture = std::move(GetTextureManager().GetResource("/textures/caustics.png"));
+
+        glUseProgram(terrainShader_->getProgramId());
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture->getTextureId());
+        glUniform1i(terrainShader_->getUniformLocation((std::string)"causticTex"), 0);
+
         waterMesh_->scale = glm::vec3(0.5f,0.5f,0.5f);
 
         /* Allocate offscreen framebuffer for shadow map */
