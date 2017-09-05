@@ -126,7 +126,7 @@ void main() {
 	for(int i = 0; i < numSourceLights; i++){
 		result += CalcPointLight(sourceLights[i], norm, vPosition, viewDir); 
 	}
-    color = vec4(result,max(material.alpha,0.9f));
+    color = vec4(result,1);
 
     // blue fog for the underwater effect
     color += pow(distance(vPosition,viewPos)*0.8f,4) * 0.001f * vec4(0.0f,0.15f,0.25f,0.0f);

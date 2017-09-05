@@ -1,7 +1,17 @@
-# Blender MTL File: 'RoomMaster.blend'
-# Material Count: 1
+# Blender MTL File: 'RoomMasterSplit.blend'
+# Material Count: 2
 
-newmtl Wall
+newmtl Flooring
+Ns 115.686275
+Ka 1.000000 1.000000 1.000000
+Kd 0.360000 0.480000 0.360000
+Ks 0.700000 0.700000 0.700000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 0.900000
+illum 2
+
+newmtl WallExterior
 Ns 115.686275
 Ka 1.000000 1.000000 1.000000
 Kd 0.240000 0.240000 0.240000
