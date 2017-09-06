@@ -142,7 +142,7 @@ namespace viscom {
         terrainShader_ = GetApplication()->GetGPUProgramManager().GetResource("underwater",
             std::initializer_list<std::string>{ "underwater.vert", "underwater.frag" });
         waterMesh_ = new PostProcessingMesh(
-            GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/newModels/desert.obj"),
+            GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/newModels/desertWithDetail.obj"),
             terrainShader_);
         
 

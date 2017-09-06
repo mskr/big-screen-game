@@ -21,6 +21,7 @@ public:
 private:
     bool firstRoom = true;
     void checkConnection(Room* newRoom, int lengthX, int lengthY, int posX, int posY);
+    void checkForNearInfections(Room * newRoom);
 };
 
 #endif

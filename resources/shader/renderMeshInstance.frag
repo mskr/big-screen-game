@@ -144,7 +144,7 @@ void main() {
 		for(int i = 0; i < numSourceLights; i++){
 		    result += CalcPointLight(sourceLights[i], norm, vPosition, viewDir); 
 		}
-        color = vec4(result,max(material.alpha,0.97f));            
+        color = vec4(result,1);            
     }
 }
 

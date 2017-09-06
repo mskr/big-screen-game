@@ -133,7 +133,7 @@ void main() {
 	for(int i = 0; i < numSourceLights; i++){
 		result += CalcPointLight(sourceLights[i], norm, vPosition, viewDir); 
 	}
-    color = vec4(result,max(material.alpha,0.9f));
+    color = vec4(result,1);
 
     // blue fog for the underwater effect
     color += texture2D(causticTex,waterTexCoords*10)*abs(distortOffset.x)*10;
