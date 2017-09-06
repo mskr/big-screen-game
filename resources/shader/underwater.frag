@@ -2,17 +2,17 @@
 
 
 // Speed of water shader
-#define speed 10
+#define speed 0.6f
 
 // the amount of shearing (shifting of a single column or row)
 // 1.0 = entire screen height offset (to both sides, meaning it's 2.0 in total)
-#define xDistMag 0.05
-#define yDistMag 0.05
+#define xDistMag 0.005
+#define yDistMag 0.005
 
 // cycle multiplier for a given screen height
 // 2*PI = you see a complete sine wave from top..bottom
-#define xSineCycles 6.28 /10
-#define ySineCycles 6.28 /10
+#define xSineCycles 6.28 
+#define ySineCycles 6.28 
 
 /*Directional Lights Parts*/
 uniform vec3 viewPos;
@@ -96,7 +96,7 @@ void main() {
 
 
 
-	// underwater effect
+	// caustic effect
 
 	vec2 waterTexCoords = vTexCoords;
 	waterTexCoords /= 2;
@@ -105,8 +105,8 @@ void main() {
     // 1. the time, so that it animates.
     // 2. the y-row, so that ALL scanlines do not distort equally.
 	float localtime = speed * time;
-    float xAngle = time + waterTexCoords.y * ySineCycles;
-    float yAngle = time + waterTexCoords.x * xSineCycles;
+    float xAngle = localtime + waterTexCoords.y * ySineCycles;
+    float yAngle = localtime + waterTexCoords.x * xSineCycles;
 
     vec2 distortOffset = 
         vec2(sin(xAngle), sin(yAngle)) * // amount of shearing
@@ -131,16 +131,12 @@ void main() {
     color = vec4(result,max(material.alpha,0.9f));
 
     // blue fog for the underwater effect
+    color += texture2D(causticTex,waterTexCoords*10)*abs(distortOffset.x)*15;
+
     color += pow(distance(vPosition,viewPos)*0.8f,4) * 0.001f * vec4(0.0f,0.15f,0.25f,0.0f);
 
-    float fac1 = 10.0f;
-    float fac2 = 0.5f;
-    float causticx = fac2 * sin(time + vPosition.x * fac1) - 0.4;
-    float causticy = fac2 * sin(time + vPosition.y * fac1) - 0.4;
-    
-    float caustic = max(0,causticx+causticy);
     //color += caustic * vec4(0.7f);
-    color += texture2D(causticTex,waterTexCoords*10);
+
 
     float tmpcol = max(1.0f,pow(distance(vPosition,viewPos)*0.8f,4) * 0.01f);
     //color = (color / tmpcol) + vec4(0.0f,0.2f,0.3f,0.0f) * tmpcol * 0.07f + vec4(0.0f,0.1f,0.25f,0.0f);// * vec4(0.0f,0.15f,0.25f,0.0f);
