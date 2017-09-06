@@ -44,7 +44,7 @@ bool Room::checkValidity(bool firstRoom) {
     else {
         connectedToARoom = connected;
     }
-    isValid = sizeValid && connectedToARoom && !collision;
+    isValid = sizeValid && connectedToARoom && !collision && !infectedNeighbours;
     if (isValid) {
         validate();
     }

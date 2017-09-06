@@ -34,6 +34,7 @@ public:
     bool isValid = false;
     bool collision = false;
     bool connected = false;
+    bool infectedNeighbours = false;
     bool checkValidity(bool firstRoom);
 	void finish();
 	size_t getColSize();
