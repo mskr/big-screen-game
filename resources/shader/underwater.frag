@@ -14,8 +14,9 @@
 #define xSineCycles 6.28 
 #define ySineCycles 6.28 
 
+uniform sampler2D causticTex;
+
 /*Directional Lights Parts*/
-uniform vec3 viewPos;
 
 struct DirLight{
 	vec3 direction;
@@ -46,6 +47,10 @@ uniform PointLight outerInfLights[NR_OUT_INF_LIGHTS];
 uniform PointLight sourceLights[MAX_NR_SOURCE_LIGHTS];
 uniform int numSourceLights;
 vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir); 
+
+
+
+
 /*Material attributes*/
 struct Material {
     float alpha;
@@ -67,7 +72,7 @@ uniform float time;
 
 uniform int isDebugMode;
 
-uniform sampler2D causticTex;
+uniform vec3 viewPos;
 
 in vec3 vPosition;
 in vec3 vNormal;
@@ -131,13 +136,15 @@ void main() {
     color = vec4(result,max(material.alpha,0.9f));
 
     // blue fog for the underwater effect
-    color += texture2D(causticTex,waterTexCoords*10)*abs(distortOffset.x)*15;
+    color += texture2D(causticTex,waterTexCoords*10)*abs(distortOffset.x)*10;
 
-    color += pow(distance(vPosition,viewPos)*0.8f,4) * 0.001f * vec4(0.0f,0.15f,0.25f,0.0f);
+    //color += pow(distance(vPosition,viewPos)*0.8f,4) * 0.001f * vec4(0.0f,0.15f,0.25f,0.0f);
 
     //color += caustic * vec4(0.7f);
 
-
+    float diste = 0.1 * exp((distance(vPosition,viewPos))*0.4); 
+    //color += diste * vec4(0.0f,0.2f,0.25f,0.0f); // make it more blue and green
+    color += diste * vec4(-0.09f,-0.04f,-0.04f,1.0f) + vec4(0.0f,0.20f,0.20f,0.0f); 
     float tmpcol = max(1.0f,pow(distance(vPosition,viewPos)*0.8f,4) * 0.01f);
     //color = (color / tmpcol) + vec4(0.0f,0.2f,0.3f,0.0f) * tmpcol * 0.07f + vec4(0.0f,0.1f,0.25f,0.0f);// * vec4(0.0f,0.15f,0.25f,0.0f);
 
