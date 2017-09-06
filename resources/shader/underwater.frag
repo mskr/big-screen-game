@@ -140,7 +140,7 @@ void main() {
     
     float caustic = max(0,causticx+causticy);
     //color += caustic * vec4(0.7f);
-    color = texture2D(causticTex,vTexCoords);
+    color += texture2D(causticTex,waterTexCoords*10);
 
     float tmpcol = max(1.0f,pow(distance(vPosition,viewPos)*0.8f,4) * 0.01f);
     //color = (color / tmpcol) + vec4(0.0f,0.2f,0.3f,0.0f) * tmpcol * 0.07f + vec4(0.0f,0.1f,0.25f,0.0f);// * vec4(0.0f,0.15f,0.25f,0.0f);

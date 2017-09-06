@@ -31,9 +31,10 @@ PostProcessingMesh::PostProcessingMesh(std::shared_ptr<viscom::Mesh> mesh, std::
 	uloc_time_ = shader->getUniformLocation("time");
 	uloc_lightspace_matrix_ = shader->getUniformLocation("lightSpaceMatrix");
 	uloc_shadow_map_ = shader->getUniformLocation("shadowMap");
+    uloc_caustics_ = shader->getUniformLocation("causticTex");
 }
 
-void PostProcessingMesh::render(glm::mat4& vp, glm::mat4& lightspace, GLuint shadowMap, GLint isDebugMode, LightInfo* lightInfo, glm::vec3& viewPos)  {
+void PostProcessingMesh::render(glm::mat4& vp, glm::mat4& lightspace, GLuint shadowMap, GLuint caustics, GLint isDebugMode, LightInfo* lightInfo, glm::vec3& viewPos )  {
     SimpleGameMesh::render(vp,1,[&]() {
         glUniformMatrix4fv(uloc_lightspace_matrix_, 1, GL_FALSE, &lightspace[0][0]);
 		// Bind shadow map to texture unit **2** because
@@ -48,5 +49,11 @@ void PostProcessingMesh::render(glm::mat4& vp, glm::mat4& lightspace, GLuint sha
 		glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 		glUniform1i(uloc_shadow_map_, 2);
 		glUniform1f(uloc_time_, time_);
+
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D, caustics);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glUniform1i(uloc_caustics_, 3);
 	},false, lightInfo,viewPos,isDebugMode);
 }

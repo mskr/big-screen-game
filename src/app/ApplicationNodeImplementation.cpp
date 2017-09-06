@@ -149,15 +149,9 @@ namespace viscom {
         //std::shared_ptr<Texture> texCaustics = GetApplication()->GetTextureManager().GetResource("/textures/caustics.png");
         //glUseProgram(terrainShader_->getProgramId);
 
-        
-        glUseProgram(terrainShader_->getProgramId());
-        auto texture = std::move(GetTextureManager().GetResource("/textures/caustics.png"));
+       
+        caustics = std::move(GetTextureManager().GetResource("/textures/caustics.png"));
 
-        glUseProgram(terrainShader_->getProgramId());
-
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texture->getTextureId());
-        glUniform1i(terrainShader_->getUniformLocation((std::string)"causticTex"), 0);
 
         waterMesh_->scale = glm::vec3(0.5f,0.5f,0.5f);
 
@@ -232,10 +226,9 @@ namespace viscom {
             meshpool_.renderAllMeshesExcept(lightspace, GridCell::OUTER_INFLUENCE, 1, (render_mode_ == RenderMode::DBG) ? 1 : 0,lightInfo,viewPos);
         });
         updateSourcePos(outerInfluence_->meshComponent->sourcePositions_);
-
         fbo.DrawToFBO([&]() {
             //backgroundMesh_->render(viewProj, lightspace, shadowMap_->get(), (render_mode_ == RenderMode::DBG) ? 1 : 0);
-            waterMesh_->render(viewProj, lightspace, shadowMap_->get(), (render_mode_ == RenderMode::DBG) ? 1 : 0,lightInfo,viewPos);
+            waterMesh_->render(viewProj, lightspace, shadowMap_->get(),caustics->getTextureId(), (render_mode_ == RenderMode::DBG) ? 1 : 0,lightInfo,viewPos);
             glEnable(GL_BLEND); glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             meshpool_.renderAllMeshes(viewProj, 0, (render_mode_ == RenderMode::DBG) ? 1 : 0, lightInfo, viewPos);
             glm::mat4 influPos = outerInfluence_->meshComponent->model_matrix_;
@@ -279,6 +272,15 @@ namespace viscom {
             GLint uniLoc = shad->getUniformLocation(loc);
             glUniform3fv(uniLoc, 1, glm::value_ptr(sourcePositions[i]));
         }
+    }
+
+    void ApplicationNodeImplementation::uploadTextures(std::shared_ptr<viscom::GPUProgram> shader, std::shared_ptr<Texture> texture)
+    {
+        glUseProgram(shader->getProgramId());
+
+        glActiveTexture(GL_TEXTURE0 + 1);
+        glBindTexture(GL_TEXTURE_2D, texture->getTextureId());
+        glUniform1i(terrainShader_->getUniformLocation((std::string)"causticTex"), 1);
     }
 
     void ApplicationNodeImplementation::PostDraw() {
