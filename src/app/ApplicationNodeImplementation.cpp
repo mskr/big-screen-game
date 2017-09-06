@@ -274,15 +274,6 @@ namespace viscom {
         }
     }
 
-    void ApplicationNodeImplementation::uploadTextures(std::shared_ptr<viscom::GPUProgram> shader, std::shared_ptr<Texture> texture)
-    {
-        glUseProgram(shader->getProgramId());
-
-        glActiveTexture(GL_TEXTURE0 + 1);
-        glBindTexture(GL_TEXTURE_2D, texture->getTextureId());
-        glUniform1i(terrainShader_->getUniformLocation((std::string)"causticTex"), 1);
-    }
-
     void ApplicationNodeImplementation::PostDraw() {
         GLenum e;
         while ((e = glGetError()) != GL_NO_ERROR) {
