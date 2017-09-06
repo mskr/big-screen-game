@@ -87,18 +87,19 @@ void RoomInteractiveGrid::checkConnection(Room* newRoom, int lengthX, int length
     newRoom->connected = connected;
 }
 
-bool RoomInteractiveGrid::checkRoomPosition(Room* newRoom) {
+void RoomInteractiveGrid::checkForNearInfections(Room* newRoom)
+{
     //Check for infected neighbouring rooms
     bool infectedNeighbours = false;
-    int left2neighbour = newRoom->leftLowerCorner_->getCol() - 2;
-    int bottom2neighbour = newRoom->leftLowerCorner_->getRow() - 2;
-    int right2neighbour = newRoom->rightUpperCorner_->getCol() + 2;
-    int top2neighbour = newRoom->rightUpperCorner_->getRow() + 2;
+    int left2neighbour = static_cast<int>(newRoom->leftLowerCorner_->getCol() - 1);
+    int bottom2neighbour = static_cast<int>(newRoom->leftLowerCorner_->getRow() - 1);
+    int right2neighbour = static_cast<int>(newRoom->rightUpperCorner_->getCol() + 1);
+    int top2neighbour = static_cast<int>(newRoom->rightUpperCorner_->getRow() + 1);
 
     forEachCellInRange(&cells_[left2neighbour][bottom2neighbour], &cells_[right2neighbour][top2neighbour], static_cast<std::function<void(GridCell*)>>([&](GridCell* cell)
     {
-        int column = cell->getCol();
-        int row = cell->getRow();
+        int column = static_cast<int>(cell->getCol());
+        int row = static_cast<int>(cell->getRow());
         if (column == left2neighbour || column == right2neighbour || row == top2neighbour || row == bottom2neighbour)
         {
             if ((cell->getBuildState() & GridCell::INFECTED) != 0)
@@ -108,8 +109,10 @@ bool RoomInteractiveGrid::checkRoomPosition(Room* newRoom) {
         }
     }));
     newRoom->infectedNeighbours = infectedNeighbours;
+}
 
-
+bool RoomInteractiveGrid::checkRoomPosition(Room* newRoom) {
+    checkForNearInfections(newRoom);
 
     int lengthX = (int)newRoom->getColSize();
     int lengthY = (int)newRoom->getRowSize();
