@@ -121,13 +121,13 @@ namespace viscom {
         SynchronizedGameMesh* outerInfluenceMeshComp = new SynchronizedGameMesh(
             GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/latticeplane.obj"),
             outerInfShader);
-        outerInfluence_->meshComponent = outerInfluenceMeshComp;
+        outerInfluence_->MeshComponent = outerInfluenceMeshComp;
         glm::mat4 movMat = glm::mat4(1);
         movMat = glm::scale(movMat, glm::vec3(0.1, 0.1, 0.1));
         movMat = glm::translate(movMat, glm::vec3(0, 0, 2));
         movMat = glm::translate(movMat, glm::vec3(30, 0, 0));
-        outerInfluence_->meshComponent->model_matrix_ = movMat;
-        outerInfluence_->meshComponent->scale = 0.1f;
+        outerInfluence_->MeshComponent->model_matrix_ = movMat;
+        outerInfluence_->MeshComponent->scale = 0.1f;
 
         /* Load other meshes */
 
@@ -213,32 +213,32 @@ namespace viscom {
         shadowMap_->DrawToFBO([&]() {
             meshpool_.renderAllMeshesExcept(lightspace, GridCell::OUTER_INFLUENCE, 1, (render_mode_ == RenderMode::DBG) ? 1 : 0,lightInfo,viewPos);
         });
-        updateSourcePos(outerInfluence_->meshComponent->sourcePositions_);
+        updateSourcePos(outerInfluence_->MeshComponent->sourcePositions_);
 
         fbo.DrawToFBO([&]() {
             //backgroundMesh_->render(viewProj, lightspace, shadowMap_->get(), (render_mode_ == RenderMode::DBG) ? 1 : 0);
             waterMesh_->render(viewProj, lightspace, shadowMap_->get(), (render_mode_ == RenderMode::DBG) ? 1 : 0,lightInfo,viewPos);
             glEnable(GL_BLEND); glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             meshpool_.renderAllMeshes(viewProj, 0, (render_mode_ == RenderMode::DBG) ? 1 : 0, lightInfo, viewPos);
-            glm::mat4 influPos = outerInfluence_->meshComponent->model_matrix_;
+            glm::mat4 influPos = outerInfluence_->MeshComponent->model_matrix_;
             
             if (outerInfPositions_.size() > 40) {
                 outerInfPositions_.resize(40);
             }
             for (int i = 0; i < outerInfPositions_.size(); i++) {
                 if (i % 5 == 0) {
-                    outerInfluence_->meshComponent->scale -= 0.01f;
+                    outerInfluence_->MeshComponent->scale -= 0.01f;
                 }
-                outerInfluence_->meshComponent->model_matrix_ = outerInfPositions_[i];
-                outerInfluence_->meshComponent->render(viewProj,1,nullptr,glm::mat4(1),false,lightInfo,viewPos, (render_mode_ == RenderMode::DBG) ? 1 : 0);
+                outerInfluence_->MeshComponent->model_matrix_ = outerInfPositions_[i];
+                outerInfluence_->MeshComponent->render(viewProj,1,nullptr,glm::mat4(1),false,lightInfo,viewPos, (render_mode_ == RenderMode::DBG) ? 1 : 0);
             }
-            outerInfluence_->meshComponent->scale = 0.1f;
-            for (int i = 0; i < outerInfluence_->meshComponent->influencePositions_.size(); i++) {
-                outerInfluence_->meshComponent->model_matrix_ = outerInfluence_->meshComponent->influencePositions_[i];
-                outerInfPositions_.insert(outerInfPositions_.begin(),outerInfluence_->meshComponent->influencePositions_[i]);
-                outerInfluence_->meshComponent->render(viewProj, 1, nullptr, glm::mat4(1), false, lightInfo, viewPos, (render_mode_ == RenderMode::DBG) ? 1 : 0);
+            outerInfluence_->MeshComponent->scale = 0.1f;
+            for (int i = 0; i < outerInfluence_->MeshComponent->influencePositions_.size(); i++) {
+                outerInfluence_->MeshComponent->model_matrix_ = outerInfluence_->MeshComponent->influencePositions_[i];
+                outerInfPositions_.insert(outerInfPositions_.begin(),outerInfluence_->MeshComponent->influencePositions_[i]);
+                outerInfluence_->MeshComponent->render(viewProj, 1, nullptr, glm::mat4(1), false, lightInfo, viewPos, (render_mode_ == RenderMode::DBG) ? 1 : 0);
             }
-            outerInfluence_->meshComponent->model_matrix_ = influPos;
+            outerInfluence_->MeshComponent->model_matrix_ = influPos;
             glDisable(GL_BLEND);
         });
     }

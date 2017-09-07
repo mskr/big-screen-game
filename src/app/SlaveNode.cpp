@@ -39,7 +39,7 @@ namespace viscom {
     */
     void SlaveNode::DecodeData() {
         SlaveNodeInternal::DecodeData();
-        outerInfluence_->meshComponent->decode();
+        outerInfluence_->MeshComponent->decode();
         meshpool_.decode();
         sgct::SharedData::instance()->readObj<glm::vec3>(&synchronized_grid_translation_);
         sgct::SharedData::instance()->readFloat(&synchronized_automaton_transition_time_delta_);
@@ -53,7 +53,7 @@ namespace viscom {
     */
     void SlaveNode::UpdateSyncedInfo() {
         SlaveNodeInternal::UpdateSyncedInfo();
-        outerInfluence_->meshComponent->updateSyncedSlave();
+        outerInfluence_->MeshComponent->updateSyncedSlave();
         meshpool_.updateSyncedSlave();
         grid_translation_ = synchronized_grid_translation_.getVal();
         automaton_transition_time_delta_ = synchronized_automaton_transition_time_delta_.getVal();
@@ -70,7 +70,7 @@ namespace viscom {
                     GL_RG, // no "_INTEGER" postfix means data is treated as NORM and sampling delivers float
                     GL_UNSIGNED_INT, // pixel data points to integers treated as UNORM
                     grid_state_.data());
-                grid_state_ = synchronized_grid_state_.getVal(); // fetch new grid state
+                grid_state_ = synchronized_grid_state_.getVal(); // fetch new Grid state
                 glBindTexture(GL_TEXTURE_2D, current_grid_state_texture_.id);
                 glTexImage2D(GL_TEXTURE_2D, 0,
                     GL_RG32F, // 32 bit UNORM means 1.0F == 2^31 == 4294967296U (=> 1.0/(2^22) == 2^9 == 512U == INFECTED)

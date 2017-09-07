@@ -8,74 +8,78 @@ namespace roomgame {
     const float BASE_SPEED = 0.5f;
     const float ROT_SPEED_MULTIPLIER = 50.0f;
 
-	OuterInfluence::OuterInfluence()
+	OuterInfluence::OuterInfluence(): MeshComponent(nullptr), distance_(0), targetCell_(nullptr), deltaTime_(0)
+    {
+        Grid = nullptr;
+        mode_ = 0;
+        actionStatus_ = 0;
+        oldPosition_ = glm::vec3(0, 0, 0);
+        targetPosition_ = glm::vec3(2, 0, 0);
+        posDiff_ = glm::vec3(0);
+        ViewPersMat = glm::mat4(1);
+        speed_ = BASE_SPEED;
+        attackChance_ = ATTACK_CHANCE_BASE;
+        attackChanceGrowth_ = 1;
+        const auto seed1 = static_cast<unsigned>(std::chrono::system_clock::now().time_since_epoch().count());
+        rndGenerator_ = std::default_random_engine(seed1);
+        distributor100_ = std::uniform_int_distribution<int>(0, 100);
+    }
+
+
+    OuterInfluence::~OuterInfluence()
 	{
-		grid = nullptr;
-		mode = 0;
-		actionStatus = 0;
-		oldPosition = glm::vec3(0, 0, 0);
-		targetPosition = glm::vec3(2, 0, 0);
-		posDiff = glm::vec3(0);
-        viewPersMat = glm::mat4(1);
-        speed = BASE_SPEED;
-        attackChance = ATTACK_CHANCE_BASE;
-        attackChanceGrowth = 1;
-        unsigned seed1 = (unsigned) std::chrono::system_clock::now().time_since_epoch().count();
-        rndGenerator = std::default_random_engine(seed1);
-        distributor100 = std::uniform_int_distribution<int>(0, 100);
 	}
 
-
-
-	OuterInfluence::~OuterInfluence()
-	{
-	}
-
-	void OuterInfluence::calcPositions(bool init = false) {
-		for (int i = 0; i < 5; i++) {
-            float tmpI = i + 0.1f;
-            glm::mat4 transPat = glm::translate(glm::vec3(sinf(tmpI*(float)glfwGetTime()), cosf(tmpI*(float)glfwGetTime())*0.5f, cosf(tmpI*(float)glfwGetTime())*0.5f));
-            glm::mat4 transAtt = glm::translate(glm::vec3(cosf(tmpI*(float)glfwGetTime())*0.05f, sinf(tmpI*(float)glfwGetTime())*0.1, cosf(tmpI*(float)glfwGetTime())*0.05f));
-            glm::mat4 translation = glm::mix(transPat, transAtt, movementType);
-            if (i<meshComponent->influencePositions_.size()) {
-                meshComponent->influencePositions_[i] = meshComponent->model_matrix_*translation;
+	void OuterInfluence::CalcPositions(bool init = false) {
+		for (auto i = 0; i < 5; i++) {
+		    const auto tmpI = i + 0.1f;
+		    const auto transPat = glm::translate(glm::vec3(sinf(tmpI*static_cast<float>(glfwGetTime())), cosf(tmpI*static_cast<float>(glfwGetTime()))*0.5f, cosf(tmpI*static_cast<float>(glfwGetTime()))*0.5f));
+		    const auto transAtt = glm::translate(glm::vec3(cosf(tmpI*static_cast<float>(glfwGetTime()))*0.05f, sinf(tmpI*static_cast<float>(glfwGetTime()))*0.1, cosf(tmpI*static_cast<float>(glfwGetTime()))*0.05f));
+		    const auto translation = glm::mix(transPat, transAtt, movementType_);
+            if (i<MeshComponent->influencePositions_.size()) {
+                MeshComponent->influencePositions_[i] = MeshComponent->model_matrix_*translation;
             }
             else {
-				meshComponent->influencePositions_.push_back(meshComponent->model_matrix_*translation);
+				MeshComponent->influencePositions_.push_back(MeshComponent->model_matrix_*translation);
             }
 		}
-        if (mode == ATTACK) {
-            movementType = min(movementType + ChangeSpeed*(float)deltaTime, 1);
-            speed = min(speed + ChangeSpeed*(float)deltaTime, 1.3f);
+        if (mode_ == ATTACK) {
+            movementType_ = min(movementType_ + changeSpeed_*(float)deltaTime_, 1);
+            speed_ = min(speed_ + changeSpeed_*(float)deltaTime_, 1.3f);
         }
-        else if (mode == RETREAT) {
-            movementType = max(movementType - ChangeSpeed*(float)deltaTime, 0);
-            speed = max(speed - ChangeSpeed*10*(float)deltaTime, 0.5f);
+        else if (mode_ == RETREAT) {
+            movementType_ = max(movementType_ - changeSpeed_*(float)deltaTime_, 0);
+            speed_ = max(speed_ - changeSpeed_*10*(float)deltaTime_, 0.5f);
         }
 	}
 
 	void OuterInfluence::Update(double deltaTime)
 	{
-		this->deltaTime = deltaTime;
+		this->deltaTime_ = deltaTime;
 		Move();
-		calcPositions();
-        if (mode == ATTACK) {
+		CalcPositions();
+        if (mode_ == ATTACK) {
             Attack();
         }
-        else if (mode == RETREAT) {
+        else if (mode_ == RETREAT) {
             Retreat();
         }
 	}
 
 	//Change Position
-	void OuterInfluence::Move() {
-        if(mode==PATROL){
-            meshComponent->transform(glm::translate(glm::vec3(-30, 0, 0)));
-            meshComponent->transform(glm::rotate(glm::radians(speed*ROT_SPEED_MULTIPLIER*(float)deltaTime), glm::vec3(0, 0, 1)));
-            meshComponent->transform(glm::translate(glm::vec3(30, 0, 0)));
+	void OuterInfluence::Move() const
+	{
+        if(mode_==PATROL){
+            auto rotateMat = translate(glm::vec3(-30, 0, 0));
+            rotateMat *= rotate(glm::radians(speed_*ROT_SPEED_MULTIPLIER*static_cast<float>(deltaTime_)), glm::vec3(0, 0, 1));
+            rotateMat *= translate(glm::vec3(30, 0, 0));
+            MeshComponent->transform(rotateMat);
         }
         else{
-            meshComponent->transform(glm::inverse(meshComponent->model_matrix_) * glm::translate((posDiff)*(speed*(float)deltaTime)) * meshComponent->model_matrix_);
+            auto targetMovMat = inverse(MeshComponent->model_matrix_);
+            targetMovMat *= translate((posDiff_)*(speed_*static_cast<float>(deltaTime_)));
+            targetMovMat *= MeshComponent->model_matrix_;
+            MeshComponent->transform(targetMovMat);
         }
 	}
 
@@ -91,93 +95,93 @@ namespace roomgame {
     }
 
 	void OuterInfluence::DecideNextAction() {
-		switch (mode) {
+		switch (mode_) {
 		case PATROL:
 			Patrol();
 			break;
 		case ATTACK:
 		case RETREAT:
 			break;
+		default: 
+		    std::cout << "invalid OuterInfluence Mode" << std::endl;
+            break;
 		}
 
 	}
 
 	void OuterInfluence::Patrol() {
 		//Move around in a circle until the attack decision (chance gets higher over time)
-        int randNumber = distributor100(rndGenerator);
-        //std::cout << randNumber << "/" << attackChance << std::endl;
-        if (randNumber > 100-attackChance) {
-            attackChance = ATTACK_CHANCE_BASE;
-            oldPosition = glm::vec3(meshComponent->model_matrix_[3][0], meshComponent->model_matrix_[3][1], meshComponent->model_matrix_[3][2]);
-			mode = ATTACK;
-            //std::cout << "Changed mode to attack" << std::endl;
+	    const auto randNumber = distributor100_(rndGenerator_);
+        //std::cout << randNumber << "/" << attackChance_ << std::endl;
+        if (randNumber > 100-attackChance_) {
+            attackChance_ = ATTACK_CHANCE_BASE;
+            oldPosition_ = glm::vec3(MeshComponent->model_matrix_[3][0], MeshComponent->model_matrix_[3][1], MeshComponent->model_matrix_[3][2]);
+			mode_ = ATTACK;
+            //std::cout << "Changed mode_ to attack" << std::endl;
             ChooseTarget();
         }
         else {
-            attackChance += attackChanceGrowth;
+            attackChance_ += attackChanceGrowth_;
         }
 	}
 
     void OuterInfluence::ChooseTarget() {
         //Set the closest cell with wall build state as moveTarget (move towards it until collison)
-        glm::vec4 ndcCoords = glm::vec4(meshComponent->model_matrix_[3][0], meshComponent->model_matrix_[3][1], 0.0f, 1.0f);
-        ndcCoords = viewPersMat * ndcCoords;
+        auto ndcCoords = glm::vec4(MeshComponent->model_matrix_[3][0], MeshComponent->model_matrix_[3][1], 0.0f, 1.0f);
+        ndcCoords = ViewPersMat * ndcCoords;
         ndcCoords = ndcCoords / ndcCoords.w;
-        ndcCoords = glm::vec4(grid->pushNDCinsideGrid(glm::vec2(ndcCoords.x, ndcCoords.y)), ndcCoords.z, ndcCoords.w);
-        GridCell* tmp = grid->getCellAt(glm::vec2(ndcCoords.x, ndcCoords.y));
+        ndcCoords = glm::vec4(Grid->pushNDCinsideGrid(glm::vec2(ndcCoords.x, ndcCoords.y)), ndcCoords.z, ndcCoords.w);
+        auto tmp = Grid->getCellAt(glm::vec2(ndcCoords.x, ndcCoords.y));
         if (tmp == nullptr) {
             std::cout << "nullptr when choosing target" << std::endl;
             return;
         }
-        float cellDistance = 9999.0f;
+        auto cellDistance = 9999.0f;
         GridCell* closestWallCell = nullptr;
-        GridCell* leftLower = grid->getCellAt(0,0);
-        GridCell* rightUpper = grid->getCellAt(grid->getNumRows()-1,grid->getNumColumns()-1);
-        grid->forEachCellInRange(leftLower, rightUpper, [&](GridCell* cell) {
+        const auto leftLower = Grid->getCellAt(0,0);
+        const auto rightUpper = Grid->getCellAt(Grid->getNumRows()-1,Grid->getNumColumns()-1);
+        Grid->forEachCellInRange(leftLower, rightUpper, static_cast<std::function<void(GridCell*)>>([&](GridCell* cell) {
             if ((cell->getBuildState() & GridCell::WALL) != 0 && cell->getDistanceTo(tmp) < cellDistance && (cell->getBuildState() & (GridCell::TEMPORARY|GridCell::SOURCE)) == 0) {
                 cellDistance = cell->getDistanceTo(tmp);
                 closestWallCell = cell;
             }
-        });
-        //closestWallCell = grid->getCellAt(0, 0);
+        }));
         if (closestWallCell != nullptr) {
-            targetPosition = glm::vec3(closestWallCell->getXPosition(), closestWallCell->getYPosition(), 0);
-            targetPosition += grid->getTranslation();
-            posDiff = targetPosition - glm::vec3(meshComponent->model_matrix_[3][0], meshComponent->model_matrix_[3][1], 0.0f);
-            distance = glm::length(posDiff);
-            targetCell = closestWallCell;
+            targetPosition_ = glm::vec3(closestWallCell->getXPosition(), closestWallCell->getYPosition(), 0);
+            targetPosition_ += Grid->getTranslation();
+            posDiff_ = targetPosition_ - glm::vec3(MeshComponent->model_matrix_[3][0], MeshComponent->model_matrix_[3][1], 0.0f);
+            distance_ = glm::length(posDiff_);
+            targetCell_ = closestWallCell;
         }
         else {
-            mode = PATROL;
-            //std::cout << "Changed mode to patrol" << std::endl;
+            mode_ = PATROL;
+            //std::cout << "Changed mode_ to patrol" << std::endl;
         }
     }
 
 	void OuterInfluence::Attack() {
-        //If the target Cell is reached, change to retreat mode and mark the cell as source
-        glm::vec3 currentPos = glm::vec3(meshComponent->model_matrix_[3][0], meshComponent->model_matrix_[3][1], meshComponent->model_matrix_[3][2]);
-        float dist = glm::distance(oldPosition, currentPos);
-        //std::cout << "posdiff: " << posDiff.x << "," << posDiff.y << "," << posDiff.z << ",  " << dist << "/" << distance << std::endl;
-        if (dist>distance) {
-            targetPosition = oldPosition;
-            oldPosition = currentPos;
-            posDiff = targetPosition - currentPos;
-            distance = glm::length(posDiff);
-            mode = RETREAT;
-            grid->buildAt(targetCell->getCol(),targetCell->getRow(),GridCell::SOURCE,InteractiveGrid::BuildMode::Additive);
-            glm::vec3 wPos = grid->getWorldCoordinates(targetCell->getPosition());
-            meshComponent->sourcePositions_.push_back(wPos);
+        //If the target Cell is reached, change to retreat mode_ and mark the cell as source
+	    const auto currentPos = glm::vec3(MeshComponent->model_matrix_[3][0], MeshComponent->model_matrix_[3][1], MeshComponent->model_matrix_[3][2]);
+	    const auto dist = glm::distance(oldPosition_, currentPos);
+        if (dist>distance_) {
+            targetPosition_ = oldPosition_;
+            oldPosition_ = currentPos;
+            posDiff_ = targetPosition_ - currentPos;
+            distance_ = glm::length(posDiff_);
+            mode_ = RETREAT;
+            Grid->buildAt(targetCell_->getCol(),targetCell_->getRow(),GridCell::SOURCE,InteractiveGrid::BuildMode::Additive);
+            const auto wPos = Grid->getWorldCoordinates(targetCell_->getPosition());
+            MeshComponent->sourcePositions_.push_back(wPos);
         }
 	}
 
 	void OuterInfluence::Retreat() {
-		//If back at original position, change to patrol mode
-        glm::vec3 currentPos = glm::vec3(meshComponent->model_matrix_[3][0], meshComponent->model_matrix_[3][1], meshComponent->model_matrix_[3][2]);
-        float dist = glm::distance(oldPosition, currentPos);
-        //std::cout << "posdiff: " << posDiff.x << "," << posDiff.y << "," << posDiff.z << ",  " << dist << "/" << distance << std::endl;
-        if (dist>distance) {
-            mode = PATROL;
-            //std::cout << "Changed mode to patrol" << std::endl;
+		//If back at original position, change to patrol mode_
+	    const auto currentPos = glm::vec3(MeshComponent->model_matrix_[3][0], MeshComponent->model_matrix_[3][1], MeshComponent->model_matrix_[3][2]);
+	    const auto dist = glm::distance(oldPosition_, currentPos);
+        if (dist>distance_) {
+            mode_ = PATROL;
+            //std::cout << "Changed mode_ to patrol" << std::endl;
         }
     }
 }
