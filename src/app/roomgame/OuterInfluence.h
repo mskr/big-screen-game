@@ -1,46 +1,43 @@
 #pragma once
-#include "app\roomgame\IUpdateable.h"
-#include "app\roomgame\RoomInteractiveGrid.h"
-#include "glm\gtx\transform.hpp"
+#include "app/roomgame/IUpdateable.h"
+#include "app/roomgame/RoomInteractiveGrid.h"
 #include <random>
-#include <ctime>
 
 namespace roomgame {
 	class OuterInfluence : public roomgame::IUpdateable
 	{
 	public:
 		OuterInfluence();
-		~OuterInfluence();
+	    virtual ~OuterInfluence();
 
 		// Geerbt über IUpdateable
-		virtual void Update(double deltaTime) override;
-		virtual void UpdateSlow(double deltaTime) override;
+	    void Update(double deltaTime) override;
+	    void UpdateSlow(double deltaTime) override;
 
-        glm::mat4 viewPersMat;
-		SynchronizedGameMesh* meshComponent;
-		RoomInteractiveGrid* grid;
+        glm::mat4 ViewPersMat;
+		SynchronizedGameMesh* MeshComponent;
+		RoomInteractiveGrid* Grid;
 	private:
-        float movementType = 0; // 0 is patrolling movement, 1 is attacking movement
-        float ChangeSpeed = 1.25f; // How fast the influence changes its movement pattern
-        float speed;
-        float distance;
-        int attackChance;
-        int attackChanceGrowth;
-        std::default_random_engine rndGenerator;
-        std::uniform_int_distribution<int> distributor100;
-        GridCell* targetCell;
-		int mode;
-		double deltaTime;
-		float actionStatus;
-		glm::vec3 oldPosition;
-		glm::vec3 targetPosition;
-		glm::vec3 posDiff;
-		void DecideNextAction();
-		void calcPositions(bool init);
-		void Patrol();
+        float movementType_ = 0; // 0 is patrolling movement, 1 is attacking movement
+        float changeSpeed_ = 1.25f; // How fast the influence changes its movement pattern
+        float speed_;
+        float distance_;
+        int attackChance_;
+        int attackChanceGrowth_;
+        std::default_random_engine rndGenerator_;
+        std::uniform_int_distribution<int> distributor100_;
+        GridCell* targetCell_;
+		int mode_;
+		double deltaTime_;
+		float actionStatus_;
+		glm::vec3 oldPosition_;
+		glm::vec3 targetPosition_;
+		glm::vec3 posDiff_;
+		void CalcPositions(bool init);
+		void CheckForPatrolEnd();
 		void Attack();
 		void Retreat();
-		void Move();
+		void Move() const;
         void ChooseTarget();
 	};
 }
