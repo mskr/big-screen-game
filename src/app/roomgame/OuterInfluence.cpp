@@ -83,41 +83,21 @@ namespace roomgame {
         }
 	}
 
-    
-
 	void OuterInfluence::UpdateSlow(double deltaTime)
 	{
-        
-		//Change Behaviour, Change Target
-        DecideNextAction();
-        
-
+        //If patrolling, check if Attack should be initiated
+        if(mode_==PATROL)
+        {
+            CheckForPatrolEnd();
+        }
     }
 
-	void OuterInfluence::DecideNextAction() {
-		switch (mode_) {
-		case PATROL:
-			Patrol();
-			break;
-		case ATTACK:
-		case RETREAT:
-			break;
-		default: 
-		    std::cout << "invalid OuterInfluence Mode" << std::endl;
-            break;
-		}
-
-	}
-
-	void OuterInfluence::Patrol() {
-		//Move around in a circle until the attack decision (chance gets higher over time)
+	void OuterInfluence::CheckForPatrolEnd() {
 	    const auto randNumber = distributor100_(rndGenerator_);
-        //std::cout << randNumber << "/" << attackChance_ << std::endl;
         if (randNumber > 100-attackChance_) {
             attackChance_ = ATTACK_CHANCE_BASE;
             oldPosition_ = glm::vec3(MeshComponent->model_matrix_[3][0], MeshComponent->model_matrix_[3][1], MeshComponent->model_matrix_[3][2]);
 			mode_ = ATTACK;
-            //std::cout << "Changed mode_ to attack" << std::endl;
             ChooseTarget();
         }
         else {
@@ -133,7 +113,7 @@ namespace roomgame {
         ndcCoords = glm::vec4(Grid->pushNDCinsideGrid(glm::vec2(ndcCoords.x, ndcCoords.y)), ndcCoords.z, ndcCoords.w);
         auto tmp = Grid->getCellAt(glm::vec2(ndcCoords.x, ndcCoords.y));
         if (tmp == nullptr) {
-            std::cout << "nullptr when choosing target" << std::endl;
+            std::cout << "nullptr when choosing cell where Outer Influence is positioned" << std::endl;
             return;
         }
         auto cellDistance = 9999.0f;
@@ -155,7 +135,6 @@ namespace roomgame {
         }
         else {
             mode_ = PATROL;
-            //std::cout << "Changed mode_ to patrol" << std::endl;
         }
     }
 
@@ -181,7 +160,6 @@ namespace roomgame {
 	    const auto dist = glm::distance(oldPosition_, currentPos);
         if (dist>distance_) {
             mode_ = PATROL;
-            //std::cout << "Changed mode_ to patrol" << std::endl;
         }
     }
 }
