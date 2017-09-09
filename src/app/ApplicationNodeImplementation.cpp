@@ -279,6 +279,9 @@ namespace viscom {
         delete shadowMap_;
         //delete backgroundMesh_;
         delete waterMesh_;
+        delete lightInfo->sun;
+        delete lightInfo->outerInfLights;
+        delete lightInfo->sourceLights;
     }
 
     bool ApplicationNodeImplementation::KeyboardCallback(int key, int scancode, int action, int mods)
