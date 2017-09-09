@@ -93,25 +93,7 @@ namespace viscom {
         if (last_grid_state_texture_.id > 0 && current_grid_state_texture_.id > 0) {
             // ensure that this happens only once after a automaton transition to have last and current state right
             if (automaton_has_transitioned_) {
-                // Grid state: type UINT has to be converted to UNORM to make use of bilinear interpolation when rendering
-                glBindTexture(GL_TEXTURE_2D, last_grid_state_texture_.id);
-                glTexImage2D(GL_TEXTURE_2D, 0,
-                    // 32 bit UNORM means 1.0F is represented by (2^31 - 1)U
-                    roomgame::FILTERABLE_GRID_STATE_TEXTURE.sized_format,
-                    GRID_COLS_, GRID_ROWS_, 0,
-                    // no "_INTEGER" postfix means data is treated as NORM and sampling delivers float
-                    roomgame::FILTERABLE_GRID_STATE_TEXTURE.format,
-                    // pixel data points to integers treated as UNORM
-                    roomgame::FILTERABLE_GRID_STATE_TEXTURE.datatype,
-                    grid_state_.data());
-                grid_state_ = synchronized_grid_state_.getVal(); // fetch new Grid state
-                glBindTexture(GL_TEXTURE_2D, current_grid_state_texture_.id);
-                glTexImage2D(GL_TEXTURE_2D, 0,
-                    roomgame::FILTERABLE_GRID_STATE_TEXTURE.sized_format,
-                    GRID_COLS_, GRID_ROWS_, 0,
-                    roomgame::FILTERABLE_GRID_STATE_TEXTURE.format,
-                    roomgame::FILTERABLE_GRID_STATE_TEXTURE.datatype,
-                    grid_state_.data());
+                uploadGridStateToGPU();
             }
         }
     }
