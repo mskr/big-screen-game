@@ -31,9 +31,11 @@ namespace viscom {
 	 * Triggers rendering of all meshes in pool
 	 * Creates and renders static meshes
 	*/
-    class ApplicationNodeImplementation : public ApplicationNodeBase
-    {
+    class ApplicationNodeImplementation : public ApplicationNodeBase {
+
+
     public:
+
         explicit ApplicationNodeImplementation(ApplicationNodeInternal* appNode);
         ApplicationNodeImplementation(const ApplicationNodeImplementation&) = delete;
         ApplicationNodeImplementation(ApplicationNodeImplementation&&) = delete;
@@ -51,7 +53,12 @@ namespace viscom {
         virtual bool KeyboardCallback(int key, int scancode, int action, int mods) override;
 
 
+    private:
+
 		GLenum last_glerror_; // helps output an error only once
+
+
+    protected:
 
 		// ROOMGAME DATA
 		// =============
@@ -82,7 +89,7 @@ namespace viscom {
 
 		/* Copy of part of grid state for use by each node's GPU (same as used by automaton) */
 		GPUBuffer::Tex current_grid_state_texture_, last_grid_state_texture_;
-		// use vector although grid state is not dynamic because it can be nicely initialized from array
+		// use vector although grid state is not dynamic because sgct provides no shared array
 		sgct::SharedVector<roomgame::GRID_STATE_ELEMENT> synchronized_grid_state_;
 		std::vector<roomgame::GRID_STATE_ELEMENT> grid_state_;
 
@@ -176,10 +183,15 @@ namespace viscom {
 				glEnable(GL_DEPTH_TEST);
 			}
 		} screenfilling_quad_;
-        private:
-            void updateSourcePos(std::vector<glm::vec3> sourcePositions);
-            void uploadSourcePos(std::shared_ptr<viscom::GPUProgram> shad, std::vector<glm::vec3> sourcePositions);
 
-            std::shared_ptr<Texture> caustics;
+        void uploadGridStateToGPU();
+
+
+    private:
+
+        void updateSourcePos(std::vector<glm::vec3> sourcePositions);
+        void uploadSourcePos(std::shared_ptr<viscom::GPUProgram> shad, std::vector<glm::vec3> sourcePositions);
+
+        std::shared_ptr<Texture> caustics;
 	};
 }

@@ -35,7 +35,7 @@ namespace viscom {
 
         cellular_automaton_.init(GetApplication()->GetGPUProgramManager());
 
-        outerInfluence_->grid = &grid_;
+        outerInfluence_->Grid = &grid_;
         glm::vec3 gridPos = grid_.grid_center_;
         glm::vec2 pos = GetCirclePos(glm::vec2(gridPos.y, gridPos.z), range, viewAngle);
         GetCamera()->SetPosition(glm::vec3(0, pos.x, pos.y));
@@ -47,12 +47,12 @@ namespace viscom {
     /* Sync step 1: Master sets values of shared objects to the values of corresponding non-shared objects */
     void MasterNode::PreSync() {
         ApplicationNodeImplementation::PreSync();
-        outerInfluence_->meshComponent->preSync();
+        outerInfluence_->MeshComponent->preSync();
         meshpool_.preSync();
         synchronized_grid_translation_.setVal(grid_.getTranslation());
         synchronized_automaton_transition_time_delta_.setVal(cellular_automaton_.getTimeDeltaNormalized());
         synchronized_automaton_has_transitioned_.setVal(automaton_has_transitioned_);
-        // grid state sync only when automaton changed it
+        // Grid state sync only when automaton changed it
         if (automaton_has_transitioned_) {
             synchronized_grid_state_.setVal(std::vector<roomgame::GRID_STATE_ELEMENT>(
                 cellular_automaton_.getGridBuffer(),
@@ -65,7 +65,7 @@ namespace viscom {
     */
     void MasterNode::EncodeData() {
         ApplicationNodeImplementation::EncodeData();
-        outerInfluence_->meshComponent->encode();
+        outerInfluence_->MeshComponent->encode();
         meshpool_.encode();
         sgct::SharedData::instance()->writeObj<glm::vec3>(&synchronized_grid_translation_);
         sgct::SharedData::instance()->writeFloat(&synchronized_automaton_transition_time_delta_);
@@ -82,7 +82,7 @@ namespace viscom {
     */
     void MasterNode::UpdateSyncedInfo() {
         ApplicationNodeImplementation::UpdateSyncedInfo();
-        outerInfluence_->meshComponent->updateSyncedMaster();
+        outerInfluence_->MeshComponent->updateSyncedMaster();
         meshpool_.updateSyncedMaster();
         // Of course the following variables are redundant on master 
         // but help to write "unified" code in ApplicationNodeImplementation
@@ -93,25 +93,7 @@ namespace viscom {
         if (last_grid_state_texture_.id > 0 && current_grid_state_texture_.id > 0) {
             // ensure that this happens only once after a automaton transition to have last and current state right
             if (automaton_has_transitioned_) {
-                // Grid state: type UINT has to be converted to UNORM to make use of bilinear interpolation when rendering
-                glBindTexture(GL_TEXTURE_2D, last_grid_state_texture_.id);
-                glTexImage2D(GL_TEXTURE_2D, 0,
-                    // 32 bit UNORM means 1.0F is represented by (2^31 - 1)U
-                    roomgame::FILTERABLE_GRID_STATE_TEXTURE.sized_format,
-                    GRID_COLS_, GRID_ROWS_, 0,
-                    // no "_INTEGER" postfix means data is treated as NORM and sampling delivers float
-                    roomgame::FILTERABLE_GRID_STATE_TEXTURE.format,
-                    // pixel data points to integers treated as UNORM
-                    roomgame::FILTERABLE_GRID_STATE_TEXTURE.datatype,
-                    grid_state_.data());
-                grid_state_ = synchronized_grid_state_.getVal(); // fetch new grid state
-                glBindTexture(GL_TEXTURE_2D, current_grid_state_texture_.id);
-                glTexImage2D(GL_TEXTURE_2D, 0,
-                    roomgame::FILTERABLE_GRID_STATE_TEXTURE.sized_format,
-                    GRID_COLS_, GRID_ROWS_, 0,
-                    roomgame::FILTERABLE_GRID_STATE_TEXTURE.format,
-                    roomgame::FILTERABLE_GRID_STATE_TEXTURE.datatype,
-                    grid_state_.data());
+                uploadGridStateToGPU();
             }
         }
     }
@@ -138,7 +120,7 @@ namespace viscom {
         ApplicationNodeImplementation::DrawFrame(fbo);
 
         glm::mat4 viewProj = GetCamera()->GetViewPerspectiveMatrix();
-        outerInfluence_->viewPersMat = viewProj;
+        outerInfluence_->ViewPersMat = viewProj;
 
         grid_.updateProjection(viewProj);
         fbo.DrawToFBO([&] {
