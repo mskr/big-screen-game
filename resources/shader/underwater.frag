@@ -100,26 +100,6 @@ void main() {
 	vec3 thisFragment = vPosLightSpace.xyz / vPosLightSpace.w * 0.5 + 0.5;
 
 
-
-	// caustic effect
-
-	vec2 waterTexCoords = vTexCoords;
-	waterTexCoords /= 2;
-	
-    // the value for the sine has 2 inputs:
-    // 1. the time, so that it animates.
-    // 2. the y-row, so that ALL scanlines do not distort equally.
-	float localtime = speed * time;
-    float xAngle = localtime + waterTexCoords.y * ySineCycles;
-    float yAngle = localtime + waterTexCoords.x * xSineCycles;
-
-    vec2 distortOffset = 
-        vec2(sin(xAngle), sin(yAngle)) * // amount of shearing
-        vec2(xDistMag,yDistMag); // magnitude adjustment
-
-	waterTexCoords += distortOffset; 	
-
-
 	//color = texture(materal.diffuseTex, waterTexCoords);
 	//color = texture(material.diffuseTex, vTexCoords);
 
@@ -135,17 +115,39 @@ void main() {
 	}
     color = vec4(result,1);
 
-    // blue fog for the underwater effect
-    color += texture2D(causticTex,waterTexCoords*10)*abs(distortOffset.x)*10;
 
-    //color += pow(distance(vPosition,viewPos)*0.8f,4) * 0.001f * vec4(0.0f,0.15f,0.25f,0.0f);
 
-    //color += caustic * vec4(0.7f);
 
+    // caustic effect movement
+
+	vec2 waterTexCoords = vTexCoords;
+	//waterTexCoords /= 2; // Use this to increase/decrease caustic texture size
+	
+    // the value for the sine has 2 inputs:
+    // 1. the time, so that it animates.
+    // 2. the y-row, so that ALL scanlines do not distort equally.
+	float localtime = speed * time;
+    float xAngle = localtime + waterTexCoords.y * ySineCycles;
+    float yAngle = localtime + waterTexCoords.x * xSineCycles;
+
+    vec2 distortOffset = 
+        vec2(sin(xAngle), sin(yAngle)) * // amount of shearing
+        vec2(xDistMag,yDistMag); // magnitude adjustment
+
+	waterTexCoords += distortOffset; 	
+
+    // distance calculation for fading
     float diste = 0.1 * exp((distance(vPosition,viewPos))*0.4); 
-    //color += diste * vec4(0.0f,0.2f,0.25f,0.0f); // make it more blue and green
+
+    // add caustics for the underwater effect
+    color += texture2D(causticTex,waterTexCoords*10)*abs(distortOffset.x)*5 *(4/diste);
+
+    // add underwater fog
     color += diste * vec4(-0.09f,-0.04f,-0.04f,1.0f) + vec4(0.0f,0.20f,0.20f,0.0f); 
-    float tmpcol = max(1.0f,pow(distance(vPosition,viewPos)*0.8f,4) * 0.01f);
+
+    //color += diste * vec4(0.0f,0.2f,0.25f,0.0f); // make it more blue and green
+    //color += pow(distance(vPosition,viewPos)*0.8f,4) * 0.001f * vec4(0.0f,0.15f,0.25f,0.0f);
+    //float tmpcol = max(1.0f,pow(distance(vPosition,viewPos)*0.8f,4) * 0.01f);
     //color = (color / tmpcol) + vec4(0.0f,0.2f,0.3f,0.0f) * tmpcol * 0.07f + vec4(0.0f,0.1f,0.25f,0.0f);// * vec4(0.0f,0.15f,0.25f,0.0f);
 
 
