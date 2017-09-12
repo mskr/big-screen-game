@@ -47,15 +47,19 @@ namespace viscom {
         virtual void UpdateFrame(double currentTime, double elapsedTime) override;
         virtual void ClearBuffer(FrameBuffer& fbo) override;
         virtual void DrawFrame(FrameBuffer& fbo) override;
-		virtual void PostDraw() override;
+        virtual void PostDraw() override;
         virtual void CleanUp() override;
 
         virtual bool KeyboardCallback(int key, int scancode, int action, int mods) override;
 
 
     private:
-
+        void DrawScene(glm::vec3 viewPos, glm::mat4 lightspace, glm::mat4 viewProj, LightInfo *lightInfo);
+        void RenderOuterInfluence(glm::vec3 viewPos, glm::mat4 viewProj, LightInfo* lightInfo);
 		GLenum last_glerror_; // helps output an error only once
+        //unsigned int textureColorbuffer;
+        std::vector<FrameBuffer> offscreenBuffers;
+        const FrameBuffer* currentOffscreenBuffer;
 
 
     protected:
