@@ -123,7 +123,7 @@ namespace viscom {
             std::initializer_list<std::string>{ "applyTextureAndShadow.vert", "OuterInfl.frag" });
 
         SynchronizedGameMesh* outerInfluenceMeshComp = new SynchronizedGameMesh(
-            GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/latticeplane.obj"),
+            GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/floor.obj"),
             outerInfShader);
         outerInfluence_->MeshComponent = outerInfluenceMeshComp;
         glm::mat4 movMat = glm::mat4(1);
@@ -180,13 +180,17 @@ namespace viscom {
 // framebuffer configuration
 // -------------------------
         FrameBufferTextureDescriptor texDesc(GL_RGBA);
+        RenderBufferDescriptor bufDesc(GL_DEPTH24_STENCIL8);
+        std::vector<RenderBufferDescriptor> renVec;
         std::vector<FrameBufferTextureDescriptor> texVec;
         texVec.push_back(texDesc);
+        renVec.push_back(bufDesc);
         //        texVec.push_back(texDesc);
-        FrameBufferDescriptor desc{};
-        desc.texDesc_ = texVec;
+        FrameBufferDescriptor desc{texVec,renVec};
+        //desc.texDesc_ = texVec;
         offscreenBuffers = CreateOffscreenBuffers(desc);
         currentOffscreenBuffer = GetApplication()->SelectOffscreenBuffer(offscreenBuffers);
+        fullScreenQuad = CreateFullscreenQuad("postProcessing.frag");
 
         //// create a color attachment texture
         //glGenTextures(1, &textureColorbuffer);
@@ -228,12 +232,6 @@ namespace viscom {
             glClearDepth(1.0f);
             glClear(GL_DEPTH_BUFFER_BIT);
         });
-
-        currentOffscreenBuffer->DrawToFBO([&]()
-        {
-            glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-            glClear(GL_COLOR_BUFFER_BIT);
-        });
     }
 
     void ApplicationNodeImplementation::DrawFrame(FrameBuffer& fbo)
@@ -242,25 +240,28 @@ namespace viscom {
         //GLenum e;
         //e = glGetError(); printf("%x\n", e);
 
-//        auto currentTexVec = currentOffscreenBuffer->GetTextures();
-//        currentTexVec.push_back(texVec.at(0));
-
 
         glm::mat4 viewProj = GetCamera()->GetViewPerspectiveMatrix();
         for (int i = 0; i < min(5,outerInfPositions_.size()); i++) {
             glm::mat4 tmp = outerInfPositions_[i];
             lightInfo->infLightPos[i] = glm::vec3(tmp[3][0], tmp[3][1], tmp[3][2]);
         }
+        updateSourcePos(outerInfluence_->MeshComponent->sourcePositions_);
         glm::vec3 viewPos = GetCamera()->GetPosition();
         //TODO Is the engine matrix really needed here?
         glm::mat4 lightspace = shadowMap_->getLightMatrix();
-        shadowMap_->DrawToFBO([&]() {
-            meshpool_.renderAllMeshesExcept(lightspace, GridCell::OUTER_INFLUENCE, 1, (render_mode_ == RenderMode::DBG) ? 1 : 0,lightInfo,viewPos);
-        });
+        //shadowMap_->DrawToFBO([&]() {
+        //    meshpool_.renderAllMeshesExcept(lightspace, GridCell::OUTER_INFLUENCE, 1, (render_mode_ == RenderMode::DBG) ? 1 : 0,lightInfo,viewPos);
+        //});
 
-        updateSourcePos(outerInfluence_->MeshComponent->sourcePositions_);
+
         currentOffscreenBuffer->DrawToFBO([&]()
         {
+            glEnable(GL_DEPTH_TEST); // enable depth testing (is disabled for rendering screen-space quad)
+
+                                     // make sure we clear the framebuffer's content
+            glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             DrawScene(viewPos, lightspace, viewProj, lightInfo);
         });
 
@@ -269,8 +270,9 @@ namespace viscom {
         fbo.DrawToFBO([&]() {
             glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
                                       // clear all relevant buffers
-            //glClear(GL_COLOR_BUFFER_BIT);
-            auto fullScreenQuad = CreateFullscreenQuad("postProcessing.frag");
+            glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set clear color to white (not really necessery actually, since we won't be able to see behind the quad anyways)
+            glClear(GL_COLOR_BUFFER_BIT);
+            glUseProgram(fullScreenQuad->GetGPUProgram()->getProgramId());
             GLuint imageTex = currentOffscreenBuffer->GetTextures().at(0);
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, imageTex);
@@ -281,8 +283,17 @@ namespace viscom {
             glUniform1i(fullScreenQuad->GetGPUProgram()->getUniformLocation("screenTexture"),0);
 
             fullScreenQuad->Draw();
-            //DrawScene(viewPos, lightspace, viewProj, lightInfo);
         });
+    }
+
+    void ApplicationNodeImplementation::DrawScene(glm::vec3 viewPos, glm::mat4 lightspace, glm::mat4 viewProj, LightInfo *lightInfo)
+    {
+        //backgroundMesh_->render(viewProj, lightspace, shadowMap_->get(), (render_mode_ == RenderMode::DBG) ? 1 : 0);
+        waterMesh_->render(viewProj, lightspace, shadowMap_->get(), (render_mode_ == RenderMode::DBG) ? 1 : 0, lightInfo, viewPos);
+        glEnable(GL_BLEND); glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        meshpool_.renderAllMeshes(viewProj, 0, (render_mode_ == RenderMode::DBG) ? 1 : 0, lightInfo, viewPos);
+        RenderOuterInfluence(viewPos, viewProj, lightInfo);
+        glDisable(GL_BLEND);
     }
 
     void ApplicationNodeImplementation::RenderOuterInfluence(glm::vec3 viewPos, glm::mat4 viewProj, LightInfo* lightInfo)
@@ -308,15 +319,6 @@ namespace viscom {
         outerInfluence_->MeshComponent->model_matrix_ = influPos;
     }
 
-    void ApplicationNodeImplementation::DrawScene(glm::vec3 viewPos, glm::mat4 lightspace, glm::mat4 viewProj, LightInfo *lightInfo)
-    {
-        //backgroundMesh_->render(viewProj, lightspace, shadowMap_->get(), (render_mode_ == RenderMode::DBG) ? 1 : 0);
-        waterMesh_->render(viewProj, lightspace, shadowMap_->get(), (render_mode_ == RenderMode::DBG) ? 1 : 0, lightInfo, viewPos);
-        glEnable(GL_BLEND); glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        meshpool_.renderAllMeshes(viewProj, 0, (render_mode_ == RenderMode::DBG) ? 1 : 0, lightInfo, viewPos);
-        RenderOuterInfluence(viewPos, viewProj, lightInfo);
-        glDisable(GL_BLEND);
-    }
 
 
     std::string outerInfString = "outerInfLights";

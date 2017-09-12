@@ -60,7 +60,7 @@ namespace viscom {
         //unsigned int textureColorbuffer;
         std::vector<FrameBuffer> offscreenBuffers;
         const FrameBuffer* currentOffscreenBuffer;
-
+        std::unique_ptr<FullscreenQuad> fullScreenQuad;
 
     protected:
 
