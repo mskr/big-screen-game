@@ -16,6 +16,10 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/detail/type_mat.hpp>
+#include <glm/detail/_vectorize.hpp>
+#include <glm/detail/_vectorize.hpp>
+#include "../../extern/fwcore/extern/assimp/code/ColladaHelper.h"
 
 namespace viscom {
 
@@ -119,7 +123,7 @@ namespace viscom {
             std::initializer_list<std::string>{ "applyTextureAndShadow.vert", "OuterInfl.frag" });
 
         SynchronizedGameMesh* outerInfluenceMeshComp = new SynchronizedGameMesh(
-            GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/latticeplane.obj"),
+            GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/floor.obj"),
             outerInfShader);
         outerInfluence_->MeshComponent = outerInfluenceMeshComp;
         glm::mat4 movMat = glm::mat4(1);
@@ -173,6 +177,40 @@ namespace viscom {
         lightInfo->infLightPos.push_back(glm::vec3(0));
 //        lightInfo->sourceLightsPos.push_back(glm::vec3(-.5f, -.5f, 0.2f));
 //        lightInfo->sourceLightsPos.push_back(glm::vec3(.5f, .5f, 0.2f));
+// framebuffer configuration
+// -------------------------
+        FrameBufferTextureDescriptor texDesc(GL_RGBA);
+        RenderBufferDescriptor bufDesc(GL_DEPTH24_STENCIL8);
+        std::vector<RenderBufferDescriptor> renVec;
+        std::vector<FrameBufferTextureDescriptor> texVec;
+        texVec.push_back(texDesc);
+        renVec.push_back(bufDesc);
+        //        texVec.push_back(texDesc);
+        FrameBufferDescriptor desc{texVec,renVec};
+        //desc.texDesc_ = texVec;
+        offscreenBuffers = CreateOffscreenBuffers(desc);
+        currentOffscreenBuffer = GetApplication()->SelectOffscreenBuffer(offscreenBuffers);
+        fullScreenQuad = CreateFullscreenQuad("postProcessing.frag");
+
+        //// create a color attachment texture
+        //glGenTextures(1, &textureColorbuffer);
+        //glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
+        //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 600, 800, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+        //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        //glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorbuffer, 0);
+        //// create a renderbuffer object for depth and stencil attachment (we won't be sampling these)
+        //unsigned int rbo;
+        //glGenRenderbuffers(1, &rbo);
+        //glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+        //glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 600, 800); // use a single renderbuffer object for both a depth AND stencil buffer.
+        //glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo); // now actually attach it
+        //                                                                                              // now that we actually created the framebuffer and added all attachments we want to check if it is actually complete now
+        //if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        //    std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+        //glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        //std::cout << "lalala" << std::endl;
+
     }
 
 
@@ -202,46 +240,87 @@ namespace viscom {
         //GLenum e;
         //e = glGetError(); printf("%x\n", e);
 
+
         glm::mat4 viewProj = GetCamera()->GetViewPerspectiveMatrix();
         for (int i = 0; i < min(5,outerInfPositions_.size()); i++) {
             glm::mat4 tmp = outerInfPositions_[i];
             lightInfo->infLightPos[i] = glm::vec3(tmp[3][0], tmp[3][1], tmp[3][2]);
         }
+        updateSourcePos(outerInfluence_->MeshComponent->sourcePositions_);
         glm::vec3 viewPos = GetCamera()->GetPosition();
         //TODO Is the engine matrix really needed here?
         glm::mat4 lightspace = shadowMap_->getLightMatrix();
-        shadowMap_->DrawToFBO([&]() {
-            meshpool_.renderAllMeshesExcept(lightspace, GridCell::OUTER_INFLUENCE, 1, (render_mode_ == RenderMode::DBG) ? 1 : 0,lightInfo,viewPos);
+        //shadowMap_->DrawToFBO([&]() {
+        //    meshpool_.renderAllMeshesExcept(lightspace, GridCell::OUTER_INFLUENCE, 1, (render_mode_ == RenderMode::DBG) ? 1 : 0,lightInfo,viewPos);
+        //});
+
+
+        currentOffscreenBuffer->DrawToFBO([&]()
+        {
+            glEnable(GL_DEPTH_TEST); // enable depth testing (is disabled for rendering screen-space quad)
+
+                                     // make sure we clear the framebuffer's content
+            glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            DrawScene(viewPos, lightspace, viewProj, lightInfo);
         });
-        updateSourcePos(outerInfluence_->MeshComponent->sourcePositions_);
+
+
 
         fbo.DrawToFBO([&]() {
-            //backgroundMesh_->render(viewProj, lightspace, shadowMap_->get(), (render_mode_ == RenderMode::DBG) ? 1 : 0);
-            waterMesh_->render(viewProj, lightspace, shadowMap_->get(), (render_mode_ == RenderMode::DBG) ? 1 : 0,lightInfo,viewPos);
-            glEnable(GL_BLEND); glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            meshpool_.renderAllMeshes(viewProj, 0, (render_mode_ == RenderMode::DBG) ? 1 : 0, lightInfo, viewPos);
-            glm::mat4 influPos = outerInfluence_->MeshComponent->model_matrix_;
-            
-            if (outerInfPositions_.size() > 40) {
-                outerInfPositions_.resize(40);
-            }
-            for (int i = 0; i < outerInfPositions_.size(); i++) {
-                if (i % 5 == 0) {
-                    outerInfluence_->MeshComponent->scale -= 0.01f;
-                }
-                outerInfluence_->MeshComponent->model_matrix_ = outerInfPositions_[i];
-                outerInfluence_->MeshComponent->render(viewProj,1,nullptr,glm::mat4(1),false,lightInfo,viewPos, (render_mode_ == RenderMode::DBG) ? 1 : 0);
-            }
-            outerInfluence_->MeshComponent->scale = 0.1f;
-            for (int i = 0; i < outerInfluence_->MeshComponent->influencePositions_.size(); i++) {
-                outerInfluence_->MeshComponent->model_matrix_ = outerInfluence_->MeshComponent->influencePositions_[i];
-                outerInfPositions_.insert(outerInfPositions_.begin(),outerInfluence_->MeshComponent->influencePositions_[i]);
-                outerInfluence_->MeshComponent->render(viewProj, 1, nullptr, glm::mat4(1), false, lightInfo, viewPos, (render_mode_ == RenderMode::DBG) ? 1 : 0);
-            }
-            outerInfluence_->MeshComponent->model_matrix_ = influPos;
-            glDisable(GL_BLEND);
+            glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
+                                      // clear all relevant buffers
+            glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set clear color to white (not really necessery actually, since we won't be able to see behind the quad anyways)
+            glClear(GL_COLOR_BUFFER_BIT);
+            glUseProgram(fullScreenQuad->GetGPUProgram()->getProgramId());
+            GLuint imageTex = currentOffscreenBuffer->GetTextures().at(0);
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, imageTex);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+            glUniform1i(fullScreenQuad->GetGPUProgram()->getUniformLocation("screenTexture"),0);
+
+            fullScreenQuad->Draw();
         });
     }
+
+    void ApplicationNodeImplementation::DrawScene(glm::vec3 viewPos, glm::mat4 lightspace, glm::mat4 viewProj, LightInfo *lightInfo)
+    {
+        //backgroundMesh_->render(viewProj, lightspace, shadowMap_->get(), (render_mode_ == RenderMode::DBG) ? 1 : 0);
+        waterMesh_->render(viewProj, lightspace, shadowMap_->get(), (render_mode_ == RenderMode::DBG) ? 1 : 0, lightInfo, viewPos);
+        glEnable(GL_BLEND); glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        meshpool_.renderAllMeshes(viewProj, 0, (render_mode_ == RenderMode::DBG) ? 1 : 0, lightInfo, viewPos);
+        RenderOuterInfluence(viewPos, viewProj, lightInfo);
+        glDisable(GL_BLEND);
+    }
+
+    void ApplicationNodeImplementation::RenderOuterInfluence(glm::vec3 viewPos, glm::mat4 viewProj, LightInfo* lightInfo)
+    {
+        const auto influPos = outerInfluence_->MeshComponent->model_matrix_;
+
+        if (outerInfPositions_.size() > 40) {
+            outerInfPositions_.resize(40);
+        }
+        for (auto i = 0; i < outerInfPositions_.size(); i++) {
+            if (i % 5 == 0) {
+                outerInfluence_->MeshComponent->scale -= 0.01f;
+            }
+            outerInfluence_->MeshComponent->model_matrix_ = outerInfPositions_[i];
+            outerInfluence_->MeshComponent->render(viewProj, 1, nullptr, glm::mat4(1), false, lightInfo, viewPos, (render_mode_ == RenderMode::DBG) ? 1 : 0);
+        }
+        outerInfluence_->MeshComponent->scale = 0.1f;
+        for (auto i = 0; i < outerInfluence_->MeshComponent->influencePositions_.size(); i++) {
+            outerInfluence_->MeshComponent->model_matrix_ = outerInfluence_->MeshComponent->influencePositions_[i];
+            outerInfPositions_.insert(outerInfPositions_.begin(), outerInfluence_->MeshComponent->influencePositions_[i]);
+            outerInfluence_->MeshComponent->render(viewProj, 1, nullptr, glm::mat4(1), false, lightInfo, viewPos, (render_mode_ == RenderMode::DBG) ? 1 : 0);
+        }
+        outerInfluence_->MeshComponent->model_matrix_ = influPos;
+    }
+
+
+
     std::string outerInfString = "outerInfLights";
     std::string sourceString = "sourceLights";
 
