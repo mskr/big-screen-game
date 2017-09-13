@@ -75,6 +75,7 @@ vec2 rotateZ_step90(float x, float y) {
 flat out uint st;
 flat out uint hp;
 out vec2 cellCoords;
+out vec2 causticCoords;
 
 void main() {
     mat4 modelMatrix = mat4(0); // this fixed the glitch
@@ -108,6 +109,8 @@ void main() {
     vPosition = vec3(posV4);
     vNormal = vec3(rotateZ_step90(normal.x, -normal.z), normal.y); //TODO incorporate sin wave
     vTexCoords = texCoords;
-
-    gl_Position = viewProjectionMatrix * posV4;
+    posV4 = viewProjectionMatrix * posV4;
+    vec4 caustpos = viewProjectionMatrix * modelMatrix * subMeshLocalMatrix * vec4(pos.x, -pos.z, pos.y, 1);
+    causticCoords = cellCoords + (caustpos - posV4).xy;
+    gl_Position = posV4;
 }
