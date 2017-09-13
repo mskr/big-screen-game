@@ -44,6 +44,8 @@ namespace viscom {
 
         /* Init mesh pool (mesh and shader resources need to be loaded on all nodes) */
 
+        caustics = std::move(GetTextureManager().GetResource("/textures/caustics.png"));
+
         instanceShader_ = GetApplication()->GetGPUProgramManager().GetResource("renderMeshInstance",
             std::initializer_list<std::string>{ "renderMeshInstance.vert", "renderMeshInstance.frag" });
 
@@ -117,6 +119,14 @@ namespace viscom {
             glUniform1i(uloc, 1);
         });
 
+        meshpool_.updateUniformEveryFrame("causticTex", [&](GLint uloc) {
+            glActiveTexture(GL_TEXTURE2);
+            glBindTexture(GL_TEXTURE_2D, caustics->getTextureId());
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+            glUniform1i(uloc, 2);
+        });
+
 
         /* Init outer influence */
         std::shared_ptr<viscom::GPUProgram> outerInfShader = GetApplication()->GetGPUProgramManager().GetResource("stuff",
@@ -149,8 +159,7 @@ namespace viscom {
         //std::shared_ptr<Texture> texCaustics = GetApplication()->GetTextureManager().GetResource("/textures/caustics.png");
         //glUseProgram(terrainShader_->getProgramId);
 
-       
-        caustics = std::move(GetTextureManager().GetResource("/textures/caustics.png"));
+
 
 
         waterMesh_->scale = glm::vec3(0.5f,0.5f,0.5f);
