@@ -19,7 +19,7 @@ namespace roomgame {
 		RoomInteractiveGrid* Grid;
 	private:
         float movementType_ = 0; // 0 is patrolling movement, 1 is attacking movement
-        float changeSpeed_ = 1.25f; // How fast the influence changes its movement pattern
+        float changeSpeed_ = 1.f; // How fast the influence changes its movement pattern
         float speed_;
         float distance_;
         int attackChance_;

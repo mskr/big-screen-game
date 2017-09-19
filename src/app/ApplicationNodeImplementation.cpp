@@ -280,9 +280,10 @@ namespace viscom {
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-            glUniform1i(fullScreenQuad->GetGPUProgram()->getUniformLocation("screenTexture"),0);
+            glUniform1i(fullScreenQuad->GetGPUProgram()->getUniformLocation("screenTexture"), 0);
 
             fullScreenQuad->Draw();
+
         });
     }
 
@@ -300,17 +301,17 @@ namespace viscom {
     {
         const auto influPos = outerInfluence_->MeshComponent->model_matrix_;
 
-        if (outerInfPositions_.size() > 40) {
-            outerInfPositions_.resize(40);
+        if (outerInfPositions_.size() > 250) {
+            outerInfPositions_.resize(250);
         }
         for (auto i = 0; i < outerInfPositions_.size(); i++) {
             if (i % 5 == 0) {
-                outerInfluence_->MeshComponent->scale -= 0.01f;
+                outerInfluence_->MeshComponent->scale -= 0.004f;
             }
             outerInfluence_->MeshComponent->model_matrix_ = outerInfPositions_[i];
             outerInfluence_->MeshComponent->render(viewProj, 1, nullptr, glm::mat4(1), false, lightInfo, viewPos, (render_mode_ == RenderMode::DBG) ? 1 : 0);
         }
-        outerInfluence_->MeshComponent->scale = 0.1f;
+        outerInfluence_->MeshComponent->scale = 0.2f;
         for (auto i = 0; i < outerInfluence_->MeshComponent->influencePositions_.size(); i++) {
             outerInfluence_->MeshComponent->model_matrix_ = outerInfluence_->MeshComponent->influencePositions_[i];
             outerInfPositions_.insert(outerInfPositions_.begin(), outerInfluence_->MeshComponent->influencePositions_[i]);

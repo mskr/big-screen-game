@@ -19,7 +19,7 @@ namespace roomgame {
         ViewPersMat = glm::mat4(1);
         speed_ = BASE_SPEED;
         attackChance_ = ATTACK_CHANCE_BASE;
-        attackChanceGrowth_ = 1;
+        attackChanceGrowth_ = 2;
         const auto seed1 = static_cast<unsigned>(std::chrono::system_clock::now().time_since_epoch().count());
         rndGenerator_ = std::default_random_engine(seed1);
         distributor100_ = std::uniform_int_distribution<int>(0, 100);
@@ -45,11 +45,15 @@ namespace roomgame {
 		}
         if (mode_ == ATTACK) {
             movementType_ = min(movementType_ + changeSpeed_*(float)deltaTime_, 1);
-            speed_ = min(speed_ + changeSpeed_*(float)deltaTime_, 1.3f);
+            speed_ = min(exp(speed_ + changeSpeed_*0.2f*(float)deltaTime_)-1.0f, 0.8f);
         }
         else if (mode_ == RETREAT) {
             movementType_ = max(movementType_ - changeSpeed_*(float)deltaTime_, 0);
-            speed_ = max(speed_ - changeSpeed_*10*(float)deltaTime_, 0.5f);
+            speed_ = min(speed_ + changeSpeed_*0.1f*(float)deltaTime_, 0.4f);
+//            speed_ = max(speed_ - changeSpeed_*10*(float)deltaTime_, 0.5f);
+        }else
+        {
+            speed_ = min(speed_ + changeSpeed_*0.1f*(float)deltaTime_, 0.4f);
         }
 	}
 
@@ -127,6 +131,7 @@ namespace roomgame {
             }
         }));
         if (closestWallCell != nullptr) {
+            speed_ = 0;
             targetPosition_ = glm::vec3(closestWallCell->getXPosition(), closestWallCell->getYPosition(), 0);
             targetPosition_ += Grid->getTranslation();
             posDiff_ = targetPosition_ - glm::vec3(MeshComponent->model_matrix_[3][0], MeshComponent->model_matrix_[3][1], 0.0f);
@@ -143,6 +148,7 @@ namespace roomgame {
 	    const auto currentPos = glm::vec3(MeshComponent->model_matrix_[3][0], MeshComponent->model_matrix_[3][1], MeshComponent->model_matrix_[3][2]);
 	    const auto dist = glm::distance(oldPosition_, currentPos);
         if (dist>distance_) {
+            speed_ = 0;
             targetPosition_ = oldPosition_;
             oldPosition_ = currentPos;
             posDiff_ = targetPosition_ - currentPos;
@@ -159,6 +165,7 @@ namespace roomgame {
 	    const auto currentPos = glm::vec3(MeshComponent->model_matrix_[3][0], MeshComponent->model_matrix_[3][1], MeshComponent->model_matrix_[3][2]);
 	    const auto dist = glm::distance(oldPosition_, currentPos);
         if (dist>distance_) {
+            speed_ = 0;
             mode_ = PATROL;
         }
     }
