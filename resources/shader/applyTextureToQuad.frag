@@ -12,5 +12,6 @@ float lin(float depth) {
 }
 
 void main() {
-	gl_FragColor = vec4(texture(texture, pixel).r);
+    float depth = texture(texture, pixel).r;
+	gl_FragColor = vec4(depth);
 }
