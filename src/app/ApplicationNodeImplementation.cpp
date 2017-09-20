@@ -56,9 +56,11 @@ namespace viscom {
             GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/newModels/RoomCorner.obj"));
         meshpool_.addMesh({ GridCell::WALL },
             GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/newModels/RoomWall.obj"));
-        meshpool_.addMesh({ GridCell::INVALID|GridCell::TEMPORARY, GridCell::TEMPORARY, 
-            GridCell::INFECTED, GridCell::SOURCE, GridCell::SOURCE|GridCell::INFECTED },
+        meshpool_.addMesh({ GridCell::INVALID | GridCell::TEMPORARY, GridCell::TEMPORARY,
+            GridCell::INFECTED, GridCell::SOURCE | GridCell::INFECTED },
             GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/newModels/InnerInfluence.obj"));
+        meshpool_.addMesh({ GridCell::SOURCE},
+            GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/newModels/RoomWallBrokenWater.obj"));
 
         meshpool_.updateUniformEveryFrame("t_sec", [this](GLint uloc) {
             glUniform1f(uloc, (float)clock_.t_in_sec);
@@ -150,8 +152,14 @@ namespace viscom {
         //		std::initializer_list<std::string>{ "applyTextureAndShadow.vert", "applyTextureAndShadow.frag" }));
         terrainShader_ = GetApplication()->GetGPUProgramManager().GetResource("underwater",
             std::initializer_list<std::string>{ "underwater.vert", "underwater.frag" });
+        std::string desertVersion = "";
+#ifdef _DEBUG
+        desertVersion = "/models/roomgame_models/newModels/desert.obj";
+#else
+        desertVersion = "/models/roomgame_models/newModels/desertWithDetail.obj";
+#endif
         waterMesh_ = new PostProcessingMesh(
-            GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/newModels/desertWithDetail.obj"),
+            GetApplication()->GetMeshManager().GetResource(desertVersion),
             terrainShader_);
         
 
@@ -296,9 +304,10 @@ namespace viscom {
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-            glUniform1i(fullScreenQuad->GetGPUProgram()->getUniformLocation("screenTexture"),0);
+            glUniform1i(fullScreenQuad->GetGPUProgram()->getUniformLocation("screenTexture"), 0);
 
             fullScreenQuad->Draw();
+
         });
     }
 
@@ -315,18 +324,26 @@ namespace viscom {
     void ApplicationNodeImplementation::RenderOuterInfluence(glm::vec3 viewPos, glm::mat4 viewProj, LightInfo* lightInfo)
     {
         const auto influPos = outerInfluence_->MeshComponent->model_matrix_;
-
-        if (outerInfPositions_.size() > 40) {
-            outerInfPositions_.resize(40);
+        int outerInfInstances;
+        float scaleStep;
+#ifdef _DEBUG
+        outerInfInstances = 20;
+        scaleStep = 0.01f;
+#else
+        outerInfInstances = 250;
+        scaleStep = 0.004f;
+#endif
+        if (outerInfPositions_.size() > outerInfInstances) {
+            outerInfPositions_.resize(outerInfInstances);
         }
         for (auto i = 0; i < outerInfPositions_.size(); i++) {
             if (i % 5 == 0) {
-                outerInfluence_->MeshComponent->scale -= 0.01f;
+                outerInfluence_->MeshComponent->scale -= scaleStep;
             }
             outerInfluence_->MeshComponent->model_matrix_ = outerInfPositions_[i];
             outerInfluence_->MeshComponent->render(viewProj, 1, nullptr, glm::mat4(1), false, lightInfo, viewPos, (render_mode_ == RenderMode::DBG) ? 1 : 0);
         }
-        outerInfluence_->MeshComponent->scale = 0.1f;
+        outerInfluence_->MeshComponent->scale = 0.2f;
         for (auto i = 0; i < outerInfluence_->MeshComponent->influencePositions_.size(); i++) {
             outerInfluence_->MeshComponent->model_matrix_ = outerInfluence_->MeshComponent->influencePositions_[i];
             outerInfPositions_.insert(outerInfPositions_.begin(), outerInfluence_->MeshComponent->influencePositions_[i]);

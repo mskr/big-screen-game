@@ -52,20 +52,23 @@ vec2 rotateZ_step90(float x, float y) {
     // Problem: One mesh can be used with different instance attributes for different build states
     // Very specific solution: Choose rotation for corners and walls
     //TODO Find more generic solution
+    if((buildState & INFECTED) == INFECTED) {
+        return vec2(x, y);
+    }
     if((buildState & (LEFT | TOP | CORNER))==(LEFT|TOP|CORNER) ||
+        (buildState & (LEFT | SOURCE))==(LEFT | SOURCE) ||
         (buildState & (LEFT | WALL))==(LEFT | WALL)){
             return vec2(-y, x);
     }
     else if((buildState & (RIGHT | TOP | CORNER))==(RIGHT|TOP|CORNER) ||
+        (buildState & (TOP | SOURCE))==(TOP | SOURCE) ||
         (buildState & (TOP | WALL))==(TOP | WALL)){
             return vec2(x, y);
     }
     else if((buildState & (RIGHT | BOTTOM | CORNER))==(RIGHT|BOTTOM|CORNER) ||
+        (buildState & (RIGHT | SOURCE))==(RIGHT | SOURCE) ||
         (buildState & (RIGHT | WALL))==(RIGHT | WALL)){
             return vec2(y, -x);
-    }
-    else if((buildState & INFECTED) == INFECTED) {
-        return vec2(x, y);
     }
     else {
         return vec2(-x, -y);
@@ -102,7 +105,7 @@ void main() {
         vec4 last = texture(last_grid_state, cellCoords).rgba;
         vec4 curr = texture(curr_grid_state, cellCoords).rgba;
         float fluid = mix(1.0 - last.a, 1.0 - curr.a, automatonTimeDelta);
-        pos.y += fluid;
+        pos.y += fluid*3.0f;
     }
 
     vec4 posV4 = modelMatrix * subMeshLocalMatrix * vec4(rotateZ_step90(pos.x, -pos.z), pos.y, 1);
