@@ -102,9 +102,11 @@ namespace viscom {
     void MasterNode::UpdateFrame(double t1, double t2) {
         ApplicationNodeImplementation::UpdateFrame(t1, t2);
 
+#ifdef WITH_TUIO
         if (!inputBuffer.empty()) {
             handleInputBuffer();
         }
+#endif
 
         //cellular_automaton_.setTransitionTime(automaton_transition_time);
         //cellular_automaton_.setDamagePerCell(automaton_damage_per_cell);
@@ -286,18 +288,22 @@ namespace viscom {
             // this object lives for the duration of one touch gesture
             // and is used to distinguish clicks/touches, to reuse IDs of accidentally interrupted touch gestures, etc.
             // (see RoomInteractiveGrid::handleHoveredCell + handleRelease + GridInteraction::testTemporalAndSpatialProximity)
+#ifdef WITH_TUIO
         mtx.lock();
         inputBuffer.push_back(input{ INPUT_ADD,tcur->getX(),tcur->getY(), tcur->getCursorID() });
         mtx.unlock();
+#endif
         //std::cout << "add    cur  " << tcur->getCursorID() << " (" << tcur->getSessionID() << "/" << tcur->getTuioSourceID() << ") " << tcur->getX() << " " << tcur->getY() << std::endl;
         return true;
     }
 
     bool MasterNode::UpdateTuioCursor(TUIO::TuioCursor* tcur)
     {
+#ifdef WITH_TUIO
         mtx.lock();
         inputBuffer.push_back(input{ INPUT_UPDATE,tcur->getX(),tcur->getY(), tcur->getCursorID() });
         mtx.unlock();
+#endif
         //std::cout << "set    cur  " << tcur->getCursorID() << " (" << tcur->getSessionID() << "/" << tcur->getTuioSourceID() << ") " << tcur->getX() << " " << tcur->getY()
         //    << " " << tcur->getMotionSpeed() << " " << tcur->getMotionAccel() << " " << std::endl;
         return true;
@@ -305,14 +311,17 @@ namespace viscom {
 
     bool MasterNode::RemoveTuioCursor(TUIO::TuioCursor* tcur)
     {
+#ifdef WITH_TUIO
         mtx.lock();
         inputBuffer.push_back(input{ INPUT_REMOVE,tcur->getX(),tcur->getY(), tcur->getCursorID() });
         mtx.unlock();
+#endif
         //std::cout << "delete cur  " << tcur->getCursorID() << " (" << tcur->getSessionID() << "/" << tcur->getTuioSourceID() << ")" << std::endl;
         return true;
     }
 
     bool MasterNode::handleInputBuffer() {
+#ifdef WITH_TUIO
         if (mtx.try_lock()) {
             //std::cout << "DEBUG: working on input with size " << inputBuffer.size() << std::endl;
             for (int i = 0; i < inputBuffer.size(); i++) {
@@ -338,5 +347,7 @@ namespace viscom {
             std::cout << "could not lock" << std::endl;
             return false;
         }
+#endif
+        return true;
     }
 }
