@@ -41,6 +41,8 @@ namespace viscom {
 
     void ApplicationNodeImplementation::InitOpenGL() {
 
+        screenfilling_quad_.init(GetApplication()->GetGPUProgramManager());
+
         /* Init mesh pool (mesh and shader resources need to be loaded on all nodes) */
 
         caustics = std::move(GetTextureManager().GetResource("/textures/caustics.png"));
@@ -151,7 +153,7 @@ namespace viscom {
         terrainShader_ = GetApplication()->GetGPUProgramManager().GetResource("underwater",
             std::initializer_list<std::string>{ "underwater.vert", "underwater.frag" });
         waterMesh_ = new PostProcessingMesh(
-            GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/newModels/desertWithDetail.obj"),
+            GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/newModels/desert.obj"),
             terrainShader_);
         
 
@@ -163,11 +165,6 @@ namespace viscom {
 
         waterMesh_->scale = glm::vec3(0.5f,0.5f,0.5f);
 
-        /* Allocate offscreen framebuffer for shadow map */
-
-        shadowMap_ = new ShadowMap(1024, 1024);
-        shadowMap_->setLightMatrix(glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0), glm::vec3(0, 1, 0)));
-
         /* Init update manager */
         updateManager_.AddUpdateable(outerInfluence_);
 
@@ -178,6 +175,11 @@ namespace viscom {
         glm::vec3 diffuse = glm::vec3(0.4f, 0.4f, 0.4f);
         glm::vec3 specular = glm::vec3(0.7f, 0.7f, 0.7f);
         lightInfo->sun = new DirLight(ambient,diffuse,specular,direction);
+        /* Allocate offscreen framebuffer for shadow map */
+        sm_ = new GPUBuffer::Tex{ 0, GL_DEPTH_ATTACHMENT, GL_DEPTH_COMPONENT32F, GL_DEPTH_COMPONENT, GL_FLOAT };
+        sm_fbo_ = new GPUBuffer(1024, 1024, { sm_ });
+        sm_lightmatrix_ = glm::ortho(/*left*/-10.0f, /*right*/10.0f, /*bot*/-10.0f, /*top*/10.0f, 0.1f, 60.0f) *
+            glm::lookAt(-direction, glm::vec3(0, 0, -4), glm::vec3(0, 1, 0));
 
         ambient = glm::vec3(0.01f, 0.01f, 0.01f);
         diffuse = glm::vec3(0.9f, 0.1f, 0.1f);
@@ -243,33 +245,35 @@ namespace viscom {
             glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         });
-
-        shadowMap_->DrawToFBO([&]() {
-            glClearDepth(1.0f);
-            glClear(GL_DEPTH_BUFFER_BIT);
-        });
     }
 
     void ApplicationNodeImplementation::DrawFrame(FrameBuffer& fbo)
     {
-        //TODO Before the first draw there is already a framebuffer error (but seems to work anyway so far)
-        //GLenum e;
-        //e = glGetError(); printf("%x\n", e);
+
+        //GetApplication()->GetEngine()->setNearAndFarClippingPlanes(0.1f, 60.0f);
 
 
         glm::mat4 viewProj = GetCamera()->GetViewPerspectiveMatrix();
+
         for (int i = 0; i < min(5,outerInfPositions_.size()); i++) {
             glm::mat4 tmp = outerInfPositions_[i];
             lightInfo->infLightPos[i] = glm::vec3(tmp[3][0], tmp[3][1], tmp[3][2]);
         }
-        updateSourcePos(outerInfluence_->MeshComponent->sourcePositions_);
-        glm::vec3 viewPos = GetCamera()->GetPosition();
-        //TODO Is the engine matrix really needed here?
-        glm::mat4 lightspace = shadowMap_->getLightMatrix();
-        //shadowMap_->DrawToFBO([&]() {
-        //    meshpool_.renderAllMeshesExcept(lightspace, GridCell::OUTER_INFLUENCE, 1, (render_mode_ == RenderMode::DBG) ? 1 : 0,lightInfo,viewPos);
-        //});
 
+        updateSourcePos(outerInfluence_->MeshComponent->sourcePositions_);
+
+        glm::vec3 viewPos = GetCamera()->GetPosition();
+
+        // render to shadow map
+        glBindFramebuffer(GL_FRAMEBUFFER, sm_fbo_->id());
+        glClearDepth(1.0f);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        glViewport(0, 0, 1024, 1024);
+        glDepthMask(GL_TRUE);
+        glEnable(GL_DEPTH_TEST);
+        glDepthFunc(GL_LESS);
+        DrawScene(viewPos, sm_lightmatrix_, sm_lightmatrix_, lightInfo);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         currentOffscreenBuffer->DrawToFBO([&]()
         {
@@ -278,12 +282,14 @@ namespace viscom {
                                      // make sure we clear the framebuffer's content
             glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            DrawScene(viewPos, lightspace, viewProj, lightInfo);
+            DrawScene(viewPos, sm_lightmatrix_, viewProj, lightInfo);
         });
 
 
 
         fbo.DrawToFBO([&]() {
+            //screenfilling_quad_.render(sm_->id); return;
+
             glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
                                       // clear all relevant buffers
             glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set clear color to white (not really necessery actually, since we won't be able to see behind the quad anyways)
@@ -304,8 +310,8 @@ namespace viscom {
 
     void ApplicationNodeImplementation::DrawScene(glm::vec3 viewPos, glm::mat4 lightspace, glm::mat4 viewProj, LightInfo *lightInfo)
     {
-        //backgroundMesh_->render(viewProj, lightspace, shadowMap_->get(), (render_mode_ == RenderMode::DBG) ? 1 : 0);
-        waterMesh_->render(viewProj, lightspace, shadowMap_->get(), caustics->getTextureId(), (render_mode_ == RenderMode::DBG) ? 1 : 0, lightInfo, viewPos);
+        waterMesh_->render(viewProj, lightspace, sm_->id, caustics->getTextureId(), (render_mode_ == RenderMode::DBG) ? 1 : 0, lightInfo, viewPos);
+        
         glEnable(GL_BLEND); glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         meshpool_.renderAllMeshes(viewProj, 0, (render_mode_ == RenderMode::DBG) ? 1 : 0, lightInfo, viewPos);
         RenderOuterInfluence(viewPos, viewProj, lightInfo);
@@ -393,7 +399,8 @@ namespace viscom {
     void ApplicationNodeImplementation::CleanUp()
     {
         meshpool_.cleanup();
-        delete shadowMap_;
+        delete sm_;
+        delete sm_fbo_;
         //delete backgroundMesh_;
         delete waterMesh_;
         delete lightInfo->sun;

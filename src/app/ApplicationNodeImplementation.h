@@ -112,6 +112,10 @@ namespace viscom {
         /* Shadow map is basically an offscreen framebuffer */
 		ShadowMap* shadowMap_; // hold shadow map framebuffer on all nodes
 
+        GPUBuffer::Tex* sm_;
+        GPUBuffer* sm_fbo_;
+        glm::mat4 sm_lightmatrix_;
+
         /* Shadow receiving meshes are (non-instanced) meshes with a shader reading from shadow maps */
 		ShadowReceivingMesh* backgroundMesh_; // hold static mesh on all nodes
 
@@ -165,7 +169,7 @@ namespace viscom {
 				glBindVertexArray(0);
 				shader = mgr.GetResource("applyTextureToQuad",
 					std::initializer_list<std::string>{ "applyTextureToQuad.vert", "applyTextureToQuad.frag" });
-				texture_uniform_location = shader->getUniformLocation("texture");
+				texture_uniform_location = shader->getUniformLocation("tex");
 			}
 			void render(GLuint texture) const {
 				glUseProgram(shader->getProgramId());
@@ -173,8 +177,8 @@ namespace viscom {
 				glDisable(GL_CULL_FACE);
 				glActiveTexture(GL_TEXTURE0);
 				glBindTexture(GL_TEXTURE_2D, texture);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 				float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };

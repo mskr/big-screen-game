@@ -81,14 +81,20 @@ in vec4 vPosLightSpace;
 
 out vec4 color;
 
-const float DEPTH_BIAS = 0.00001;
+const float DEPTH_BIAS = 0.0001;
 
+// Calc visibility of this fragment in lightspace using PCF with filter size 3
 float visibility(vec3 thisFragment) {
 	float v = 0.0;
 	vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
-	for(int x = -1; x <= 1; x++)
-		for(int y = -1; y <= 1; y++)
-			if(texture(shadowMap, thisFragment.xy + vec2(x,y) * texelSize).r > thisFragment.z) v += 1.0;
+	for(int x = -1; x <= 1; x++) {
+		for(int y = -1; y <= 1; y++) {
+            float closestZ = texture(shadowMap, thisFragment.xy + vec2(x,y) * texelSize).r;
+			if(thisFragment.z - DEPTH_BIAS < closestZ) {
+                v += 1.0;
+            }
+        }
+    }
 	return v/9.0;
 }
 
@@ -97,9 +103,6 @@ void main() {
 		color = vec4(1);
 		return;
 	}
-	vec3 thisFragment = vPosLightSpace.xyz / vPosLightSpace.w * 0.5 + 0.5;
-
-
 	//color = texture(materal.diffuseTex, waterTexCoords);
 	//color = texture(material.diffuseTex, vTexCoords);
 
@@ -114,9 +117,6 @@ void main() {
 		result += CalcPointLight(sourceLights[i], norm, vPosition, viewDir); 
 	}
     color = vec4(result,1);
-
-
-
 
     // caustic effect movement
 
@@ -162,7 +162,7 @@ vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir){
 	vec3 ambient = light.ambient * material.diffuse;
 	vec3 diffuse = light.diffuse * diff * material.diffuse;
 	vec3 specular = light.specular * spec * material.specular;
-	return (ambient + diffuse + specular);
+	return ambient + (diffuse + specular) * visibility(vPosLightSpace.xyz / vPosLightSpace.w * 0.5 + 0.5);
 }
 
 vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
@@ -184,5 +184,5 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
     ambient  *= attenuation;
     diffuse  *= attenuation;
     specular *= attenuation;
-    return (ambient + diffuse + specular);
+    return ambient + (diffuse + specular) * visibility(vPosLightSpace.xyz / vPosLightSpace.w * 0.5 + 0.5);
 } 
