@@ -380,13 +380,14 @@ class PostProcessingMesh : public SimpleGameMesh {
 	GLint uloc_lightspace_matrix_;
 	GLint uloc_shadow_map_;
 	GLint uloc_time_;
+    GLint uloc_caustics_;
 	GLfloat time_;
 public:
     PostProcessingMesh(std::shared_ptr<viscom::Mesh> mesh, std::shared_ptr<viscom::GPUProgram> shader);
 	void setTime(double time) {
 		time_ = (GLfloat) time;
 	}
-	void render(glm::mat4& vp, glm::mat4& lightspace, GLuint shadowMap, GLint isDebugMode = 0, LightInfo* lightInfo = nullptr, glm::vec3& viewPos = glm::vec3(0, 0, 4)) ;
+	void render(glm::mat4& vp, glm::mat4& lightspace, GLuint shadowMap, GLuint caustics, GLint isDebugMode = 0, LightInfo* lightInfo = nullptr, glm::vec3& viewPos = glm::vec3(0, 0, 4)) ;
 };
 
 /* Simple synchronized mesh class extending MeshBase.

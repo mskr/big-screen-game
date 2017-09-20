@@ -18,7 +18,6 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/detail/type_mat.hpp>
 #include <glm/detail/_vectorize.hpp>
-#include <glm/detail/_vectorize.hpp>
 #include "../../extern/fwcore/extern/assimp/code/ColladaHelper.h"
 
 namespace viscom {
@@ -43,6 +42,8 @@ namespace viscom {
     void ApplicationNodeImplementation::InitOpenGL() {
 
         /* Init mesh pool (mesh and shader resources need to be loaded on all nodes) */
+
+        caustics = std::move(GetTextureManager().GetResource("/textures/caustics.png"));
 
         instanceShader_ = GetApplication()->GetGPUProgramManager().GetResource("renderMeshInstance",
             std::initializer_list<std::string>{ "renderMeshInstance.vert", "renderMeshInstance.frag" });
@@ -117,6 +118,14 @@ namespace viscom {
             glUniform1i(uloc, 1);
         });
 
+        meshpool_.updateUniformEveryFrame("causticTex", [&](GLint uloc) {
+            glActiveTexture(GL_TEXTURE2);
+            glBindTexture(GL_TEXTURE_2D, caustics->getTextureId());
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+            glUniform1i(uloc, 2);
+        });
+
 
         /* Init outer influence */
         std::shared_ptr<viscom::GPUProgram> outerInfShader = GetApplication()->GetGPUProgramManager().GetResource("stuff",
@@ -145,6 +154,13 @@ namespace viscom {
             GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/newModels/desertWithDetail.obj"),
             terrainShader_);
         
+
+        //std::shared_ptr<Texture> texCaustics = GetApplication()->GetTextureManager().GetResource("/textures/caustics.png");
+        //glUseProgram(terrainShader_->getProgramId);
+
+
+
+
         waterMesh_->scale = glm::vec3(0.5f,0.5f,0.5f);
 
         /* Allocate offscreen framebuffer for shadow map */
@@ -289,7 +305,7 @@ namespace viscom {
     void ApplicationNodeImplementation::DrawScene(glm::vec3 viewPos, glm::mat4 lightspace, glm::mat4 viewProj, LightInfo *lightInfo)
     {
         //backgroundMesh_->render(viewProj, lightspace, shadowMap_->get(), (render_mode_ == RenderMode::DBG) ? 1 : 0);
-        waterMesh_->render(viewProj, lightspace, shadowMap_->get(), (render_mode_ == RenderMode::DBG) ? 1 : 0, lightInfo, viewPos);
+        waterMesh_->render(viewProj, lightspace, shadowMap_->get(), caustics->getTextureId(), (render_mode_ == RenderMode::DBG) ? 1 : 0, lightInfo, viewPos);
         glEnable(GL_BLEND); glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         meshpool_.renderAllMeshes(viewProj, 0, (render_mode_ == RenderMode::DBG) ? 1 : 0, lightInfo, viewPos);
         RenderOuterInfluence(viewPos, viewProj, lightInfo);

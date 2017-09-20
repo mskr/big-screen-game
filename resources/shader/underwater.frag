@@ -2,20 +2,21 @@
 
 
 // Speed of water shader
-#define speed 10
+#define speed 0.6f
 
 // the amount of shearing (shifting of a single column or row)
 // 1.0 = entire screen height offset (to both sides, meaning it's 2.0 in total)
-#define xDistMag 0.05
-#define yDistMag 0.05
+#define xDistMag 0.005
+#define yDistMag 0.005
 
 // cycle multiplier for a given screen height
 // 2*PI = you see a complete sine wave from top..bottom
-#define xSineCycles 6.28 /10
-#define ySineCycles 6.28 /10
+#define xSineCycles 6.28 
+#define ySineCycles 6.28 
+
+uniform sampler2D causticTex;
 
 /*Directional Lights Parts*/
-uniform vec3 viewPos;
 
 struct DirLight{
 	vec3 direction;
@@ -46,6 +47,10 @@ uniform PointLight outerInfLights[NR_OUT_INF_LIGHTS];
 uniform PointLight sourceLights[MAX_NR_SOURCE_LIGHTS];
 uniform int numSourceLights;
 vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir); 
+
+
+
+
 /*Material attributes*/
 struct Material {
     float alpha;
@@ -66,6 +71,8 @@ uniform sampler2D shadowMap;
 uniform float time;
 
 uniform int isDebugMode;
+
+uniform vec3 viewPos;
 
 in vec3 vPosition;
 in vec3 vNormal;
@@ -93,26 +100,6 @@ void main() {
 	vec3 thisFragment = vPosLightSpace.xyz / vPosLightSpace.w * 0.5 + 0.5;
 
 
-
-	// underwater effect
-
-	vec2 waterTexCoords = vTexCoords;
-	waterTexCoords /= 2;
-	
-    // the value for the sine has 2 inputs:
-    // 1. the time, so that it animates.
-    // 2. the y-row, so that ALL scanlines do not distort equally.
-	float localtime = speed * time;
-    float xAngle = time + waterTexCoords.y * ySineCycles;
-    float yAngle = time + waterTexCoords.x * xSineCycles;
-
-    vec2 distortOffset = 
-        vec2(sin(xAngle), sin(yAngle)) * // amount of shearing
-        vec2(xDistMag,yDistMag); // magnitude adjustment
-
-	waterTexCoords += distortOffset; 	
-
-
 	//color = texture(materal.diffuseTex, waterTexCoords);
 	//color = texture(material.diffuseTex, vTexCoords);
 
@@ -128,15 +115,40 @@ void main() {
 	}
     color = vec4(result,1);
 
-    // blue fog for the underwater effect
-    color += pow(distance(vPosition,viewPos)*0.8f,4) * 0.001f * vec4(0.0f,0.15f,0.25f,0.0f);
 
 
-	// color.rgb = vec3(0.0,0.1,0.3) + color.rgb * vec3(0.5,0.6,0.1);
-	// color *= visibility(thisFragment);
-//	if(texture(shadowMap, thisFragment.xy).r < (thisFragment.z - DEPTH_BIAS))
-//		color *= 0.5;
 
+    // caustic effect movement
+
+    vec2 waterTexCoords = vPosition.xy/18;
+	//waterTexCoords /= 2; // Use this to increase/decrease caustic texture size
+	
+    // the value for the sine has 2 inputs:
+    // 1. the time, so that it animates.
+    // 2. the y-row, so that ALL scanlines do not distort equally.
+	float localtime = speed * time;
+    float xAngle = localtime + waterTexCoords.y * ySineCycles;
+    float yAngle = localtime + waterTexCoords.x * xSineCycles;
+
+    vec2 distortOffset = 
+        vec2(sin(xAngle), sin(yAngle)) * // amount of shearing
+        vec2(xDistMag,yDistMag); // magnitude adjustment
+
+	waterTexCoords += distortOffset; 	
+
+    // distance calculation for fading
+    float diste = 0.1 * exp((distance(vPosition,viewPos))*0.4); 
+
+    // add caustics for the underwater effect
+    color += texture2D(causticTex,waterTexCoords*10)*abs(distortOffset.x)*5 *(4/diste);
+
+    // add underwater fog
+    color += diste * vec4(-0.09f,-0.04f,-0.04f,1.0f) + vec4(0.0f,0.20f,0.20f,0.0f); 
+
+    //color += diste * vec4(0.0f,0.2f,0.25f,0.0f); // make it more blue and green
+    //color += pow(distance(vPosition,viewPos)*0.8f,4) * 0.001f * vec4(0.0f,0.15f,0.25f,0.0f);
+    //float tmpcol = max(1.0f,pow(distance(vPosition,viewPos)*0.8f,4) * 0.01f);
+    //color = (color / tmpcol) + vec4(0.0f,0.2f,0.3f,0.0f) * tmpcol * 0.07f + vec4(0.0f,0.1f,0.25f,0.0f);// * vec4(0.0f,0.15f,0.25f,0.0f);
 }
 
 vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir){
