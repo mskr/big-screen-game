@@ -169,7 +169,7 @@ namespace viscom {
 				glBindVertexArray(0);
 				shader = mgr.GetResource("applyTextureToQuad",
 					std::initializer_list<std::string>{ "applyTextureToQuad.vert", "applyTextureToQuad.frag" });
-				texture_uniform_location = shader->getUniformLocation("texture");
+				texture_uniform_location = shader->getUniformLocation("tex");
 			}
 			void render(GLuint texture) const {
 				glUseProgram(shader->getProgramId());
