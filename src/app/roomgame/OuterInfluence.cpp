@@ -154,7 +154,10 @@ namespace roomgame {
             posDiff_ = targetPosition_ - currentPos;
             distance_ = glm::length(posDiff_);
             mode_ = RETREAT;
-            Grid->buildAt(targetCell_->getCol(),targetCell_->getRow(),GridCell::SOURCE,InteractiveGrid::BuildMode::Additive);
+            auto bs = targetCell_->getBuildState();
+            Grid->buildAt(targetCell_->getCol(), targetCell_->getRow(), GridCell::SOURCE, InteractiveGrid::BuildMode::Additive);
+            Grid->buildAt(targetCell_->getCol(), targetCell_->getRow(), GridCell::WALL, InteractiveGrid::BuildMode::RemoveSpecific);
+            bs = targetCell_->getBuildState();
             const auto wPos = Grid->getWorldCoordinates(targetCell_->getPosition());
             MeshComponent->sourcePositions_.push_back(wPos);
         }

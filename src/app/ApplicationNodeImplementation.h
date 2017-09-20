@@ -61,6 +61,7 @@ namespace viscom {
         std::vector<FrameBuffer> offscreenBuffers;
         const FrameBuffer* currentOffscreenBuffer;
         std::unique_ptr<FullscreenQuad> fullScreenQuad;
+        bool debugModels = true;
 
     protected:
 
