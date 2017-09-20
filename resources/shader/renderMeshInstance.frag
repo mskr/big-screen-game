@@ -168,7 +168,7 @@ void main() {
 
     // caustic effect movement
 
-	vec2 waterTexCoords = cellCoords;
+	vec2 waterTexCoords = vPosition.xy / 18;
 	//waterTexCoords /= 2; // Use this to increase/decrease caustic texture size
 	
     // the value for the sine has 2 inputs:

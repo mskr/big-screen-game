@@ -120,7 +120,7 @@ void main() {
 
     // caustic effect movement
 
-	vec2 waterTexCoords = vTexCoords;
+    vec2 waterTexCoords = vPosition.xy/18;
 	//waterTexCoords /= 2; // Use this to increase/decrease caustic texture size
 	
     // the value for the sine has 2 inputs:
@@ -149,13 +149,6 @@ void main() {
     //color += pow(distance(vPosition,viewPos)*0.8f,4) * 0.001f * vec4(0.0f,0.15f,0.25f,0.0f);
     //float tmpcol = max(1.0f,pow(distance(vPosition,viewPos)*0.8f,4) * 0.01f);
     //color = (color / tmpcol) + vec4(0.0f,0.2f,0.3f,0.0f) * tmpcol * 0.07f + vec4(0.0f,0.1f,0.25f,0.0f);// * vec4(0.0f,0.15f,0.25f,0.0f);
-
-
-	// color.rgb = vec3(0.0,0.1,0.3) + color.rgb * vec3(0.5,0.6,0.1);
-	// color *= visibility(thisFragment);
-//	if(texture(shadowMap, thisFragment.xy).r < (thisFragment.z - DEPTH_BIAS))
-//		color *= 0.5;
-
 }
 
 vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir){
