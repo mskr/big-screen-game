@@ -148,12 +148,9 @@ namespace viscom {
 
         /* Load other meshes */
 
-        //backgroundMesh_ = new ShadowReceivingMesh(
-        //    GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/textured_4vertexplane/textured_4vertexplane.obj"),
-        //    GetApplication()->GetGPUProgramManager().GetResource("applyTextureAndShadow",
-        //		std::initializer_list<std::string>{ "applyTextureAndShadow.vert", "applyTextureAndShadow.frag" }));
         terrainShader_ = GetApplication()->GetGPUProgramManager().GetResource("underwater",
             std::initializer_list<std::string>{ "underwater.vert", "underwater.frag" });
+
         std::string desertVersion = "";
 #ifdef _DEBUG
         desertVersion = "/models/roomgame_models/newModels/desert.obj";
@@ -164,12 +161,6 @@ namespace viscom {
             GetApplication()->GetMeshManager().GetResource(desertVersion),
             terrainShader_);
         
-
-        //std::shared_ptr<Texture> texCaustics = GetApplication()->GetTextureManager().GetResource("/textures/caustics.png");
-        //glUseProgram(terrainShader_->getProgramId);
-
-
-
 
         waterMesh_->scale = glm::vec3(0.5f,0.5f,0.5f);
 
@@ -201,41 +192,21 @@ namespace viscom {
         lightInfo->infLightPos.push_back(glm::vec3(0));
         lightInfo->infLightPos.push_back(glm::vec3(0));
         lightInfo->infLightPos.push_back(glm::vec3(0));
-//        lightInfo->sourceLightsPos.push_back(glm::vec3(-.5f, -.5f, 0.2f));
-//        lightInfo->sourceLightsPos.push_back(glm::vec3(.5f, .5f, 0.2f));
-// framebuffer configuration
-// -------------------------
+
+        // framebuffer configuration
+        // -------------------------
         FrameBufferTextureDescriptor texDesc(GL_RGBA);
         RenderBufferDescriptor bufDesc(GL_DEPTH24_STENCIL8);
         std::vector<RenderBufferDescriptor> renVec;
         std::vector<FrameBufferTextureDescriptor> texVec;
         texVec.push_back(texDesc);
         renVec.push_back(bufDesc);
-        //        texVec.push_back(texDesc);
         FrameBufferDescriptor desc{texVec,renVec};
-        //desc.texDesc_ = texVec;
         offscreenBuffers = CreateOffscreenBuffers(desc);
         currentOffscreenBuffer = GetApplication()->SelectOffscreenBuffer(offscreenBuffers);
         fullScreenQuad = CreateFullscreenQuad("postProcessing.frag");
 
-        //// create a color attachment texture
-        //glGenTextures(1, &textureColorbuffer);
-        //glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
-        //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 600, 800, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-        //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        //glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorbuffer, 0);
-        //// create a renderbuffer object for depth and stencil attachment (we won't be sampling these)
-        //unsigned int rbo;
-        //glGenRenderbuffers(1, &rbo);
-        //glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-        //glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 600, 800); // use a single renderbuffer object for both a depth AND stencil buffer.
-        //glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo); // now actually attach it
-        //                                                                                              // now that we actually created the framebuffer and added all attachments we want to check if it is actually complete now
-        //if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        //    std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
-        //glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        //std::cout << "lalala" << std::endl;
+
 
     }
 
@@ -257,10 +228,6 @@ namespace viscom {
 
     void ApplicationNodeImplementation::DrawFrame(FrameBuffer& fbo)
     {
-
-        //GetApplication()->GetEngine()->setNearAndFarClippingPlanes(0.1f, 60.0f);
-
-
         glm::mat4 viewProj = GetCamera()->GetViewPerspectiveMatrix();
 
         for (int i = 0; i < min(5,outerInfPositions_.size()); i++) {
@@ -330,14 +297,11 @@ namespace viscom {
     void ApplicationNodeImplementation::RenderOuterInfluence(glm::vec3 viewPos, glm::mat4 viewProj, LightInfo* lightInfo)
     {
         const auto influPos = outerInfluence_->MeshComponent->model_matrix_;
-        int outerInfInstances;
-        float scaleStep;
+        int outerInfInstances = 250;
+        float scaleStep = 0.004f;
 #ifdef _DEBUG
         outerInfInstances = 20;
         scaleStep = 0.01f;
-#else
-        outerInfInstances = 250;
-        scaleStep = 0.004f;
 #endif
         if (outerInfPositions_.size() > outerInfInstances) {
             outerInfPositions_.resize(outerInfInstances);
