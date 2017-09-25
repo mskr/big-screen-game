@@ -12,6 +12,7 @@ GPUCellularAutomaton::GPUCellularAutomaton(AutomatonGrid* grid, double transitio
     tmp_client_buffer_(0),
     framebuffer_pair_{0, 0}
 {
+    DEFAULT_TRANSITION_TIME = transition_time;
     grid_->setCellularAutomaton(this);
 }
 
@@ -191,4 +192,14 @@ size_t GPUCellularAutomaton::getGridBufferElements() {
 
 roomgame::GRID_STATE_ELEMENT* GPUCellularAutomaton::getGridBuffer() {
     return tmp_client_buffer_;
+}
+
+double GPUCellularAutomaton::getTransitionTime()
+{
+    return transition_time_;
+}
+
+void GPUCellularAutomaton::reset()
+{
+    transition_time_ = DEFAULT_TRANSITION_TIME;
 }

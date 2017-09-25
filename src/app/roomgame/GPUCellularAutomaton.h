@@ -28,6 +28,7 @@ namespace roomgame {
  *  => When user changed something, grid calls updateCell on automaton.
 */
 class GPUCellularAutomaton {
+    double DEFAULT_TRANSITION_TIME = 3.0f;
 protected:
     AutomatonGrid* grid_;
     std::shared_ptr<viscom::GPUProgram> shader_;
@@ -55,6 +56,7 @@ public:
     void cleanup();
     //Setter
     void setTransitionTime(double);
+
     //Getter
     GLfloat getTimeDeltaNormalized();
     GLuint getLatestTexture();
@@ -63,6 +65,10 @@ public:
     size_t getGridBufferSize(); // "grid buffer" refers to automaton state storage
     size_t getGridBufferElements();
     roomgame::GRID_STATE_ELEMENT* getGridBuffer();
+    double getTransitionTime();
+
+    //reset
+    void reset();
 };
 
 #endif

@@ -32,7 +32,8 @@ namespace viscom {
         last_grid_state_texture_(roomgame::GRID_STATE_TEXTURE),
         camera_(glm::vec3(0,0,4), (viscom::CameraHelper&)(*GetCamera()))
     {
-        outerInfluence_ = std::make_shared<roomgame::OuterInfluence>();
+        sourceLightManager_ = std::make_shared<roomgame::SourceLightManager>();
+        outerInfluence_ = std::make_shared<roomgame::OuterInfluence>(sourceLightManager_);
     }
 
     ApplicationNodeImplementation::~ApplicationNodeImplementation() = default;
@@ -50,6 +51,7 @@ namespace viscom {
         instanceShader_ = GetApplication()->GetGPUProgramManager().GetResource("renderMeshInstance",
             std::initializer_list<std::string>{ "renderMeshInstance.vert", "renderMeshInstance.frag" });
 
+        sourceLightManager_->instanceShader_ = instanceShader_;
         meshpool_.loadShader(GetApplication()->GetGPUProgramManager(),instanceShader_);
 
         meshpool_.addMesh({ GridCell::INSIDE_ROOM },
@@ -150,7 +152,7 @@ namespace viscom {
 
         terrainShader_ = GetApplication()->GetGPUProgramManager().GetResource("underwater",
             std::initializer_list<std::string>{ "underwater.vert", "underwater.frag" });
-
+        sourceLightManager_->terrainShader_ = terrainShader_;
         std::string desertVersion = "";
 #ifdef _DEBUG
         desertVersion = "/models/roomgame_models/newModels/desert.obj";
@@ -183,7 +185,7 @@ namespace viscom {
         ambient = glm::vec3(0.01f, 0.01f, 0.01f);
         diffuse = glm::vec3(0.9f, 0.1f, 0.1f);
         specular = glm::vec3(1.0f, .1f, .1f);
-        lightInfo->outerInfLights = new PointLight(ambient, diffuse, specular,1.0f,20.0f,30.0f );
+        lightInfo->outerInfLights = new PointLight(ambient, diffuse, specular,1.0f,0.8f,1.5f );
         diffuse = glm::vec3(0.1f, 0.1f, 0.9f);
         specular = glm::vec3(.1f, .1f, 1.0f);
         lightInfo->sourceLights = new PointLight(ambient, diffuse, specular, 1.0f, 0.8f, 1.5f);
@@ -235,7 +237,7 @@ namespace viscom {
             lightInfo->infLightPos[i] = glm::vec3(tmp[3][0], tmp[3][1], tmp[3][2]);
         }
 
-        updateSourcePos(outerInfluence_->MeshComponent->sourcePositions_);
+        sourceLightManager_->updateSourcePos();
 
         glm::vec3 viewPos = GetCamera()->GetPosition();
 
@@ -320,29 +322,6 @@ namespace viscom {
             outerInfluence_->MeshComponent->render(viewProj, 1, nullptr, glm::mat4(1), false, lightInfo, viewPos, (render_mode_ == RenderMode::DBG) ? 1 : 0);
         }
         outerInfluence_->MeshComponent->model_matrix_ = influPos;
-    }
-
-
-
-    std::string outerInfString = "outerInfLights";
-    std::string sourceString = "sourceLights";
-
-    void ApplicationNodeImplementation::updateSourcePos(std::vector<glm::vec3> sourcePositions) {
-        glUseProgram(instanceShader_->getProgramId());
-        uploadSourcePos(instanceShader_, sourcePositions);
-        glUseProgram(terrainShader_->getProgramId());
-        uploadSourcePos(terrainShader_, sourcePositions);
-    }
-
-    void ApplicationNodeImplementation::uploadSourcePos(std::shared_ptr<viscom::GPUProgram> shad, std::vector<glm::vec3> sourcePositions) {
-        GLint lightNum = (GLint)min(sourcePositions.size(), 10);
-        glUniform1i(shad->getUniformLocation((std::string)("numSourceLights")), lightNum);
-        for (int i = 0; i < lightNum; i++) {
-            std::string number = "" + std::to_string(i);
-            std::string loc = sourceString + "[" + number + "].position";
-            GLint uniLoc = shad->getUniformLocation(loc);
-            glUniform3fv(uniLoc, 1, glm::value_ptr(sourcePositions[i]));
-        }
     }
 
     void ApplicationNodeImplementation::uploadGridStateToGPU() {

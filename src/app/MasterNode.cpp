@@ -16,7 +16,7 @@ namespace viscom {
     MasterNode::MasterNode(ApplicationNodeInternal* appNode) :
         ApplicationNodeImplementation{ appNode },
         grid_(GRID_COLS_, GRID_ROWS_, GRID_HEIGHT_, &meshpool_),
-        cellular_automaton_(&grid_, 0.2),
+        cellular_automaton_(&grid_, 3.0f),
         interaction_mode_(InteractionMode::GRID)
     {
         grid_state_ = {};
@@ -34,7 +34,6 @@ namespace viscom {
         grid_.uploadVertexData(); // ...for debug purposes
 
         cellular_automaton_.init(GetApplication()->GetGPUProgramManager());
-
         outerInfluence_->Grid = &grid_;
         glm::vec3 gridPos = grid_.grid_center_;
         glm::vec2 pos = GetCirclePos(glm::vec2(gridPos.y, gridPos.z), range, viewAngle);
@@ -47,6 +46,7 @@ namespace viscom {
     /* Sync step 1: Master sets values of shared objects to the values of corresponding non-shared objects */
     void MasterNode::PreSync() {
         ApplicationNodeImplementation::PreSync();
+        sourceLightManager_->preSync();
         outerInfluence_->MeshComponent->preSync();
         meshpool_.preSync();
         synchronized_grid_translation_.setVal(grid_.getTranslation());
@@ -65,6 +65,7 @@ namespace viscom {
     */
     void MasterNode::EncodeData() {
         ApplicationNodeImplementation::EncodeData();
+        sourceLightManager_->encode();
         outerInfluence_->MeshComponent->encode();
         meshpool_.encode();
         sgct::SharedData::instance()->writeObj<glm::vec3>(&synchronized_grid_translation_);
@@ -82,6 +83,7 @@ namespace viscom {
     */
     void MasterNode::UpdateSyncedInfo() {
         ApplicationNodeImplementation::UpdateSyncedInfo();
+        sourceLightManager_->updateSyncedMaster();
         outerInfluence_->MeshComponent->updateSyncedMaster();
         meshpool_.updateSyncedMaster();
         // Of course the following variables are redundant on master 
@@ -132,6 +134,10 @@ namespace viscom {
     }
 
     void MasterNode::Draw2D(FrameBuffer& fbo) {
+        int attackChanceGrowth = outerInfluence_->getAttackChanceGrowth();
+        float outInfluenceSpeed = outerInfluence_->getBaseSpeed();
+        float innerInfluenceTransition = (float) cellular_automaton_.getTransitionTime();
+
         fbo.DrawToFBO([&]() {
             ImGui::SetNextWindowPos(ImVec2(700, 60), ImGuiSetCond_FirstUseEver);
             ImGui::SetNextWindowSize(ImVec2(550, 680), ImGuiSetCond_FirstUseEver);
@@ -141,6 +147,41 @@ namespace viscom {
                 ImGui::Text("Interaction mode: %s", (interaction_mode_ == GRID) ? "GRID" :
                     ((interaction_mode_ == AUTOMATON) ? "AUTOMATON" : "CAMERA"));
             }
+
+            ImGui::Spacing();
+            if (ImGui::CollapsingHeader("Settings"))
+            {
+                ImGui::Spacing();
+                ImGui::Text("Outer Influence");
+                ImGui::Spacing();
+                if (ImGui::SliderInt("Attack chance", &attackChanceGrowth, 1, 10, "%.0f%%")) {
+                    outerInfluence_->setAttackChanceGrowth(attackChanceGrowth);
+                }
+
+                ImGui::Spacing();
+                if (ImGui::SliderFloat("Speed", &outInfluenceSpeed, 0.2f, 1.0f)) {
+                    outerInfluence_->setBaseSpeed(outInfluenceSpeed);
+                }
+
+                ImGui::Spacing();
+                ImGui::Text("Inner Influence");
+                ImGui::Spacing();
+                if (ImGui::SliderFloat("Transition time", &innerInfluenceTransition, 0.2f, 10.0f)) {
+                    cellular_automaton_.setTransitionTime(glm::clamp(innerInfluenceTransition,0.2f,10.0f));
+                }
+
+                ImGui::Spacing();
+                if (ImGui::Button("Reset Values")) {
+                    resetPlaygroundValues();
+                }
+            }
+
+            ImGui::Spacing();
+            if (ImGui::Button("Reset Playground")) {
+                resetPlaygroundValues();
+                reset();
+            }
+
             ImGui::End();
         });
 
@@ -349,5 +390,20 @@ namespace viscom {
         }
 #endif
         return true;
+    }
+
+    void MasterNode::reset() {
+        grid_.forEachCell([&](GridCell *cell) {
+            grid_.buildAt(cell->getCol(), cell->getRow(), GridCell::EMPTY, InteractiveGrid::BuildMode::Replace);
+            grid_.updateHealthPoints(cell, GridCell::MAX_HEALTH);
+            grid_.reset();
+        });
+        sourceLightManager_->sourcePositions_.clear();
+    }
+
+    void MasterNode::resetPlaygroundValues()
+    {
+        outerInfluence_->resetValues();
+        cellular_automaton_.reset();
     }
 }

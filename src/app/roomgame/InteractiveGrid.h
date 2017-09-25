@@ -48,7 +48,6 @@ public:
 
 
     // Helper functions
-    GridCell* InteractiveGrid::getClosestWallCell(glm::vec2 pos);
     void forEachCell(std::function<void(GridCell*)> callback);
     void forEachCell(std::function<void(GridCell*,bool*)> callback);
     void forEachCellInRange(GridCell* leftLower, GridCell* rightUpper, std::function<void(GridCell*)> callback);

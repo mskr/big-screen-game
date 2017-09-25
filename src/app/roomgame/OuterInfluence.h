@@ -7,21 +7,32 @@ namespace roomgame {
 	class OuterInfluence : public roomgame::IUpdateable
 	{
 	public:
-		OuterInfluence();
+		OuterInfluence(std::shared_ptr<SourceLightManager> sourceLightManager);
 	    virtual ~OuterInfluence();
 
 		// Geerbt über IUpdateable
 	    void Update(double deltaTime) override;
 	    void UpdateSlow(double deltaTime) override;
 
+        // Modify the outer influence on the fly
+        int getAttackChanceGrowth();
+        void setAttackChanceGrowth(int newChance);
+
+        float getBaseSpeed();
+        void setBaseSpeed(float speed);
+
+        void resetValues();
+
         glm::mat4 ViewPersMat;
 		SynchronizedGameMesh* MeshComponent;
 		RoomInteractiveGrid* Grid;
 	private:
+        std::shared_ptr<SourceLightManager> sourceLightManager_;
         float movementType_ = 0; // 0 is patrolling movement, 1 is attacking movement
         float changeSpeed_ = 1.f; // How fast the influence changes its movement pattern
         float speed_;
         float distance_;
+        float baseSpeed_;
         int attackChance_;
         int attackChanceGrowth_;
         std::default_random_engine rndGenerator_;

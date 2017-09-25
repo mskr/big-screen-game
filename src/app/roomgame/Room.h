@@ -25,7 +25,7 @@ public:
     GridCell* leftLowerCorner_;
     GridCell* rightUpperCorner_;
     static const size_t MIN_SIZE = 2;
-    static const size_t MAX_SIZE = 50;
+    static const size_t MAX_SIZE = 80;
 	Room(GridCell* leftLowerCorner, GridCell* rightUpperCorner, InteractiveGrid* grid);
 	~Room();
 	void clear();
