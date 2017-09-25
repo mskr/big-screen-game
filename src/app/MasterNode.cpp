@@ -16,7 +16,7 @@ namespace viscom {
     MasterNode::MasterNode(ApplicationNodeInternal* appNode) :
         ApplicationNodeImplementation{ appNode },
         grid_(GRID_COLS_, GRID_ROWS_, GRID_HEIGHT_, &meshpool_),
-        cellular_automaton_(&grid_, 0.2),
+        cellular_automaton_(&grid_, 3.0f),
         interaction_mode_(InteractionMode::GRID)
     {
         grid_state_ = {};
@@ -134,6 +134,7 @@ namespace viscom {
     void MasterNode::Draw2D(FrameBuffer& fbo) {
         int attackChanceGrowth = outerInfluence_->getAttackChanceGrowth();
         float outInfluenceSpeed = outerInfluence_->getBaseSpeed();
+        float innerInfluenceTransition = (float) cellular_automaton_.getTransitionTime();
 
         fbo.DrawToFBO([&]() {
             ImGui::SetNextWindowPos(ImVec2(700, 60), ImGuiSetCond_FirstUseEver);
@@ -160,6 +161,14 @@ namespace viscom {
                     outerInfluence_->setBaseSpeed(outInfluenceSpeed);
                 }
 
+                ImGui::Spacing();
+                ImGui::Text("Inner Influence");
+                ImGui::Spacing();
+                if (ImGui::SliderFloat("Transition time", &innerInfluenceTransition, 0.2f, 10.0f)) {
+                    cellular_automaton_.setTransitionTime(glm::clamp(innerInfluenceTransition,0.2f,10.0f));
+                }
+
+                ImGui::Spacing();
                 if (ImGui::Button("Reset Values")) {
                     resetPlaygroundValues();
                 }
@@ -393,5 +402,6 @@ namespace viscom {
     void MasterNode::resetPlaygroundValues()
     {
         outerInfluence_->resetValues();
+        cellular_automaton_.reset();
     }
 }
