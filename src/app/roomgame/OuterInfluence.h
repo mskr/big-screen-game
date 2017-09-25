@@ -7,7 +7,7 @@ namespace roomgame {
 	class OuterInfluence : public roomgame::IUpdateable
 	{
 	public:
-		OuterInfluence();
+		OuterInfluence(std::shared_ptr<SourceLightManager> sourceLightManager);
 	    virtual ~OuterInfluence();
 
 		// Geerbt über IUpdateable
@@ -27,6 +27,7 @@ namespace roomgame {
 		SynchronizedGameMesh* MeshComponent;
 		RoomInteractiveGrid* Grid;
 	private:
+        std::shared_ptr<SourceLightManager> sourceLightManager_;
         float movementType_ = 0; // 0 is patrolling movement, 1 is attacking movement
         float changeSpeed_ = 1.f; // How fast the influence changes its movement pattern
         float speed_;

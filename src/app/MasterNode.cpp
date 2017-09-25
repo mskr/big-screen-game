@@ -396,7 +396,7 @@ namespace viscom {
             grid_.updateHealthPoints(cell, GridCell::MAX_HEALTH);
             grid_.reset();
         });
-        outerInfluence_->MeshComponent->sourcePositions_.clear();
+        sourceLightManager_->sourcePositions_.clear();
     }
 
     void MasterNode::resetPlaygroundValues()

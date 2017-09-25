@@ -51,6 +51,7 @@ void RoomInteractiveGrid::handleTouchedCell(int touchID, GridCell* touchedCell) 
                 if (currentHealth >= GridCell::MAX_HEALTH) {
                     buildAt(touchedCell->getCol(), touchedCell->getRow(), GridCell::WALL, InteractiveGrid::BuildMode::Additive);
                     buildAt(touchedCell->getCol(), touchedCell->getRow(), GridCell::SOURCE | GridCell::INFECTED, InteractiveGrid::BuildMode::RemoveSpecific);
+                    sourceLightManager_->DeleteClosestSourcePos(getWorldCoordinates(touchedCell->getPosition()));
                 }
                 
             }

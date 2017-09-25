@@ -43,7 +43,7 @@ struct PointLight{
 };
 #define NR_OUT_INF_LIGHTS 5  
 uniform PointLight outerInfLights[NR_OUT_INF_LIGHTS];
-#define MAX_NR_SOURCE_LIGHTS 10  
+#define MAX_NR_SOURCE_LIGHTS 15  
 uniform PointLight sourceLights[MAX_NR_SOURCE_LIGHTS];
 uniform int numSourceLights;
 vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir); 

@@ -16,6 +16,7 @@
 #include "../Vertices.h"
 #include "sgct.h"
 #include "app\roomgame\LightBase.h"
+#include "SourceLightManager.h"
 
 /* Base class for all meshes rendered by the roomgame.
  * Construct with a vertex class as template parameter (providing CreateVertexBuffer and SetVertexAttributes functions).
@@ -251,7 +252,7 @@ private:
             }
 
             ////source lights
-            for (int i = 0; i < 10; i++) {
+            for (int i = 0; i < roomgame::SourceLightManager::MAX_VISIBLE_SOURCE_LIGHTS; i++) {
                 std::string number = "" + std::to_string(i);
                 std::string loc = sourceString + "[" + number + "]";
                 glUniform3fv(program_->getUniformLocation(loc + pointLightProps[1]), 1, glm::value_ptr(lightInfo->sourceLights->ambient));
@@ -344,12 +345,10 @@ protected:
 	std::shared_ptr<viscom::GPUProgram> shader_resource_;
 	sgct::SharedObject<glm::mat4> sharedModelMatrix_;
 	sgct::SharedVector<glm::mat4> sharedInfluencePositions_;
-    sgct::SharedVector<glm::vec3> sharedSourceLightPositions_;
 public:
 	float scale;
     glm::mat4 model_matrix_;
 	std::vector<glm::mat4> influencePositions_;
-    std::vector<glm::vec3> sourcePositions_;
     SynchronizedGameMesh(std::shared_ptr<viscom::Mesh> mesh, std::shared_ptr<viscom::GPUProgram> shader) :
 		MeshBase(mesh.get(), shader.get()),
 		mesh_resource_(mesh), shader_resource_(shader)
@@ -363,22 +362,18 @@ public:
 	void preSync() { // master
 		sharedModelMatrix_.setVal(model_matrix_);
 		sharedInfluencePositions_.setVal(influencePositions_);
-        sharedSourceLightPositions_.setVal(sourcePositions_);
 	}
 	void encode() { // master
 		sgct::SharedData::instance()->writeObj(&sharedModelMatrix_);
         sgct::SharedData::instance()->writeVector(&sharedInfluencePositions_);
-        sgct::SharedData::instance()->writeVector(&sharedSourceLightPositions_);
     }
 	void decode() { // slave
 		sgct::SharedData::instance()->readObj(&sharedModelMatrix_);
         sgct::SharedData::instance()->readVector(&sharedInfluencePositions_);
-        sgct::SharedData::instance()->readVector(&sharedSourceLightPositions_);
     }
 	void updateSyncedSlave() {
 		model_matrix_ = sharedModelMatrix_.getVal();
 		influencePositions_ = sharedInfluencePositions_.getVal();
-        sourcePositions_ = sharedSourceLightPositions_.getVal();
 	}
 	void updateSyncedMaster() {
 		//Can maybe stay empty

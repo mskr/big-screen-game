@@ -1,4 +1,6 @@
 #include "UpdateManager.h"
+#include <iostream>
+
 namespace roomgame {
 
 	UpdateManager::UpdateManager()
@@ -16,7 +18,7 @@ namespace roomgame {
 	void UpdateManager::ManageUpdates(double deltaTime)
 	{
 		if (timer > max_time) {
-			for (std::shared_ptr<IUpdateable> upd : updateables)
+            for (std::shared_ptr<IUpdateable> upd : updateables)
 			{
 				upd.get()->Update(deltaTime);
 				upd.get()->UpdateSlow(deltaTime);

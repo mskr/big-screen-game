@@ -9,8 +9,9 @@ namespace roomgame {
     const float DEFAULT_BASE_SPEED = 0.5f;
     const float ROT_SPEED_MULTIPLIER = 50.0f;
 
-	OuterInfluence::OuterInfluence(): MeshComponent(nullptr), distance_(0), targetCell_(nullptr), deltaTime_(0)
+	OuterInfluence::OuterInfluence(std::shared_ptr<SourceLightManager> sourceLightManager): MeshComponent(nullptr), distance_(0), targetCell_(nullptr), deltaTime_(0)
     {
+        sourceLightManager_ = sourceLightManager;
         Grid = nullptr;
         mode_ = 0;
         actionStatus_ = 0;
@@ -188,7 +189,11 @@ namespace roomgame {
             Grid->buildAt(targetCell_->getCol(), targetCell_->getRow(), GridCell::SOURCE, InteractiveGrid::BuildMode::Additive);
             Grid->buildAt(targetCell_->getCol(), targetCell_->getRow(), GridCell::WALL, InteractiveGrid::BuildMode::RemoveSpecific);
             const auto wPos = Grid->getWorldCoordinates(targetCell_->getPosition());
-            MeshComponent->sourcePositions_.push_back(wPos);
+            if(Grid->sourceLightManager_==nullptr)
+            {
+                Grid->sourceLightManager_ = sourceLightManager_;
+            }
+            sourceLightManager_->sourcePositions_.push_back(wPos);
         }
 	}
 

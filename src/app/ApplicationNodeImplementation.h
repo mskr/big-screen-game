@@ -80,6 +80,7 @@ namespace viscom {
         /*  */
         std::shared_ptr<viscom::GPUProgram> instanceShader_;
         std::shared_ptr<viscom::GPUProgram> terrainShader_;
+        std::shared_ptr<roomgame::SourceLightManager> sourceLightManager_;
 
 		/* Grid parameters (constant on all nodes) */
 		const int GRID_COLS_ = 128;
@@ -194,13 +195,7 @@ namespace viscom {
 		} screenfilling_quad_;
 
         void uploadGridStateToGPU();
-
-
     private:
-
-        void updateSourcePos(std::vector<glm::vec3> sourcePositions);
-        void uploadSourcePos(std::shared_ptr<viscom::GPUProgram> shad, std::vector<glm::vec3> sourcePositions);
-
         std::shared_ptr<Texture> caustics;
 	};
 }
