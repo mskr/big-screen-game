@@ -32,21 +32,25 @@ void RoomInteractiveGrid::handleTouchedCell(int touchID, GridCell* touchedCell) 
         GLuint currentHealth = touchedCell->getHealthPoints();
         GLuint updatedHealth = min(currentHealth + ((GridCell::MAX_HEALTH - GridCell::MIN_HEALTH) / 4),GridCell::MAX_HEALTH);
 
-        if ((north & test) & (south & test) & (east & test) & (west & test) ) {
+        GLuint andSides = north & south & east & west;
+
+        if (andSides & test) {
             //std::cout << "Cell is in the middle of 4 infected cells" << std::endl;
-            // FIXME: if two source cells are neighbors there is no chance to repair it
             return;
         }
         else if (touchedCell->getBuildState() & GridCell::SOURCE) {
-            if ((north & test) | (south & test) | (east & test) | (west & test)) {
+            if (((north & test) && !(north & GridCell::SOURCE)) | 
+                ((south & test) && !(south & GridCell::SOURCE)) | 
+                ((east & test) && !(east & GridCell::SOURCE)) |
+                ((west & test) && !(west & GridCell::SOURCE))) {
                 //std::cout << "Try to cure Source Cell but there are infected cells nerby" << std::endl;
             }
             else {
                 //std::cout << "Cure source Cell" << std::endl;
                 touchedCell->updateHealthPoints(vbo_, updatedHealth);
                 if (currentHealth >= GridCell::MAX_HEALTH) {
-                    buildAt(touchedCell->getCol(), touchedCell->getRow(), GridCell::SOURCE | GridCell::INFECTED, InteractiveGrid::BuildMode::RemoveSpecific);
                     buildAt(touchedCell->getCol(), touchedCell->getRow(), GridCell::WALL, InteractiveGrid::BuildMode::Additive);
+                    buildAt(touchedCell->getCol(), touchedCell->getRow(), GridCell::SOURCE | GridCell::INFECTED, InteractiveGrid::BuildMode::RemoveSpecific);
                 }
                 
             }
