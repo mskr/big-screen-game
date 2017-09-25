@@ -48,11 +48,13 @@ glm::vec2 InteractiveGrid::getNDC(glm::vec2 cellPosition) {
 }
 
 glm::vec3 InteractiveGrid::getWorldCoordinates(glm::vec2 cellPosition) {
-	return glm::vec3(cellPosition, 0.0f) + translation_;
+    glm::vec3 pos = translation_; // grid translation
+    pos += glm::vec3(cellPosition, 0.0f); // + relative cell translation
+    pos += glm::vec3(cell_size_ , cell_size_*0.5f, 0.0f);// + origin to middle of cell
+    return pos;
 }
 
 GridCell* InteractiveGrid::getClosestWallCell(glm::vec2 pos) {
-	//TODO: write
 	return getCellAt(glm::vec2(0,0));
 }
 
@@ -186,6 +188,8 @@ GridCell* InteractiveGrid::pickCell(glm::vec3 rayStartPoint, glm::vec3 rayInterm
     glm::vec3 gridLeftLowerCorner = getWorldCoordinates(cells_[0][0].getPosition());
     glm::vec3 gridRight = getWorldCoordinates(cells_[getNumColumns()-1][0].getPosition())- gridLeftLowerCorner;
     glm::vec3 gridTop = getWorldCoordinates(cells_[0][getNumRows() - 1].getPosition())- gridLeftLowerCorner;
+
+
 
 	m[1] = gridRight;
 	m[2] = gridTop;
