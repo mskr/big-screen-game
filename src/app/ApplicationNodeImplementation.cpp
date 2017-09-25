@@ -183,7 +183,7 @@ namespace viscom {
         ambient = glm::vec3(0.01f, 0.01f, 0.01f);
         diffuse = glm::vec3(0.9f, 0.1f, 0.1f);
         specular = glm::vec3(1.0f, .1f, .1f);
-        lightInfo->outerInfLights = new PointLight(ambient, diffuse, specular,1.0f,20.0f,30.0f );
+        lightInfo->outerInfLights = new PointLight(ambient, diffuse, specular,1.0f,0.8f,1.5f );
         diffuse = glm::vec3(0.1f, 0.1f, 0.9f);
         specular = glm::vec3(.1f, .1f, 1.0f);
         lightInfo->sourceLights = new PointLight(ambient, diffuse, specular, 1.0f, 0.8f, 1.5f);
