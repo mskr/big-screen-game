@@ -39,6 +39,7 @@ namespace viscom {
     */
     void SlaveNode::DecodeData() {
         SlaveNodeInternal::DecodeData();
+        sourceLightManager_->decode();
         outerInfluence_->MeshComponent->decode();
         meshpool_.decode();
         sgct::SharedData::instance()->readObj<glm::vec3>(&synchronized_grid_translation_);
@@ -53,6 +54,7 @@ namespace viscom {
     */
     void SlaveNode::UpdateSyncedInfo() {
         SlaveNodeInternal::UpdateSyncedInfo();
+        sourceLightManager_->updateSyncedSlave();
         outerInfluence_->MeshComponent->updateSyncedSlave();
         meshpool_.updateSyncedSlave();
         grid_translation_ = synchronized_grid_translation_.getVal();

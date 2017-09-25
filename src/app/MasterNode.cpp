@@ -34,7 +34,6 @@ namespace viscom {
         grid_.uploadVertexData(); // ...for debug purposes
 
         cellular_automaton_.init(GetApplication()->GetGPUProgramManager());
-
         outerInfluence_->Grid = &grid_;
         glm::vec3 gridPos = grid_.grid_center_;
         glm::vec2 pos = GetCirclePos(glm::vec2(gridPos.y, gridPos.z), range, viewAngle);
@@ -47,6 +46,7 @@ namespace viscom {
     /* Sync step 1: Master sets values of shared objects to the values of corresponding non-shared objects */
     void MasterNode::PreSync() {
         ApplicationNodeImplementation::PreSync();
+        sourceLightManager_->preSync();
         outerInfluence_->MeshComponent->preSync();
         meshpool_.preSync();
         synchronized_grid_translation_.setVal(grid_.getTranslation());
@@ -65,6 +65,7 @@ namespace viscom {
     */
     void MasterNode::EncodeData() {
         ApplicationNodeImplementation::EncodeData();
+        sourceLightManager_->encode();
         outerInfluence_->MeshComponent->encode();
         meshpool_.encode();
         sgct::SharedData::instance()->writeObj<glm::vec3>(&synchronized_grid_translation_);
@@ -82,6 +83,7 @@ namespace viscom {
     */
     void MasterNode::UpdateSyncedInfo() {
         ApplicationNodeImplementation::UpdateSyncedInfo();
+        sourceLightManager_->updateSyncedMaster();
         outerInfluence_->MeshComponent->updateSyncedMaster();
         meshpool_.updateSyncedMaster();
         // Of course the following variables are redundant on master 

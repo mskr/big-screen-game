@@ -40,7 +40,7 @@ namespace roomgame
     }
 
     void SourceLightManager::uploadSourcePos(std::shared_ptr<viscom::GPUProgram> shad, std::vector<glm::vec3> sourcePositions) {
-        GLint lightNum = (GLint)glm::min(static_cast<int>(sourcePositions.size()), MAX_VISIBLE_SOURCE_LIGHTS);
+        GLint lightNum = (GLint)min(static_cast<int>(sourcePositions.size()), MAX_VISIBLE_SOURCE_LIGHTS);
         glUniform1i(shad->getUniformLocation((std::string)("numSourceLights")), lightNum);
         for (int i = 0; i < lightNum; i++) {
             std::string number = "" + std::to_string(i);

@@ -1,8 +1,4 @@
 #pragma once
-#include <sgct/SharedDataTypes.h>
-#include <glm/detail/type_vec3.hpp>
-#include <glm/mat4x2.hpp>
-#include <sgct/SharedData.h>
 #include <memory>
 #include "core/gfx/GPUProgram.h"
 
