@@ -54,11 +54,6 @@ glm::vec3 InteractiveGrid::getWorldCoordinates(glm::vec2 cellPosition) {
     return pos;
 }
 
-GridCell* InteractiveGrid::getClosestWallCell(glm::vec2 pos) {
-	return getCellAt(glm::vec2(0,0));
-}
-
-
 void InteractiveGrid::forEachCell(std::function<void(GridCell*)> callback) {
 	for (std::vector<GridCell> &row : cells_) {
 		for (GridCell &cell : row) {
