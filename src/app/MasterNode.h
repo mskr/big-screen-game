@@ -128,5 +128,6 @@ namespace viscom {
         std::vector<input> inputBuffer;
         
         void reset();
+        void resetPlaygroundValues();
     };
 }

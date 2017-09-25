@@ -14,6 +14,15 @@ namespace roomgame {
 	    void Update(double deltaTime) override;
 	    void UpdateSlow(double deltaTime) override;
 
+        // Modify the outer influence on the fly
+        int getAttackChanceGrowth();
+        void setAttackChanceGrowth(int newChance);
+
+        float getBaseSpeed();
+        void setBaseSpeed(float speed);
+
+        void resetValues();
+
         glm::mat4 ViewPersMat;
 		SynchronizedGameMesh* MeshComponent;
 		RoomInteractiveGrid* Grid;
@@ -22,6 +31,7 @@ namespace roomgame {
         float changeSpeed_ = 1.f; // How fast the influence changes its movement pattern
         float speed_;
         float distance_;
+        float baseSpeed_;
         int attackChance_;
         int attackChanceGrowth_;
         std::default_random_engine rndGenerator_;

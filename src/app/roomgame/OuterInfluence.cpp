@@ -5,7 +5,8 @@ namespace roomgame {
 	const int ATTACK = 1;
 	const int RETREAT = 2;
     const int ATTACK_CHANCE_BASE = 0;
-    const float BASE_SPEED = 0.5f;
+    const int DEFAULT_ATTACK_CHANCE_GROWTH = 2;
+    const float DEFAULT_BASE_SPEED = 0.5f;
     const float ROT_SPEED_MULTIPLIER = 50.0f;
 
 	OuterInfluence::OuterInfluence(): MeshComponent(nullptr), distance_(0), targetCell_(nullptr), deltaTime_(0)
@@ -17,9 +18,10 @@ namespace roomgame {
         targetPosition_ = glm::vec3(2, 0, 0);
         posDiff_ = glm::vec3(0);
         ViewPersMat = glm::mat4(1);
-        speed_ = BASE_SPEED;
+        baseSpeed_ = DEFAULT_BASE_SPEED;
+        speed_ = DEFAULT_BASE_SPEED;
         attackChance_ = ATTACK_CHANCE_BASE;
-        attackChanceGrowth_ = 2;
+        attackChanceGrowth_ = DEFAULT_ATTACK_CHANCE_GROWTH;
         const auto seed1 = static_cast<unsigned>(std::chrono::system_clock::now().time_since_epoch().count());
         rndGenerator_ = std::default_random_engine(seed1);
         distributor100_ = std::uniform_int_distribution<int>(0, 100);
@@ -45,15 +47,15 @@ namespace roomgame {
 		}
         if (mode_ == ATTACK) {
             movementType_ = min(movementType_ + changeSpeed_*(float)deltaTime_, 1);
-            speed_ = min(exp(speed_ + changeSpeed_*0.2f*(float)deltaTime_)-1.0f, 0.8f);
+            speed_ = min(exp(speed_ + changeSpeed_*0.2f*(float)deltaTime_)-1.0f, baseSpeed_ + 0.3f);
         }
         else if (mode_ == RETREAT) {
             movementType_ = max(movementType_ - changeSpeed_*(float)deltaTime_, 0);
-            speed_ = min(speed_ + changeSpeed_*0.1f*(float)deltaTime_, 0.4f);
+            speed_ = min(speed_ + changeSpeed_*0.1f*(float)deltaTime_, baseSpeed_ - 0.1f);
 //            speed_ = max(speed_ - changeSpeed_*10*(float)deltaTime_, 0.5f);
         }else
         {
-            speed_ = min(speed_ + changeSpeed_*0.1f*(float)deltaTime_, 0.4f);
+            speed_ = min(speed_ + changeSpeed_*0.1f*(float)deltaTime_, baseSpeed_ - 0.1f);
         }
 	}
 
@@ -94,6 +96,33 @@ namespace roomgame {
         {
             CheckForPatrolEnd();
         }
+    }
+
+    int OuterInfluence::getAttackChanceGrowth()
+    {
+        return attackChanceGrowth_;
+    }
+
+    void OuterInfluence::setAttackChanceGrowth(int newChance)
+    {
+        glm::clamp(newChance, 1, 10);
+        attackChanceGrowth_ = newChance;
+    }
+
+    float OuterInfluence::getBaseSpeed()
+    {
+        return baseSpeed_;
+    }
+
+    void OuterInfluence::setBaseSpeed(float speed)
+    {
+        baseSpeed_ = glm::clamp(speed, 0.2f, 1.0f);
+    }
+
+    void OuterInfluence::resetValues()
+    {
+        attackChanceGrowth_ = DEFAULT_ATTACK_CHANCE_GROWTH;
+        baseSpeed_ = DEFAULT_BASE_SPEED;
     }
 
 	void OuterInfluence::CheckForPatrolEnd() {

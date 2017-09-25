@@ -132,6 +132,9 @@ namespace viscom {
     }
 
     void MasterNode::Draw2D(FrameBuffer& fbo) {
+        int attackChanceGrowth = outerInfluence_->getAttackChanceGrowth();
+        float outInfluenceSpeed = outerInfluence_->getBaseSpeed();
+
         fbo.DrawToFBO([&]() {
             ImGui::SetNextWindowPos(ImVec2(700, 60), ImGuiSetCond_FirstUseEver);
             ImGui::SetNextWindowSize(ImVec2(550, 680), ImGuiSetCond_FirstUseEver);
@@ -142,7 +145,29 @@ namespace viscom {
                     ((interaction_mode_ == AUTOMATON) ? "AUTOMATON" : "CAMERA"));
             }
 
+            ImGui::Spacing();
+            if (ImGui::CollapsingHeader("Settings"))
+            {
+                ImGui::Spacing();
+                ImGui::Text("Outer Influence");
+                ImGui::Spacing();
+                if (ImGui::SliderInt("Attack chance", &attackChanceGrowth, 1, 10, "%.0f%%")) {
+                    outerInfluence_->setAttackChanceGrowth(attackChanceGrowth);
+                }
+
+                ImGui::Spacing();
+                if (ImGui::SliderFloat("Speed", &outInfluenceSpeed, 0.2f, 1.0f)) {
+                    outerInfluence_->setBaseSpeed(outInfluenceSpeed);
+                }
+
+                if (ImGui::Button("Reset Values")) {
+                    resetPlaygroundValues();
+                }
+            }
+
+            ImGui::Spacing();
             if (ImGui::Button("Reset Playground")) {
+                resetPlaygroundValues();
                 reset();
             }
 
@@ -363,5 +388,10 @@ namespace viscom {
             grid_.reset();
         });
         outerInfluence_->MeshComponent->sourcePositions_.clear();
+    }
+
+    void MasterNode::resetPlaygroundValues()
+    {
+        outerInfluence_->resetValues();
     }
 }
