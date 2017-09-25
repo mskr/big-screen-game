@@ -126,5 +126,7 @@ namespace viscom {
         /* Please comment */
         std::mutex mtx;
         std::vector<input> inputBuffer;
+        
+        void reset();
     };
 }

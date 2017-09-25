@@ -17,6 +17,8 @@ class RoomInteractiveGrid : public InteractiveGrid {
 public:
     bool checkRoomPosition(Room* newRoom);
     RoomInteractiveGrid(size_t columns, size_t rows, float height);
+    void updateHealthPoints(GridCell* cell, unsigned int hp);
+    void reset();
 	~RoomInteractiveGrid();
 private:
     bool firstRoom = true;

@@ -141,6 +141,11 @@ namespace viscom {
                 ImGui::Text("Interaction mode: %s", (interaction_mode_ == GRID) ? "GRID" :
                     ((interaction_mode_ == AUTOMATON) ? "AUTOMATON" : "CAMERA"));
             }
+
+            if (ImGui::Button("Reset Playground")) {
+                reset();
+            }
+
             ImGui::End();
         });
 
@@ -349,5 +354,14 @@ namespace viscom {
         }
 #endif
         return true;
+    }
+
+    void MasterNode::reset() {
+        grid_.forEachCell([&](GridCell *cell) {
+            grid_.buildAt(cell->getCol(), cell->getRow(), GridCell::EMPTY, InteractiveGrid::BuildMode::Replace);
+            grid_.updateHealthPoints(cell, GridCell::MAX_HEALTH);
+            grid_.reset();
+        });
+        outerInfluence_->MeshComponent->sourcePositions_.clear();
     }
 }

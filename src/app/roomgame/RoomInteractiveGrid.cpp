@@ -177,3 +177,14 @@ void RoomInteractiveGrid::handleRelease(GridInteraction* interac) {
 
     interactions_.remove(interac);
 }
+
+void RoomInteractiveGrid::updateHealthPoints(GridCell* cell, unsigned int hp) {
+    cell->updateHealthPoints(vbo_, hp);
+}
+
+
+void RoomInteractiveGrid::reset() {
+    for (Room* r : rooms_) delete r;
+    rooms_.clear();
+    firstRoom = true;
+}
