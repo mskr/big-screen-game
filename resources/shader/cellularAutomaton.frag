@@ -70,8 +70,6 @@ void setOutput(uint buildState, int signedHealth) {
 
 /* Simulation parameters */
 /* adapted from http://www2.econ.iastate.edu/tesfatsi/SandPileModel.pdf */
-// flow direction rotates per time step
-uniform ivec2 FLOW_DIRECTION;
 // threshold where the fluid begins to flow
 uniform int CRITICAL_VALUE; //TODO test whether uint works with unary minus
 // amount of fluid a lower cell receives from collapsing neighbor
@@ -85,9 +83,6 @@ const uint INFECTABLE = INSIDE_ROOM | WALL | CORNER;
 
 /******************** MAIN *************************/
 void main() {
-    uvec2 cell = lookup(inputGrid, pixel);
-    uvec2 left_nbor = lookup(inputGrid, pixel - FLOW_DIRECTION * pxsize);
-    uvec2 right_nbor = lookup(inputGrid, pixel + FLOW_DIRECTION * pxsize);
 
     // BACKGROUND STORY:
     // a room got attacked and is now infected
@@ -95,68 +90,82 @@ void main() {
     // the fluid slowly damages the room
     // the player tries to repair...
 
+    uvec2 cell = lookup(inputGrid, pixel);
+
     uint bstate = cell[0];
     uint health = cell[1];
     uint fluid = MAX_HEALTH - health;
 
-    uint left_bstate = left_nbor[0];
-    uint left_health = left_nbor[1];
-    uint left_fluid = MAX_HEALTH - left_health;
-
-    uint right_bstate = right_nbor[0];
-    uint right_health = right_nbor[1];
-    uint right_fluid = MAX_HEALTH - right_health;
-
-    // fluid gradient: positive=>incoming, negative=>outgoing flow
-    int left_gradient = int(left_fluid) - int(fluid);
-    int right_gradient = int(right_fluid) - int(fluid);
-
-    // prevent flow to/from non-infected cells
-    if((left_bstate & INFECTED) == 0U) left_gradient = 0;
-    if((right_bstate & INFECTED) == 0U) right_gradient = 0;
-
     // CASE 1: cell is SOURCE (& WALL)
     if((bstate & SOURCE) > 0U) {
         // constantly decrease health, while player repairs
-        int result = int(health) - int(FLOW_SPEED);
-        setOutput(bstate | INFECTED, result);
+        setOutput(bstate | INFECTED, int(health) - int(FLOW_SPEED));
         return;
     }
 
-    // CASE 2: cell is INFECTED
-    else if((bstate & INFECTED) > 0U) {
-        // compute flow assuming that fluid flows "down hill"
-        int result = int(health);
-        if(left_gradient > CRITICAL_VALUE) // incoming from left
-            result -= int(FLOW_SPEED);
-        else if(left_gradient < -CRITICAL_VALUE) // outgoing to left
-            result += int(FLOW_SPEED);
-        if(right_gradient > CRITICAL_VALUE) // incoming from right
-            result -= int(FLOW_SPEED);
-        else if(right_gradient < -CRITICAL_VALUE) // outgoing to right
-            result += int(FLOW_SPEED);
-        if(result != int(health)) {
-            setOutput(bstate, result);
-            return;
+    // looking at 4 directions and 2 neighbors for each => all 8 neighbors
+    ivec2[4] FLOW_DIRECTION;
+    FLOW_DIRECTION[0] = ivec2(1,-1);
+    FLOW_DIRECTION[1] = ivec2(1,0);
+    FLOW_DIRECTION[2] = ivec2(1,1);
+    FLOW_DIRECTION[3] = ivec2(0,1);
+    
+    // accumulating new health here
+    int result = int(health);
+
+    for(int i = 0; i < 4; i++) {
+
+        uvec2 left_nbor = lookup(inputGrid, pixel - FLOW_DIRECTION[i] * pxsize);
+        uvec2 right_nbor = lookup(inputGrid, pixel + FLOW_DIRECTION[i] * pxsize);
+
+        uint left_bstate = left_nbor[0];
+        uint left_health = left_nbor[1];
+        uint left_fluid = MAX_HEALTH - left_health;
+
+        uint right_bstate = right_nbor[0];
+        uint right_health = right_nbor[1];
+        uint right_fluid = MAX_HEALTH - right_health;
+
+        // fluid gradient: positive=>incoming, negative=>outgoing flow
+        int left_gradient = int(left_fluid) - int(fluid);
+        int right_gradient = int(right_fluid) - int(fluid);
+
+        // prevent flow to/from non-infected cells
+        if((left_bstate & INFECTED) == 0U) left_gradient = 0;
+        if((right_bstate & INFECTED) == 0U) right_gradient = 0;
+
+        // CASE 2: cell is INFECTED
+        if((bstate & INFECTED) > 0U) {
+            // compute flow assuming that fluid flows "down hill"
+            if(left_gradient > CRITICAL_VALUE) // incoming from left
+                result -= int(FLOW_SPEED);
+            else if(left_gradient < -CRITICAL_VALUE) // outgoing to left
+                result += int(FLOW_SPEED);
+            if(right_gradient > CRITICAL_VALUE) // incoming from right
+                result -= int(FLOW_SPEED);
+            else if(right_gradient < -CRITICAL_VALUE) // outgoing to right
+                result += int(FLOW_SPEED);
         }
+
+        // CASE 3: cell is INFECTABLE
+        else if((bstate & INFECTABLE) > 0U) {
+            // decide whether this cell gets infected
+            if(left_gradient > CRITICAL_VALUE)
+                result -= int(FLOW_SPEED);
+            if(right_gradient > CRITICAL_VALUE)
+                result -= int(FLOW_SPEED);
+        }
+
+    }
+    
+    // was there some flow that changed health of current cell?
+    if(result != int(health)) {
+        setOutput(bstate | INFECTED, result);
+    } else {
+        //CASE 4: cell is EMPTY or some room segment that can't get infected
+        setOutput(bstate, int(health));
     }
 
-    // CASE 3: cell is INFECTABLE
-    else if((bstate & INFECTABLE) > 0U) {
-        // decide whether this cell gets infected
-        int result = int(health);
-        if(left_gradient > CRITICAL_VALUE)
-            result -= int(FLOW_SPEED);
-        if(right_gradient > CRITICAL_VALUE)
-            result -= int(FLOW_SPEED);
-        if(result != int(health)) {
-            setOutput(bstate | INFECTED, result);
-            return;
-        }
-    }
-
-    //CASE 4: cell is EMPTY or some room segment that can't get infected
-    setOutput(bstate, int(health));
 }
 
 
