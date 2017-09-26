@@ -1,9 +1,9 @@
 #pragma once
 #include "app/roomgame/IUpdateable.h"
-#include "app/roomgame/RoomInteractiveGrid.h"
 #include <random>
 
 namespace roomgame {
+    class InteractiveGrid;
 	class OuterInfluence : public roomgame::IUpdateable
 	{
 	public:
@@ -25,7 +25,7 @@ namespace roomgame {
 
         glm::mat4 ViewPersMat;
 		SynchronizedGameMesh* MeshComponent;
-		RoomInteractiveGrid* Grid;
+		std::shared_ptr<InteractiveGrid> Grid;
 	private:
         std::shared_ptr<SourceLightManager> sourceLightManager_;
         float movementType_ = 0; // 0 is patrolling movement, 1 is attacking movement
