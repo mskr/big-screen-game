@@ -139,6 +139,7 @@ namespace viscom {
         float innerInfluenceTransition = (float) cellular_automaton_.getTransitionTime();
         int innerInfluenceFlowSpeed = cellular_automaton_.FLOW_SPEED;
         int innerInfluenceCriticalValue = cellular_automaton_.CRITICAL_VALUE;
+        float repairPerClickValue = grid_.healAmount_;
 
         fbo.DrawToFBO([&]() {
             ImGui::SetNextWindowPos(ImVec2(700, 60), ImGuiSetCond_FirstUseEver);
@@ -178,6 +179,13 @@ namespace viscom {
                 ImGui::Spacing();
                 if (ImGui::SliderInt("Critical Value", &innerInfluenceCriticalValue, 1, 100)) {
                     cellular_automaton_.CRITICAL_VALUE = (glm::clamp(innerInfluenceCriticalValue, 1, 100));
+                }
+
+                ImGui::Spacing();
+                ImGui::Text("Repairs");
+                ImGui::Spacing();
+                if (ImGui::SliderFloat("Heal per click", &repairPerClickValue, 0.1f, 1.1f)) {
+                    grid_.healAmount_ = glm::clamp(repairPerClickValue, 0.1f, 1.1f);
                 }
 
                 ImGui::Spacing();
@@ -416,5 +424,6 @@ namespace viscom {
         outerInfluence_->resetValues();
         cellular_automaton_.ResetTransitionTime();
         cellular_automaton_.Reset();
+        grid_.ResetHealAmount();
     }
 }

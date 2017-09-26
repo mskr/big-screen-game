@@ -13,16 +13,19 @@
 class RoomInteractiveGrid : public InteractiveGrid {
 	std::vector<Room*> rooms_;
 	void handleTouchedCell(int touchID, GridCell*) override;
-	void handleHoveredCell(GridCell*, GridInteraction*) override;
+    void handleHoveredCell(GridCell*, GridInteraction*) override;
 	void handleRelease(GridInteraction*) override;
 public:
+    void ResetHealAmount();
     std::shared_ptr<roomgame::SourceLightManager> sourceLightManager_ = nullptr;
     bool checkRoomPosition(Room* newRoom);
     RoomInteractiveGrid(size_t columns, size_t rows, float height);
     void updateHealthPoints(GridCell* cell, unsigned int hp);
     void reset();
 	~RoomInteractiveGrid();
+    float healAmount_;
 private:
+    const float DEFAULT_HEAL_AMOUNT = 0.25f;
     bool firstRoom = true;
     void checkConnection(Room* newRoom, int lengthX, int lengthY, int posX, int posY);
     void checkForNearInfections(Room * newRoom);

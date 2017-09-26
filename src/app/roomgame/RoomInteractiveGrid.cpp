@@ -3,7 +3,7 @@
 RoomInteractiveGrid::RoomInteractiveGrid(size_t columns, size_t rows, float height) :
     InteractiveGrid(columns, rows, height)
 {
-    
+    healAmount_ = DEFAULT_HEAL_AMOUNT;
 }
 
 RoomInteractiveGrid::~RoomInteractiveGrid() {
@@ -30,7 +30,7 @@ void RoomInteractiveGrid::handleTouchedCell(int touchID, GridCell* touchedCell) 
         GLuint test = GridCell::SOURCE | GridCell::INFECTED;
 
         GLuint currentHealth = touchedCell->getHealthPoints();
-        GLuint updatedHealth = min(currentHealth + ((GridCell::MAX_HEALTH - GridCell::MIN_HEALTH) / 4),GridCell::MAX_HEALTH);
+        GLuint updatedHealth = min(currentHealth + ((GridCell::MAX_HEALTH - GridCell::MIN_HEALTH) * healAmount_),GridCell::MAX_HEALTH);
 
         GLuint andSides = north & south & east & west;
 
@@ -58,6 +58,10 @@ void RoomInteractiveGrid::handleTouchedCell(int touchID, GridCell* touchedCell) 
         }
         else {
             //std::cout << "Cure infected Cell" << std::endl;
+            //forEachCellInRange(&cells_[touchedCell->getCol()-1][touchedCell->getRow()-1], &cells_[touchedCell->getCol()+1][touchedCell->getRow()+1],[&](GridCell* cell)
+            //{
+            //    
+            //});
             touchedCell->updateHealthPoints(vbo_, updatedHealth);
             if (currentHealth >= GridCell::MAX_HEALTH) {
                 buildAt(touchedCell->getCol(), touchedCell->getRow(), GridCell::INFECTED, InteractiveGrid::BuildMode::RemoveSpecific);
@@ -65,6 +69,11 @@ void RoomInteractiveGrid::handleTouchedCell(int touchID, GridCell* touchedCell) 
         }
         
     }
+}
+
+void RoomInteractiveGrid::ResetHealAmount()
+{
+    healAmount_ = DEFAULT_HEAL_AMOUNT;
 }
 
 void RoomInteractiveGrid::checkConnection(Room* newRoom, int lengthX, int lengthY, int posX, int posY) {
