@@ -19,7 +19,7 @@ namespace roomgame
     * Usage notes:
     * Mesh pool exists on all SGCT nodes
     * Used by nodes to create meshes (each including vertex and instance buffer)
-    * Used by MeshInstanceGrid to get appropriate mesh for build state
+    * Used by MeshInstanceBuilder to get appropriate mesh for build state
     * Used by nodes to render all meshes by a single call
     */
     class RoomSegmentMeshPool {

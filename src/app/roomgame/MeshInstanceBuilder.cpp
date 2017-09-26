@@ -1,16 +1,16 @@
 #include "RoomSegmentMeshPool.h"
 #include "InteractiveGrid.h"
-#include "MeshInstanceGrid.h"
+#include "MeshInstanceBuilder.h"
 #include "AutomatonGrid.h"
 namespace roomgame
 {
-    MeshInstanceGrid::MeshInstanceGrid(RoomSegmentMeshPool* meshpool)
+    MeshInstanceBuilder::MeshInstanceBuilder(RoomSegmentMeshPool* meshpool)
     {
         meshpool_ = meshpool;
     }
 
     /* Called only on master (resulting instance buffer is synced) */
-    void MeshInstanceGrid::addInstanceAt(GridCell* c, GLuint buildStateBits) {
+    void MeshInstanceBuilder::addInstanceAt(GridCell* c, GLuint buildStateBits) {
         RoomSegmentMesh::Instance instance;
         float cell_size_ = interactiveGrid_->getCellSize();
         instance.scale = cell_size_ / 1.98f; // assume model extends [-1,1]^3
@@ -31,14 +31,14 @@ namespace roomgame
     }
 
     /* Called only on master (resulting instance buffer is synced) */
-    void MeshInstanceGrid::removeInstanceAt(GridCell* c) {
+    void MeshInstanceBuilder::removeInstanceAt(GridCell* c) {
         RoomSegmentMesh::InstanceBufferRange bufrange;
         while ((bufrange = c->popMeshInstance()).mesh_) {
             bufrange.mesh_->removeInstanceUnordered(bufrange.offset_instances_);
         }
     }
 
-    bool MeshInstanceGrid::deleteNeighbouringWalls(GridCell* cell, bool simulate) {
+    bool MeshInstanceBuilder::deleteNeighbouringWalls(GridCell* cell, bool simulate) {
         GLuint cellState = cell->getBuildState();
         if ((cellState & GridCell::WALL) != 0) {
             GridCell* neighbour = nullptr;
@@ -106,7 +106,7 @@ namespace roomgame
     }
 
 
-    void MeshInstanceGrid::buildAt(GridCell* c, std::function<void(GridCell*)> callback) {
+    void MeshInstanceBuilder::buildAt(GridCell* c, std::function<void(GridCell*)> callback) {
         GLuint current = c->getBuildState();
         callback(c);
         GLuint newSt = c->getBuildState();
@@ -124,7 +124,7 @@ namespace roomgame
         automatonGrid_->updateAutomatonAt(c, newSt, c->getHealthPoints());
     }
 
-    void MeshInstanceGrid::buildAt(GridCell* c, GLuint newState, BuildMode buildMode) {
+    void MeshInstanceBuilder::buildAt(GridCell* c, GLuint newState, BuildMode buildMode) {
         GLuint current = c->getBuildState();
         GLuint moddedState;
         switch (buildMode) {
@@ -151,12 +151,12 @@ namespace roomgame
         automatonGrid_->updateAutomatonAt(c, moddedState, c->getHealthPoints());
     }
 
-    void MeshInstanceGrid::buildAt(size_t col, size_t row, std::function<void(GridCell*)> callback) {
+    void MeshInstanceBuilder::buildAt(size_t col, size_t row, std::function<void(GridCell*)> callback) {
         GridCell* maybeCell = interactiveGrid_->getCellAt(col, row);
         if (maybeCell) buildAt(maybeCell, callback);
     }
 
-    void MeshInstanceGrid::buildAt(size_t col, size_t row, GLuint newState, BuildMode buildMode) {
+    void MeshInstanceBuilder::buildAt(size_t col, size_t row, GLuint newState, BuildMode buildMode) {
         GridCell* maybeCell = interactiveGrid_->getCellAt(col, row);
         if (maybeCell) buildAt(maybeCell, newState, buildMode);
     }

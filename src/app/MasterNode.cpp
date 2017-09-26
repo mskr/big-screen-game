@@ -10,7 +10,7 @@
 #include <imgui.h>
 #include "core/imgui/imgui_impl_glfw_gl3.h"
 #include <iostream>
-#include "roomgame/MeshInstanceGrid.h"
+#include "roomgame/MeshInstanceBuilder.h"
 #include "roomgame/InteractiveGrid.h"
 #include "roomgame/RoomSegmentMeshPool.h"
 #include "roomgame/RoomInteractiveGrid.h"
@@ -24,15 +24,15 @@ namespace viscom {
         automatonGrid_(),
         interaction_mode_(InteractionMode::GRID)
     {
-        meshInstanceGrid_ = std::make_shared<MeshInstanceGrid>(&meshpool_);
+        meshInstanceBuilder_ = std::make_shared<MeshInstanceBuilder>(&meshpool_);
         interactiveGrid_ = std::make_shared<InteractiveGrid>(GRID_COLS_, GRID_ROWS_, GRID_HEIGHT_);
-        meshInstanceGrid_->interactiveGrid_ = interactiveGrid_;
-        meshInstanceGrid_->automatonGrid_ = &automatonGrid_;
+        meshInstanceBuilder_->interactiveGrid_ = interactiveGrid_;
+        meshInstanceBuilder_->automatonGrid_ = &automatonGrid_;
         roomInteractiveGrid_ = std::make_shared<RoomInteractiveGrid>();
         roomInteractiveGrid_->interactiveGrid_ = interactiveGrid_;
-        roomInteractiveGrid_->meshInstanceGrid_ = meshInstanceGrid_;
+        roomInteractiveGrid_->meshInstanceBuilder_ = meshInstanceBuilder_;
         interactiveGrid_->RoomInteractiveGrid = roomInteractiveGrid_;
-        automatonGrid_.meshInstanceGrid_ = meshInstanceGrid_;
+        automatonGrid_.meshInstanceBuilder_ = meshInstanceBuilder_;
         automatonGrid_.interactiveGrid_ = interactiveGrid_;
         cellular_automaton_ = std::make_shared<roomgame::InnerInfluence>(&automatonGrid_,interactiveGrid_,3.0);
         grid_state_ = {};
@@ -428,7 +428,7 @@ namespace viscom {
 
     void MasterNode::reset() {
         interactiveGrid_->forEachCell([&](GridCell *cell) {
-            meshInstanceGrid_->buildAt(cell->getCol(), cell->getRow(), GridCell::EMPTY, MeshInstanceGrid::BuildMode::Replace);
+            meshInstanceBuilder_->buildAt(cell->getCol(), cell->getRow(), GridCell::EMPTY, MeshInstanceBuilder::BuildMode::Replace);
             roomInteractiveGrid_->updateHealthPoints(cell, GridCell::MAX_HEALTH);
             roomInteractiveGrid_->reset();
         });

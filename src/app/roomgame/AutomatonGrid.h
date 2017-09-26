@@ -2,14 +2,14 @@
 #include <memory>
 #include <functional>
 #include "GridCell.h"
-#include "MeshInstanceGrid.h"
+#include "MeshInstanceBuilder.h"
 namespace roomgame
 {
     class GPUCellularAutomaton;
     class InteractiveGrid;
     /* Grid class for cellular automatons.
     * Has InteractiveGrid as base class.
-    * Inherits functionality of RoomInteractiveGrid and MeshInstanceGrid as well.
+    * Inherits functionality of RoomInteractiveGrid and MeshInstanceBuilder as well.
     * Adds possibility to receive changes
     * a) from user input by overriding buildAt() and
     * b) from cellular automaton by offering updateCell() function.
@@ -36,7 +36,7 @@ namespace roomgame
         // Update automaton (called from user input or outer influence through buildAt)
         void updateAutomatonAt(GridCell* c, GLuint state, GLuint hp);
 
-        std::shared_ptr<MeshInstanceGrid> meshInstanceGrid_;
+        std::shared_ptr<MeshInstanceBuilder> meshInstanceBuilder_;
         std::shared_ptr<InteractiveGrid> interactiveGrid_;
         static const GLuint SIMULATED_STATE = GridCell::INFECTED;
         AutomatonGrid();

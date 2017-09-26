@@ -5,13 +5,13 @@ namespace roomgame
     class RoomSegmentMeshPool;
     class InteractiveGrid;
     class AutomatonGrid;
-    /* Represents a grid with mesh instances at its cells
-    * Has InteractiveGrid as base class.
-    * Adds possibility to add/remove mesh instances through buildAt function.
+    /* 
+     * Class that manages changing the shown meshes
+     * Offers several buildAt functions for this. 
     * Uses a meshpool to request instanced meshes.
     * Calls addInstance on requested meshes.
     */
-    class MeshInstanceGrid {
+    class MeshInstanceBuilder {
     protected:
         RoomSegmentMeshPool* meshpool_;
         void addInstanceAt(GridCell*, GLuint);
@@ -26,7 +26,7 @@ namespace roomgame
         };
 
         bool deleteNeighbouringWalls(GridCell* cell, bool simulate);
-        MeshInstanceGrid(RoomSegmentMeshPool* meshpool);
+        MeshInstanceBuilder(RoomSegmentMeshPool* meshpool);
         void buildAt(size_t col, size_t row, GLuint newState, BuildMode buildMode);
         void buildAt(size_t col, size_t row, std::function<void(GridCell*)> callback);
         void buildAt(GridCell*, GLuint newState, BuildMode buildMode);

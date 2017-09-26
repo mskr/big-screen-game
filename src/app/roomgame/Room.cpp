@@ -3,11 +3,11 @@
 
 namespace roomgame
 {
-    Room::Room(GridCell* leftLowerCorner, GridCell* rightUpperCorner, std::shared_ptr<InteractiveGrid> grid, std::shared_ptr<MeshInstanceGrid> buildHelper) {
+    Room::Room(GridCell* leftLowerCorner, GridCell* rightUpperCorner, std::shared_ptr<InteractiveGrid> grid, std::shared_ptr<MeshInstanceBuilder> buildHelper) {
         leftLowerCorner_ = leftLowerCorner;
         rightUpperCorner_ = rightUpperCorner;
         grid_ = grid;
-        buildHelper_ = buildHelper;
+        meshInstanceBuilder_ = buildHelper;
         isFinished_ = false;
     }
 
@@ -17,19 +17,19 @@ namespace roomgame
 
     void Room::clear() {
         grid_->forEachCellInRange(leftLowerCorner_, rightUpperCorner_, [&](GridCell* cell) {
-            buildHelper_->buildAt(cell->getCol(), cell->getRow(), GridCell::TEMPORARY | GridCell::INVALID, MeshInstanceGrid::BuildMode::RemoveSpecific);
+            meshInstanceBuilder_->buildAt(cell->getCol(), cell->getRow(), GridCell::TEMPORARY | GridCell::INVALID, MeshInstanceBuilder::BuildMode::RemoveSpecific);
         });
     }
 
     void Room::invalidate() {
         grid_->forEachCellInRange(leftLowerCorner_, rightUpperCorner_, [&](GridCell* cell) {
-            buildHelper_->buildAt(cell->getCol(), cell->getRow(), GridCell::TEMPORARY | GridCell::INVALID, MeshInstanceGrid::BuildMode::Additive);
+            meshInstanceBuilder_->buildAt(cell->getCol(), cell->getRow(), GridCell::TEMPORARY | GridCell::INVALID, MeshInstanceBuilder::BuildMode::Additive);
         });
     }
 
     void Room::validate() {
         grid_->forEachCellInRange(leftLowerCorner_, rightUpperCorner_, [&](GridCell* cell) {
-            buildHelper_->buildAt(cell->getCol(), cell->getRow(), GridCell::TEMPORARY | GridCell::INVALID, MeshInstanceGrid::BuildMode::RemoveSpecific);
+            meshInstanceBuilder_->buildAt(cell->getCol(), cell->getRow(), GridCell::TEMPORARY | GridCell::INVALID, MeshInstanceBuilder::BuildMode::RemoveSpecific);
         });
     }
 
@@ -103,33 +103,33 @@ namespace roomgame
 
         if (temporary) {
             grid_->forEachCellInRange(leftLowerCorner_, rightUpperCorner_, [&](GridCell* cell) {
-                buildHelper_->buildAt(cell->getCol(), cell->getRow(), GridCell::TEMPORARY, MeshInstanceGrid::BuildMode::Additive);
+                meshInstanceBuilder_->buildAt(cell->getCol(), cell->getRow(), GridCell::TEMPORARY, MeshInstanceBuilder::BuildMode::Additive);
             });
         }
         else {
             // Set build states
-            buildHelper_->buildAt(minX, minY, GridCell::LEFT | GridCell::BOTTOM | GridCell::CORNER, MeshInstanceGrid::BuildMode::Replace);
-            buildHelper_->buildAt(maxX, maxY, GridCell::RIGHT | GridCell::TOP | GridCell::CORNER, MeshInstanceGrid::BuildMode::Replace);
-            buildHelper_->buildAt(minX, maxY, GridCell::LEFT | GridCell::TOP | GridCell::CORNER, MeshInstanceGrid::BuildMode::Replace);
-            buildHelper_->buildAt(maxX, minY, GridCell::RIGHT | GridCell::BOTTOM | GridCell::CORNER, MeshInstanceGrid::BuildMode::Replace);
+            meshInstanceBuilder_->buildAt(minX, minY, GridCell::LEFT | GridCell::BOTTOM | GridCell::CORNER, MeshInstanceBuilder::BuildMode::Replace);
+            meshInstanceBuilder_->buildAt(maxX, maxY, GridCell::RIGHT | GridCell::TOP | GridCell::CORNER, MeshInstanceBuilder::BuildMode::Replace);
+            meshInstanceBuilder_->buildAt(minX, maxY, GridCell::LEFT | GridCell::TOP | GridCell::CORNER, MeshInstanceBuilder::BuildMode::Replace);
+            meshInstanceBuilder_->buildAt(maxX, minY, GridCell::RIGHT | GridCell::BOTTOM | GridCell::CORNER, MeshInstanceBuilder::BuildMode::Replace);
 
             grid_->forEachCellInRange(leftUpperCorner->getEastNeighbor(), rightUpperCorner->getWestNeighbor(), [&](GridCell* cell) {
-                buildHelper_->buildAt(cell->getCol(), cell->getRow(), GridCell::WALL | GridCell::TOP, MeshInstanceGrid::BuildMode::Replace);
+                meshInstanceBuilder_->buildAt(cell->getCol(), cell->getRow(), GridCell::WALL | GridCell::TOP, MeshInstanceBuilder::BuildMode::Replace);
             });
             grid_->forEachCellInRange(leftLowerCorner->getEastNeighbor(), rightLowerCorner->getWestNeighbor(), [&](GridCell* cell) {
-                buildHelper_->buildAt(cell->getCol(), cell->getRow(), GridCell::WALL | GridCell::BOTTOM, MeshInstanceGrid::BuildMode::Replace);
+                meshInstanceBuilder_->buildAt(cell->getCol(), cell->getRow(), GridCell::WALL | GridCell::BOTTOM, MeshInstanceBuilder::BuildMode::Replace);
             });
             grid_->forEachCellInRange(leftLowerCorner->getNorthNeighbor(), leftUpperCorner->getSouthNeighbor(), [&](GridCell* cell) {
-                buildHelper_->buildAt(cell->getCol(), cell->getRow(), GridCell::WALL | GridCell::LEFT, MeshInstanceGrid::BuildMode::Replace);
+                meshInstanceBuilder_->buildAt(cell->getCol(), cell->getRow(), GridCell::WALL | GridCell::LEFT, MeshInstanceBuilder::BuildMode::Replace);
             });
             grid_->forEachCellInRange(rightLowerCorner->getNorthNeighbor(), rightUpperCorner->getSouthNeighbor(), [&](GridCell* cell) {
-                buildHelper_->buildAt(cell->getCol(), cell->getRow(), GridCell::WALL | GridCell::RIGHT, MeshInstanceGrid::BuildMode::Replace);
+                meshInstanceBuilder_->buildAt(cell->getCol(), cell->getRow(), GridCell::WALL | GridCell::RIGHT, MeshInstanceBuilder::BuildMode::Replace);
             });
 
             GridCell* insideLeftLower = leftLowerCorner->getEastNeighbor()->getNorthNeighbor();
             GridCell* insideRightUpper = rightUpperCorner->getWestNeighbor()->getSouthNeighbor();
             grid_->forEachCellInRange(insideLeftLower, insideRightUpper, [&](GridCell* cell) {
-                buildHelper_->buildAt(cell->getCol(), cell->getRow(), GridCell::INSIDE_ROOM, MeshInstanceGrid::BuildMode::Replace);
+                meshInstanceBuilder_->buildAt(cell->getCol(), cell->getRow(), GridCell::INSIDE_ROOM, MeshInstanceBuilder::BuildMode::Replace);
             });
         }
     }

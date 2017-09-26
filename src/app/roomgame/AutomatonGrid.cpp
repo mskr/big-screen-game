@@ -43,7 +43,7 @@ namespace roomgame
         }
 
         // Do instant update for all other cases
-        meshInstanceGrid_->buildAt(c, state, MeshInstanceGrid::BuildMode::Replace);
+        meshInstanceBuilder_->buildAt(c, state, MeshInstanceBuilder::BuildMode::Replace);
         c->updateHealthPoints(interactiveGrid_->vbo_, hp); // thinking of dynamic inner influence...
                                          // a fixed-on-cell health is not very practical
     }
@@ -56,7 +56,7 @@ namespace roomgame
             dup->wait_count_--;
             // ... and perform updates that are due
             if (dup->wait_count_ == 0) {
-                meshInstanceGrid_->buildAt(dup->target_, dup->to_, MeshInstanceGrid::BuildMode::Additive);
+                meshInstanceBuilder_->buildAt(dup->target_, dup->to_, MeshInstanceBuilder::BuildMode::Additive);
                 if (last) {
                     last->next_ = dup->next_;
                     delete dup;

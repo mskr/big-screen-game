@@ -1,7 +1,7 @@
 #pragma once
 
 #include "GridCell.h"
-#include "MeshInstanceGrid.h"
+#include "MeshInstanceBuilder.h"
 
 namespace roomgame
 {
@@ -21,7 +21,7 @@ namespace roomgame
     */
     class Room {
         std::shared_ptr<InteractiveGrid> grid_;
-        std::shared_ptr<MeshInstanceGrid> buildHelper_;
+        std::shared_ptr<MeshInstanceBuilder> meshInstanceBuilder_;
         bool isFinished_;
         std::vector<RoomSegmentMesh::InstanceBufferRange> mesh_instances_;
     public:
@@ -29,7 +29,7 @@ namespace roomgame
         GridCell* rightUpperCorner_;
         static const size_t MIN_SIZE = 2;
         static const size_t MAX_SIZE = 80;
-        Room(GridCell* leftLowerCorner, GridCell* rightUpperCorner, std::shared_ptr<InteractiveGrid> grid, std::shared_ptr<MeshInstanceGrid> buildHelper);
+        Room(GridCell* leftLowerCorner, GridCell* rightUpperCorner, std::shared_ptr<InteractiveGrid> grid, std::shared_ptr<MeshInstanceBuilder> buildHelper);
         ~Room();
         void clear();
         void invalidate();

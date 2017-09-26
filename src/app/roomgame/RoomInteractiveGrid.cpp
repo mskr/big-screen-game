@@ -1,5 +1,5 @@
 #include "InteractiveGrid.h"
-#include "MeshInstanceGrid.h"
+#include "MeshInstanceBuilder.h"
 #include "RoomInteractiveGrid.h"
 #include "../../../extern/fwcore/extern/assimp/code/FBXDocument.h"
 
@@ -18,10 +18,10 @@ namespace roomgame
         // ...then start room creation
         std::unique_ptr<GridInteraction> newInteraction = nullptr;
         if (touchedCell->getBuildState() == GridCell::EMPTY) {
-            Room* room = new Room(touchedCell, touchedCell,interactiveGrid_, meshInstanceGrid_);
+            Room* room = new Room(touchedCell, touchedCell,interactiveGrid_, meshInstanceBuilder_);
             interactiveGrid_->interactions_.push_back(std::make_unique<GridInteraction>(touchID, touchedCell, room));
             room->updateCorners(touchedCell, touchedCell);
-            meshInstanceGrid_->buildAt(touchedCell->getCol(), touchedCell->getRow(), GridCell::INVALID | GridCell::TEMPORARY, MeshInstanceGrid::BuildMode::Additive); // room covering one cell is invalid
+            meshInstanceBuilder_->buildAt(touchedCell->getCol(), touchedCell->getRow(), GridCell::INVALID | GridCell::TEMPORARY, MeshInstanceBuilder::BuildMode::Additive); // room covering one cell is invalid
         }
         // check if infected or source
         else if (touchedCell->getBuildState() & (GridCell::SOURCE | GridCell::INFECTED)) {
@@ -53,8 +53,8 @@ namespace roomgame
                     //std::cout << "Cure source Cell" << std::endl;
                     touchedCell->updateHealthPoints(interactiveGrid_->vbo_, updatedHealth);
                     if (currentHealth >= GridCell::MAX_HEALTH) {
-                        meshInstanceGrid_->buildAt(touchedCell->getCol(), touchedCell->getRow(), GridCell::WALL, MeshInstanceGrid::BuildMode::Additive);
-                        meshInstanceGrid_->buildAt(touchedCell->getCol(), touchedCell->getRow(), GridCell::SOURCE | GridCell::INFECTED, MeshInstanceGrid::BuildMode::RemoveSpecific);
+                        meshInstanceBuilder_->buildAt(touchedCell->getCol(), touchedCell->getRow(), GridCell::WALL, MeshInstanceBuilder::BuildMode::Additive);
+                        meshInstanceBuilder_->buildAt(touchedCell->getCol(), touchedCell->getRow(), GridCell::SOURCE | GridCell::INFECTED, MeshInstanceBuilder::BuildMode::RemoveSpecific);
                         sourceLightManager_->DeleteClosestSourcePos(interactiveGrid_->getWorldCoordinates(touchedCell->getPosition()));
                     }
 
@@ -64,7 +64,7 @@ namespace roomgame
                 //std::cout << "Cure infected Cell" << std::endl;
                 touchedCell->updateHealthPoints(interactiveGrid_->vbo_, updatedHealth);
                 if (currentHealth >= GridCell::MAX_HEALTH) {
-                    meshInstanceGrid_->buildAt(touchedCell->getCol(), touchedCell->getRow(), GridCell::INFECTED, MeshInstanceGrid::BuildMode::RemoveSpecific);
+                    meshInstanceBuilder_->buildAt(touchedCell->getCol(), touchedCell->getRow(), GridCell::INFECTED, MeshInstanceBuilder::BuildMode::RemoveSpecific);
                 }
             }
 
@@ -187,7 +187,7 @@ namespace roomgame
         }
         if (room != nullptr) {
             interactiveGrid_->forEachCellInRange(interac->getRoom()->leftLowerCorner_, interac->getRoom()->rightUpperCorner_, static_cast<std::function<void(GridCell*)>>([&](GridCell* cell) {
-                meshInstanceGrid_->deleteNeighbouringWalls(cell, false);
+                meshInstanceBuilder_->deleteNeighbouringWalls(cell, false);
             }));
         }
 

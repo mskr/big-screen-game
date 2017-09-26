@@ -22,13 +22,13 @@
 #endif
 namespace roomgame
 {
-    class MeshInstanceGrid;
+    class MeshInstanceBuilder;
     class InteractiveGrid;
     class RoomSegmentMeshPool;
     class RoomInteractiveGrid;
     class InnerInfluence;
 }
-using roomgame::MeshInstanceGrid;
+using roomgame::MeshInstanceBuilder;
 using roomgame::InteractiveGrid;
 using roomgame::RoomSegmentMeshPool;
 using roomgame::RoomInteractiveGrid;
@@ -56,7 +56,7 @@ namespace viscom {
         /* Holds core state of the roomgame and handles events */
         roomgame::AutomatonGrid automatonGrid_;
 
-        std::shared_ptr<MeshInstanceGrid> meshInstanceGrid_;
+        std::shared_ptr<MeshInstanceBuilder> meshInstanceBuilder_;
         std::shared_ptr<RoomInteractiveGrid> roomInteractiveGrid_;
         std::shared_ptr<InteractiveGrid> interactiveGrid_;
 

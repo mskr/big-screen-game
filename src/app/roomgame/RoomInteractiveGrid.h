@@ -7,7 +7,7 @@
 namespace roomgame
 {
     class InteractiveGrid;
-    class MeshInstanceGrid;
+    class MeshInstanceBuilder;
     /* Grid class that manages rooms that span over grid cells.
     * Has InteractiveGrid as base class.
     * Adds possibility to create rooms by click and drag.
@@ -16,7 +16,7 @@ namespace roomgame
     class RoomInteractiveGrid {
     public:
         std::shared_ptr<InteractiveGrid> interactiveGrid_;
-        std::shared_ptr<MeshInstanceGrid> meshInstanceGrid_;
+        std::shared_ptr<MeshInstanceBuilder> meshInstanceBuilder_;
         std::vector<Room*> rooms_;
         void handleTouchedCell(int touchID, GridCell*);
         void handleHoveredCell(GridCell*, std::shared_ptr<GridInteraction> interac);
