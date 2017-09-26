@@ -8,8 +8,6 @@ namespace roomgame
     class GPUCellularAutomaton;
     class InteractiveGrid;
     /* Grid class for cellular automatons.
-    * Has InteractiveGrid as base class.
-    * Inherits functionality of RoomInteractiveGrid and MeshInstanceBuilder as well.
     * Adds possibility to receive changes
     * a) from user input by overriding buildAt() and
     * b) from cellular automaton by offering updateCell() function.

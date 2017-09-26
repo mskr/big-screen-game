@@ -9,7 +9,7 @@ namespace roomgame
     /* A room spanning over a rectangular area of cells on a grid.
     * Rooms are also represented by build states of cells.
     * Can be interactively created/resized.
-    * Creation process is controlled by RoomInteractiveGrid.
+    * Creation process is controlled by RoomInteractionManager.
     * Grow and shrink functions allow to update a minimal amount of cells.
     * Grow functions can furthermore detect collisions (and return false if collided).
     * The span function simply updates all cells in the room and also reports collisions.

@@ -1,82 +1,91 @@
 #include "InteractiveGrid.h"
 #include "MeshInstanceBuilder.h"
-#include "RoomInteractiveGrid.h"
+#include "AutomatonGrid.h"
+#include "RoomInteractionManager.h"
 #include "../../../extern/fwcore/extern/assimp/code/FBXDocument.h"
 
 namespace roomgame
 {
-    RoomInteractiveGrid::RoomInteractiveGrid() {
+    RoomInteractionManager::RoomInteractionManager() {
         healAmount_ = DEFAULT_HEAL_AMOUNT;
     }
 
-    RoomInteractiveGrid::~RoomInteractiveGrid() {
+    RoomInteractionManager::~RoomInteractionManager() {
         for (Room* r : rooms_) delete r;
     }
 
-    void RoomInteractiveGrid::handleTouchedCell(int touchID, GridCell* touchedCell) {
-        // is the touched cell still empty?
-        // ...then start room creation
-        std::unique_ptr<GridInteraction> newInteraction = nullptr;
-        if (touchedCell->getBuildState() == GridCell::EMPTY) {
-            Room* room = new Room(touchedCell, touchedCell,interactiveGrid_, meshInstanceBuilder_);
-            interactiveGrid_->interactions_.push_back(std::make_unique<GridInteraction>(touchID, touchedCell, room));
-            room->updateCorners(touchedCell, touchedCell);
-            meshInstanceBuilder_->buildAt(touchedCell->getCol(), touchedCell->getRow(), GridCell::INVALID | GridCell::TEMPORARY, MeshInstanceBuilder::BuildMode::Additive); // room covering one cell is invalid
+    void RoomInteractionManager::startNewRoom(int touchID, GridCell* touchedCell)
+    {
+        Room* room = new Room(touchedCell, touchedCell,interactiveGrid_, meshInstanceBuilder_);
+        interactiveGrid_->interactions_.push_back(std::make_unique<GridInteraction>(touchID, touchedCell, room));
+        room->updateCorners(touchedCell, touchedCell);
+        meshInstanceBuilder_->buildAt(touchedCell->getCol(), touchedCell->getRow(), GridCell::INVALID | GridCell::TEMPORARY, MeshInstanceBuilder::BuildMode::Additive); // room covering one cell is invalid
+    }
+
+    void RoomInteractionManager::TryRepair(GridCell* touchedCell)
+    {
+        //std::cout << "Touched infected cell" << std::endl;
+        GLuint north = touchedCell->getNorthNeighbor()->getBuildState();
+        GLuint east = touchedCell->getEastNeighbor()->getBuildState();
+        GLuint south = touchedCell->getSouthNeighbor()->getBuildState();
+        GLuint west = touchedCell->getWestNeighbor()->getBuildState();
+
+        GLuint test = GridCell::SOURCE | GridCell::INFECTED;
+
+        GLuint currentHealth = touchedCell->getHealthPoints();
+        GLuint updatedHealth = min(currentHealth + static_cast<GLuint>((GridCell::MAX_HEALTH - GridCell::MIN_HEALTH) * healAmount_), GridCell::MAX_HEALTH);
+
+        GLuint andSides = north & south & east & west;
+
+        if (andSides & test) {
+            //std::cout << "Cell is in the middle of 4 infected cells" << std::endl;
+            return;
         }
-        // check if infected or source
-        else if (touchedCell->getBuildState() & (GridCell::SOURCE | GridCell::INFECTED)) {
-            //std::cout << "Touched infected cell" << std::endl;
-            GLuint north = touchedCell->getNorthNeighbor()->getBuildState();
-            GLuint east = touchedCell->getEastNeighbor()->getBuildState();
-            GLuint south = touchedCell->getSouthNeighbor()->getBuildState();
-            GLuint west = touchedCell->getWestNeighbor()->getBuildState();
-
-            GLuint test = GridCell::SOURCE | GridCell::INFECTED;
-
-            GLuint currentHealth = touchedCell->getHealthPoints();
-            GLuint updatedHealth = min(currentHealth + static_cast<GLuint>((GridCell::MAX_HEALTH - GridCell::MIN_HEALTH) * healAmount_), GridCell::MAX_HEALTH);
-
-            GLuint andSides = north & south & east & west;
-
-            if (andSides & test) {
-                //std::cout << "Cell is in the middle of 4 infected cells" << std::endl;
-                return;
-            }
-            else if (touchedCell->getBuildState() & GridCell::SOURCE) {
-                if (((north & test) && !(north & GridCell::SOURCE)) |
-                    ((south & test) && !(south & GridCell::SOURCE)) |
-                    ((east & test) && !(east & GridCell::SOURCE)) |
-                    ((west & test) && !(west & GridCell::SOURCE))) {
-                    //std::cout << "Try to cure Source Cell but there are infected cells nerby" << std::endl;
-                }
-                else {
-                    //std::cout << "Cure source Cell" << std::endl;
-                    touchedCell->updateHealthPoints(interactiveGrid_->vbo_, updatedHealth);
-                    if (currentHealth >= GridCell::MAX_HEALTH) {
-                        meshInstanceBuilder_->buildAt(touchedCell->getCol(), touchedCell->getRow(), GridCell::WALL, MeshInstanceBuilder::BuildMode::Additive);
-                        meshInstanceBuilder_->buildAt(touchedCell->getCol(), touchedCell->getRow(), GridCell::SOURCE | GridCell::INFECTED, MeshInstanceBuilder::BuildMode::RemoveSpecific);
-                        sourceLightManager_->DeleteClosestSourcePos(interactiveGrid_->getWorldCoordinates(touchedCell->getPosition()));
-                    }
-
-                }
+        else if (touchedCell->getBuildState() & GridCell::SOURCE) {
+            if (((north & test) && !(north & GridCell::SOURCE)) |
+                ((south & test) && !(south & GridCell::SOURCE)) |
+                ((east & test) && !(east & GridCell::SOURCE)) |
+                ((west & test) && !(west & GridCell::SOURCE))) {
+                //std::cout << "Try to cure Source Cell but there are infected cells nerby" << std::endl;
             }
             else {
-                //std::cout << "Cure infected Cell" << std::endl;
+                //std::cout << "Cure source Cell" << std::endl;
                 touchedCell->updateHealthPoints(interactiveGrid_->vbo_, updatedHealth);
                 if (currentHealth >= GridCell::MAX_HEALTH) {
-                    meshInstanceBuilder_->buildAt(touchedCell->getCol(), touchedCell->getRow(), GridCell::INFECTED, MeshInstanceBuilder::BuildMode::RemoveSpecific);
+                    meshInstanceBuilder_->buildAt(touchedCell->getCol(), touchedCell->getRow(), GridCell::WALL, MeshInstanceBuilder::BuildMode::Additive);
+                    meshInstanceBuilder_->buildAt(touchedCell->getCol(), touchedCell->getRow(), GridCell::SOURCE | GridCell::INFECTED, MeshInstanceBuilder::BuildMode::RemoveSpecific);
+                    sourceLightManager_->DeleteClosestSourcePos(interactiveGrid_->getWorldCoordinates(touchedCell->getPosition()));
                 }
-            }
 
+            }
+        }
+        else {
+            //std::cout << "Cure infected Cell" << std::endl;
+            touchedCell->updateHealthPoints(interactiveGrid_->vbo_, updatedHealth);
+            if (currentHealth >= GridCell::MAX_HEALTH) {
+                meshInstanceBuilder_->buildAt(touchedCell->getCol(), touchedCell->getRow(), GridCell::INFECTED, MeshInstanceBuilder::BuildMode::RemoveSpecific);
+            }
         }
     }
 
-    void RoomInteractiveGrid::ResetHealAmount()
+    void RoomInteractionManager::StartNewRoomInteractionAtTouchedCell(int touchID, GridCell* touchedCell) {
+        // is the touched cell still empty?
+        // ...then start room creation
+        if (touchedCell->getBuildState() == GridCell::EMPTY) {
+            startNewRoom(touchID, touchedCell);
+        }
+        // check if infected or source
+        else if (touchedCell->getBuildState() & (GridCell::SOURCE | GridCell::INFECTED)) {
+            TryRepair(touchedCell);
+        }
+    }
+
+    void RoomInteractionManager::ResetHealAmount()
     {
         healAmount_ = DEFAULT_HEAL_AMOUNT;
     }
 
-    void RoomInteractiveGrid::checkConnection(Room* newRoom, int lengthX, int lengthY, int posX, int posY) {
+    void RoomInteractionManager::checkConnection(Room* newRoom, int lengthX, int lengthY, int posX, int posY) {
         bool connected = false;
         for (Room* r : rooms_) {
             if (r == newRoom) {
@@ -103,7 +112,7 @@ namespace roomgame
         newRoom->connected = connected;
     }
 
-    void RoomInteractiveGrid::checkForNearInfections(Room* newRoom)
+    void RoomInteractionManager::checkForNearInfections(Room* newRoom)
     {
         //Check for infected neighbouring rooms
         bool infectedNeighbours = false;
@@ -127,7 +136,7 @@ namespace roomgame
         newRoom->infectedNeighbours = infectedNeighbours;
     }
 
-    bool RoomInteractiveGrid::checkRoomPosition(Room* newRoom) {
+    bool RoomInteractionManager::checkRoomPosition(Room* newRoom) {
         checkForNearInfections(newRoom);
 
         int lengthX = (int)newRoom->getColSize();
@@ -157,7 +166,7 @@ namespace roomgame
         return false;
     }
 
-    void RoomInteractiveGrid::handleHoveredCell(GridCell* hoveredCell, std::shared_ptr<GridInteraction> interac) {
+    void RoomInteractionManager::AdjustTemporaryRoomSize(GridCell* hoveredCell, std::shared_ptr<GridInteraction> interac) {
         if (interac->getLastCell() == hoveredCell) return; // return if cursor was still inside last cell
         interac->setLastCell(hoveredCell);
         interac->getRoom()->clear();
@@ -168,7 +177,7 @@ namespace roomgame
 
     }
 
-    void RoomInteractiveGrid::handleRelease(std::shared_ptr<GridInteraction> interac) {
+    void RoomInteractionManager::FinalizeTemporaryRoom(std::shared_ptr<GridInteraction> interac) {
         // check result and remove interaction
         Room* room = interac->getRoom();
         if (room->isValid) { // if room valid, i.e. big enough, non-colliding, connecting, then store it
@@ -194,12 +203,12 @@ namespace roomgame
         interactiveGrid_->interactions_.remove(interac);
     }
 
-    void RoomInteractiveGrid::updateHealthPoints(GridCell* cell, unsigned int hp) {
+    void RoomInteractionManager::updateHealthPoints(GridCell* cell, unsigned int hp) {
         cell->updateHealthPoints(interactiveGrid_->vbo_, hp);
     }
 
 
-    void RoomInteractiveGrid::reset() {
+    void RoomInteractionManager::reset() {
         for (Room* r : rooms_) delete r;
         rooms_.clear();
         firstRoom = true;

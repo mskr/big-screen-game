@@ -25,13 +25,13 @@ namespace roomgame
     class MeshInstanceBuilder;
     class InteractiveGrid;
     class RoomSegmentMeshPool;
-    class RoomInteractiveGrid;
+    class RoomInteractionManager;
     class InnerInfluence;
 }
 using roomgame::MeshInstanceBuilder;
 using roomgame::InteractiveGrid;
 using roomgame::RoomSegmentMeshPool;
-using roomgame::RoomInteractiveGrid;
+using roomgame::RoomInteractionManager;
 using roomgame::InnerInfluence;
 
 
@@ -57,7 +57,7 @@ namespace viscom {
         roomgame::AutomatonGrid automatonGrid_;
 
         std::shared_ptr<MeshInstanceBuilder> meshInstanceBuilder_;
-        std::shared_ptr<RoomInteractiveGrid> roomInteractiveGrid_;
+        std::shared_ptr<RoomInteractionManager> roomInteractionManager_;
         std::shared_ptr<InteractiveGrid> interactiveGrid_;
 
         /* Controls inner influence, i.e. room infection */

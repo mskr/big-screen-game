@@ -1,5 +1,5 @@
 #include "app/roomgame/InteractiveGrid.h"
-#include "RoomInteractiveGrid.h"
+#include "RoomInteractionManager.h"
 #include "MeshInstanceBuilder.h"
 #include "OuterInfluence.h"
 #include <iostream>
@@ -189,12 +189,12 @@ namespace roomgame {
             mode_ = RETREAT;
             auto bs = targetCell_->getBuildState();
             if (bs == GridCell::EMPTY) return;
-            Grid->RoomInteractiveGrid->meshInstanceBuilder_->buildAt(targetCell_->getCol(), targetCell_->getRow(), GridCell::SOURCE, MeshInstanceBuilder::BuildMode::Additive);
-            Grid->RoomInteractiveGrid->meshInstanceBuilder_->buildAt(targetCell_->getCol(), targetCell_->getRow(), GridCell::WALL, MeshInstanceBuilder::BuildMode::RemoveSpecific);
+            Grid->roomInteractionManager_->meshInstanceBuilder_->buildAt(targetCell_->getCol(), targetCell_->getRow(), GridCell::SOURCE, MeshInstanceBuilder::BuildMode::Additive);
+            Grid->roomInteractionManager_->meshInstanceBuilder_->buildAt(targetCell_->getCol(), targetCell_->getRow(), GridCell::WALL, MeshInstanceBuilder::BuildMode::RemoveSpecific);
             const auto wPos = Grid->getWorldCoordinates(targetCell_->getPosition());
-            if(Grid->RoomInteractiveGrid->sourceLightManager_==nullptr)
+            if(Grid->roomInteractionManager_->sourceLightManager_==nullptr)
             {
-                Grid->RoomInteractiveGrid->sourceLightManager_ = sourceLightManager_;
+                Grid->roomInteractionManager_->sourceLightManager_ = sourceLightManager_;
             }
             sourceLightManager_->sourcePositions_.push_back(wPos);
         }

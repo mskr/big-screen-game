@@ -8,26 +8,28 @@ namespace roomgame
 {
     class InteractiveGrid;
     class MeshInstanceBuilder;
-    /* Grid class that manages rooms that span over grid cells.
-    * Has InteractiveGrid as base class.
-    * Adds possibility to create rooms by click and drag.
+    /* Class that manages rooms that span over grid cells.
+    * Adds possibility to create rooms by click and drag as well as repairing rooms by clicking
     * Holds a list of rooms.
     */
-    class RoomInteractiveGrid {
+    class RoomInteractionManager {
     public:
         std::shared_ptr<InteractiveGrid> interactiveGrid_;
         std::shared_ptr<MeshInstanceBuilder> meshInstanceBuilder_;
+        AutomatonGrid* automatonGrid_;
         std::vector<Room*> rooms_;
-        void handleTouchedCell(int touchID, GridCell*);
-        void handleHoveredCell(GridCell*, std::shared_ptr<GridInteraction> interac);
-        void handleRelease(std::shared_ptr<GridInteraction> interac);
+        void StartNewRoomInteractionAtTouchedCell(int touchID, GridCell*);
+        void AdjustTemporaryRoomSize(GridCell*, std::shared_ptr<GridInteraction> interac);
+        void FinalizeTemporaryRoom(std::shared_ptr<GridInteraction> interac);
         void ResetHealAmount();
         std::shared_ptr<roomgame::SourceLightManager> sourceLightManager_ = nullptr;
         bool checkRoomPosition(Room* newRoom);
-        RoomInteractiveGrid();
+        RoomInteractionManager();
         void updateHealthPoints(GridCell* cell, unsigned int hp);
         void reset();
-        ~RoomInteractiveGrid();
+        ~RoomInteractionManager();
+        void startNewRoom(int touchID, GridCell* touchedCell);
+        void TryRepair(GridCell* touchedCell);
         float healAmount_;
     private:
         const float DEFAULT_HEAL_AMOUNT = 0.25f;

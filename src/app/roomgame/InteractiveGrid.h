@@ -7,7 +7,7 @@
 #include "GridInteraction.h"
 
 namespace roomgame {
-    class RoomInteractiveGrid;
+    class RoomInteractionManager;
 
     /* Renderable and clickable grid.
     * Container for grid cell objects.
@@ -31,7 +31,7 @@ namespace roomgame {
     public:
         std::vector<std::vector<GridCell>> cells_;
         std::list<std::shared_ptr<GridInteraction>> interactions_;
-        std::shared_ptr<roomgame::RoomInteractiveGrid> RoomInteractiveGrid;
+        std::shared_ptr<roomgame::RoomInteractionManager> roomInteractionManager_;
         glm::vec3 grid_center_;
         GLuint vao_, vbo_;
 

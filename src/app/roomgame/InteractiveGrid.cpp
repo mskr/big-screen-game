@@ -1,5 +1,5 @@
 #include "InteractiveGrid.h"
-#include "RoomInteractiveGrid.h"
+#include "RoomInteractionManager.h"
 
 namespace roomgame
 {
@@ -268,14 +268,14 @@ namespace roomgame
         // now use picking
         GridCell* pickedCell = pickCell(last_ray_start_point_, last_ray_intermediate_point_);
         if (!pickedCell) return;
-        RoomInteractiveGrid->handleTouchedCell(touchID, pickedCell);
+        roomInteractionManager_->StartNewRoomInteractionAtTouchedCell(touchID, pickedCell);
     }
 
 
     void InteractiveGrid::onRelease(int touchID) {
         for (std::shared_ptr<GridInteraction> interac : interactions_) {
             if (interac->getTouchID() == touchID) {
-                RoomInteractiveGrid->handleRelease(interac);
+                roomInteractionManager_->FinalizeTemporaryRoom(interac);
                 break;
             }
         }
@@ -288,7 +288,7 @@ namespace roomgame
             if (interac->getTouchID() == touchID) {
                 GridCell* maybeCell = pickCell(last_ray_start_point_, last_ray_intermediate_point_);
                 if (!maybeCell)	return; // cursor was outside grid
-                RoomInteractiveGrid->handleHoveredCell(maybeCell, interac);
+                roomInteractionManager_->AdjustTemporaryRoomSize(maybeCell, interac);
                 break;
             }
         }

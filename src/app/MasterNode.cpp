@@ -13,7 +13,7 @@
 #include "roomgame/MeshInstanceBuilder.h"
 #include "roomgame/InteractiveGrid.h"
 #include "roomgame/RoomSegmentMeshPool.h"
-#include "roomgame/RoomInteractiveGrid.h"
+#include "roomgame/RoomInteractionManager.h"
 #include "roomgame\InnerInfluence.h"
 
 
@@ -28,10 +28,11 @@ namespace viscom {
         interactiveGrid_ = std::make_shared<InteractiveGrid>(GRID_COLS_, GRID_ROWS_, GRID_HEIGHT_);
         meshInstanceBuilder_->interactiveGrid_ = interactiveGrid_;
         meshInstanceBuilder_->automatonGrid_ = &automatonGrid_;
-        roomInteractiveGrid_ = std::make_shared<RoomInteractiveGrid>();
-        roomInteractiveGrid_->interactiveGrid_ = interactiveGrid_;
-        roomInteractiveGrid_->meshInstanceBuilder_ = meshInstanceBuilder_;
-        interactiveGrid_->RoomInteractiveGrid = roomInteractiveGrid_;
+        roomInteractionManager_ = std::make_shared<RoomInteractionManager>();
+        roomInteractionManager_->interactiveGrid_ = interactiveGrid_;
+        roomInteractionManager_->meshInstanceBuilder_ = meshInstanceBuilder_;
+        roomInteractionManager_->automatonGrid_ = &automatonGrid_;
+        interactiveGrid_->roomInteractionManager_ = roomInteractionManager_;
         automatonGrid_.meshInstanceBuilder_ = meshInstanceBuilder_;
         automatonGrid_.interactiveGrid_ = interactiveGrid_;
         cellular_automaton_ = std::make_shared<roomgame::InnerInfluence>(&automatonGrid_,interactiveGrid_,3.0);
@@ -155,7 +156,7 @@ namespace viscom {
         float innerInfluenceTransition = (float) cellular_automaton_->getTransitionTime();
         int innerInfluenceFlowSpeed = cellular_automaton_->FLOW_SPEED;
         int innerInfluenceCriticalValue = cellular_automaton_->CRITICAL_VALUE;
-        float repairPerClickValue = roomInteractiveGrid_->healAmount_;
+        float repairPerClickValue = roomInteractionManager_->healAmount_;
 
         fbo.DrawToFBO([&]() {
             ImGui::SetNextWindowPos(ImVec2(700, 60), ImGuiSetCond_FirstUseEver);
@@ -201,7 +202,7 @@ namespace viscom {
                 ImGui::Text("Repairs");
                 ImGui::Spacing();
                 if (ImGui::SliderFloat("Heal per click", &repairPerClickValue, 0.1f, 1.1f)) {
-                    roomInteractiveGrid_->healAmount_ = glm::clamp(repairPerClickValue, 0.1f, 1.1f);
+                    roomInteractionManager_->healAmount_ = glm::clamp(repairPerClickValue, 0.1f, 1.1f);
                 }
 
                 ImGui::Spacing();
@@ -359,10 +360,10 @@ namespace viscom {
     bool MasterNode::AddTuioCursor(TUIO::TuioCursor* tcur)
     {
         // grid_.onTouch(-1); //TODO @Tobias: pass the CursorID here,
-        // ID is saved in interaction object by RoomInteractiveGrid::handleTouchedCell,
+        // ID is saved in interaction object by RoomInteractionManager::StartNewRoomInteractionAtTouchedCell,
             // this object lives for the duration of one touch gesture
             // and is used to distinguish clicks/touches, to reuse IDs of accidentally interrupted touch gestures, etc.
-            // (see RoomInteractiveGrid::handleHoveredCell + handleRelease + GridInteraction::testTemporalAndSpatialProximity)
+            // (see RoomInteractionManager::AdjustTemporaryRoomSize + FinalizeTemporaryRoom + GridInteraction::testTemporalAndSpatialProximity)
 #ifdef WITH_TUIO
         mtx.lock();
         inputBuffer.push_back(input{ INPUT_ADD,tcur->getX(),tcur->getY(), tcur->getCursorID() });
@@ -429,8 +430,8 @@ namespace viscom {
     void MasterNode::reset() {
         interactiveGrid_->forEachCell([&](GridCell *cell) {
             meshInstanceBuilder_->buildAt(cell->getCol(), cell->getRow(), GridCell::EMPTY, MeshInstanceBuilder::BuildMode::Replace);
-            roomInteractiveGrid_->updateHealthPoints(cell, GridCell::MAX_HEALTH);
-            roomInteractiveGrid_->reset();
+            roomInteractionManager_->updateHealthPoints(cell, GridCell::MAX_HEALTH);
+            roomInteractionManager_->reset();
         });
         sourceLightManager_->sourcePositions_.clear();
     }
@@ -440,6 +441,6 @@ namespace viscom {
         outerInfluence_->resetValues();
         cellular_automaton_->ResetTransitionTime();
         cellular_automaton_->Reset();
-        roomInteractiveGrid_->ResetHealAmount();
+        roomInteractionManager_->ResetHealAmount();
     }
 }
