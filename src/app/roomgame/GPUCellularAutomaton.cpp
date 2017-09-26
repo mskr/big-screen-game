@@ -107,8 +107,8 @@ namespace roomgame
         // iterate over contents
         for (unsigned int x = 0; x < cols; x++) {
             for (unsigned int y = 0; y < rows * N_CH - 1; y += N_CH) {
-                GLuint state = (GLuint)tmp_client_buffer_[x * N_CH * rows + y];
-                int hp = (int)tmp_client_buffer_[x * N_CH * rows + y + 1];
+                GLuint state = static_cast<GLuint>(tmp_client_buffer_[x * N_CH * rows + y]);
+                int hp = static_cast<int>(tmp_client_buffer_[x * N_CH * rows + y + 1]);
                 GridCell* c = interactiveGrid_->getCellAt(y / N_CH, x);
                 // something changed?
                 if (c->getBuildState() == state && c->getHealthPoints() == hp)

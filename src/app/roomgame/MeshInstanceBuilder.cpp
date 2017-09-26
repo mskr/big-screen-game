@@ -87,18 +87,13 @@ namespace roomgame
                 if (simulate) {
                     return true;
                 }
-                buildAt(cell->getCol(), cell->getRow(), [&](GridCell* c) {
-                    GLuint old = c->getBuildState();
-                    GLuint modified = old & (GridCell::EMPTY | GridCell::INVALID | GridCell::SOURCE | GridCell::INFECTED | GridCell::OUTER_INFLUENCE);
+                auto wallReplacementFunc = [&](GLuint oldState) {
+                    GLuint modified = oldState & (GridCell::EMPTY | GridCell::INVALID | GridCell::SOURCE | GridCell::INFECTED | GridCell::OUTER_INFLUENCE);
                     modified |= GridCell::INSIDE_ROOM;
-                    c->setBuildState(modified);
-                });
-                buildAt(neighbour->getCol(), neighbour->getRow(), [&](GridCell* c) {
-                    GLuint old = c->getBuildState();
-                    GLuint modified = old & (GridCell::EMPTY | GridCell::INVALID | GridCell::SOURCE | GridCell::INFECTED | GridCell::OUTER_INFLUENCE);
-                    modified |= GridCell::INSIDE_ROOM;
-                    c->setBuildState(modified);
-                });
+                    return modified;
+                };
+                buildAt(cell->getCol(), cell->getRow(), wallReplacementFunc);
+                buildAt(neighbour->getCol(), neighbour->getRow(), wallReplacementFunc);
                 return true;
             }
         }
@@ -106,11 +101,9 @@ namespace roomgame
     }
 
 
-    void MeshInstanceBuilder::buildAt(GridCell* c, std::function<void(GridCell*)> callback) {
+    void MeshInstanceBuilder::buildAt(GridCell* c, std::function<GLuint(GLuint)> buildStateModifyFunction) {
         GLuint current = c->getBuildState();
-        callback(c);
-        GLuint newSt = c->getBuildState();
-        c->setBuildState(current);
+        GLuint newSt = buildStateModifyFunction(current);
         if (current == newSt) return;
         else if (current == GridCell::EMPTY) addInstanceAt(c, newSt);
         else if (newSt == GridCell::EMPTY) removeInstanceAt(c);
@@ -118,42 +111,38 @@ namespace roomgame
             removeInstanceAt(c);
             addInstanceAt(c, newSt);
         }
+        if (newSt & (GridCell::SOURCE | GridCell::INFECTED | GridCell::TEMPORARY) == 0)
+        {
+            c->updateHealthPoints(interactiveGrid_->vbo_, GridCell::MAX_HEALTH);
+        }
         c->setBuildState(newSt);
         c->updateBuildState(interactiveGrid_->vbo_);
-        c->updateHealthPoints(interactiveGrid_->vbo_, GridCell::MAX_HEALTH);
         automatonUpdater_->updateAutomatonAt(c, newSt, c->getHealthPoints());
     }
 
     void MeshInstanceBuilder::buildAt(GridCell* c, GLuint newState, BuildMode buildMode) {
-        GLuint current = c->getBuildState();
-        GLuint moddedState;
-        switch (buildMode) {
-        case BuildMode::Additive:
-            moddedState = current | newState;
-            break;
-        case BuildMode::Replace:
-            moddedState = newState;
-            break;
-        case BuildMode::RemoveSpecific:
-            moddedState = (current | newState) ^ newState;
-            break;
-        }
-        if (current == moddedState) return;
-        else if (current == GridCell::EMPTY) addInstanceAt(c, moddedState);
-        else if (moddedState == GridCell::EMPTY) removeInstanceAt(c);
-        else {
-            removeInstanceAt(c);
-            addInstanceAt(c, moddedState);
-        }
-        c->setBuildState(moddedState);
-        c->updateBuildState(interactiveGrid_->vbo_);
-        c->updateHealthPoints(interactiveGrid_->vbo_, GridCell::MAX_HEALTH);
-        automatonUpdater_->updateAutomatonAt(c, moddedState, c->getHealthPoints());
+        buildAt(c,[&](GLuint oldState)
+        {
+            GLuint modified;
+            GLuint newStateInternal = newState;
+            switch (buildMode) {
+            case BuildMode::Additive:
+                modified = oldState | newStateInternal;
+                break;
+            case BuildMode::Replace:
+                modified = newStateInternal;
+                break;
+            case BuildMode::RemoveSpecific:
+                modified = (oldState | newStateInternal) ^ newStateInternal;
+                break;
+            }
+            return modified;
+        });
     }
 
-    void MeshInstanceBuilder::buildAt(size_t col, size_t row, std::function<void(GridCell*)> callback) {
+    void MeshInstanceBuilder::buildAt(size_t col, size_t row, std::function<GLuint(GLuint)> buildStateModifyFunction) {
         GridCell* maybeCell = interactiveGrid_->getCellAt(col, row);
-        if (maybeCell) buildAt(maybeCell, callback);
+        if (maybeCell) buildAt(maybeCell, buildStateModifyFunction);
     }
 
     void MeshInstanceBuilder::buildAt(size_t col, size_t row, GLuint newState, BuildMode buildMode) {

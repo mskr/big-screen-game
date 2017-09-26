@@ -28,8 +28,8 @@ namespace roomgame
         bool deleteNeighbouringWalls(GridCell* cell, bool simulate);
         MeshInstanceBuilder(RoomSegmentMeshPool* meshpool);
         void buildAt(size_t col, size_t row, GLuint newState, BuildMode buildMode);
-        void buildAt(size_t col, size_t row, std::function<void(GridCell*)> callback);
+        void buildAt(size_t col, size_t row, std::function<GLuint(GLuint)> buildStateModifyFunction);
         void buildAt(GridCell*, GLuint newState, BuildMode buildMode);
-        void buildAt(GridCell*, std::function<void(GridCell*)> callback);
+        void buildAt(GridCell*, std::function<GLuint(GLuint)> buildStateModifyFunction);
     };
 }

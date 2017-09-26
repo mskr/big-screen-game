@@ -51,6 +51,7 @@ namespace roomgame
             else {
                 //std::cout << "Cure source Cell" << std::endl;
                 touchedCell->updateHealthPoints(interactiveGrid_->vbo_, updatedHealth);
+                automatonUpdater_->updateAutomatonAt(touchedCell, touchedCell->getBuildState(), touchedCell->getHealthPoints());
                 if (currentHealth >= GridCell::MAX_HEALTH) {
                     meshInstanceBuilder_->buildAt(touchedCell->getCol(), touchedCell->getRow(), GridCell::WALL, MeshInstanceBuilder::BuildMode::Additive);
                     meshInstanceBuilder_->buildAt(touchedCell->getCol(), touchedCell->getRow(), GridCell::SOURCE | GridCell::INFECTED, MeshInstanceBuilder::BuildMode::RemoveSpecific);
@@ -62,6 +63,7 @@ namespace roomgame
         else {
             //std::cout << "Cure infected Cell" << std::endl;
             touchedCell->updateHealthPoints(interactiveGrid_->vbo_, updatedHealth);
+            automatonUpdater_->updateAutomatonAt(touchedCell, touchedCell->getBuildState(), touchedCell->getHealthPoints());
             if (currentHealth >= GridCell::MAX_HEALTH) {
                 meshInstanceBuilder_->buildAt(touchedCell->getCol(), touchedCell->getRow(), GridCell::INFECTED, MeshInstanceBuilder::BuildMode::RemoveSpecific);
             }

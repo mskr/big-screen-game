@@ -188,7 +188,8 @@ namespace roomgame {
             distance_ = glm::length(posDiff_);
             mode_ = RETREAT;
             auto bs = targetCell_->getBuildState();
-            if (bs == GridCell::EMPTY) return;
+            if (bs == GridCell::EMPTY || bs & GridCell::INSIDE_ROOM) return;
+            targetCell_->updateHealthPoints(Grid->vbo_, GridCell::MIN_HEALTH);
             Grid->roomInteractionManager_->meshInstanceBuilder_->buildAt(targetCell_->getCol(), targetCell_->getRow(), GridCell::SOURCE, MeshInstanceBuilder::BuildMode::Additive);
             Grid->roomInteractionManager_->meshInstanceBuilder_->buildAt(targetCell_->getCol(), targetCell_->getRow(), GridCell::WALL, MeshInstanceBuilder::BuildMode::RemoveSpecific);
             const auto wPos = Grid->getWorldCoordinates(targetCell_->getPosition());

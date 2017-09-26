@@ -25,9 +25,6 @@ namespace roomgame
 
     void AutomatonUpdater::updateAutomatonAt(GridCell* c, GLuint state, GLuint hp) {
         // When the outer influences creates a source, set full fluid level, i.e. zero health
-        if (c->getBuildState() & GridCell::SOURCE) {
-            c->updateHealthPoints(interactiveGrid_->vbo_, GridCell::MIN_HEALTH); //TODO TEST
-        }
         automaton_->updateCell(c, c->getBuildState(), c->getHealthPoints());
     }
 
