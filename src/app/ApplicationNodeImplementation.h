@@ -13,7 +13,6 @@
 #include "core/camera/ArcballCamera.h"
 
 #include "app/roomgame/AutomatonGrid.h"
-#include "app/roomgame/RoomSegmentMeshPool.h"
 #include "app/roomgame/DragAndZoomCamera.h"
 #include "app/roomgame/GameMesh.h"
 #include "app/roomgame/ShadowMap.h"
@@ -21,6 +20,7 @@
 #include "app/roomgame/OuterInfluence.h"
 #include "app/roomgame/GPUBuffer.h"
 #include "app/roomgame/GPUCellularAutomaton.h"
+#include "app/roomgame/RoomSegmentMeshPool.h"
 
 namespace viscom {
 
@@ -109,7 +109,7 @@ namespace viscom {
 		std::shared_ptr<roomgame::OuterInfluence> outerInfluence_;
 
 		/* Mesh pool manages and renders instanced meshes corresponding to build states of grid cells */
-		RoomSegmentMeshPool meshpool_; // hold mesh and shader resources and render on all nodes
+		roomgame::RoomSegmentMeshPool meshpool_; // hold mesh and shader resources and render on all nodes
 
         /* Shadow map is basically an offscreen framebuffer */
 		ShadowMap* shadowMap_; // hold shadow map framebuffer on all nodes

@@ -1,3 +1,6 @@
+#include "app/roomgame/InteractiveGrid.h"
+#include "RoomInteractiveGrid.h"
+#include "MeshInstanceGrid.h"
 #include "OuterInfluence.h"
 #include <iostream>
 namespace roomgame {
@@ -186,12 +189,12 @@ namespace roomgame {
             mode_ = RETREAT;
             auto bs = targetCell_->getBuildState();
             if (bs == GridCell::EMPTY) return;
-            Grid->buildAt(targetCell_->getCol(), targetCell_->getRow(), GridCell::SOURCE, InteractiveGrid::BuildMode::Additive);
-            Grid->buildAt(targetCell_->getCol(), targetCell_->getRow(), GridCell::WALL, InteractiveGrid::BuildMode::RemoveSpecific);
+            Grid->RoomInteractiveGrid->meshInstanceGrid_->buildAt(targetCell_->getCol(), targetCell_->getRow(), GridCell::SOURCE, MeshInstanceGrid::BuildMode::Additive);
+            Grid->RoomInteractiveGrid->meshInstanceGrid_->buildAt(targetCell_->getCol(), targetCell_->getRow(), GridCell::WALL, MeshInstanceGrid::BuildMode::RemoveSpecific);
             const auto wPos = Grid->getWorldCoordinates(targetCell_->getPosition());
-            if(Grid->sourceLightManager_==nullptr)
+            if(Grid->RoomInteractiveGrid->sourceLightManager_==nullptr)
             {
-                Grid->sourceLightManager_ = sourceLightManager_;
+                Grid->RoomInteractiveGrid->sourceLightManager_ = sourceLightManager_;
             }
             sourceLightManager_->sourcePositions_.push_back(wPos);
         }

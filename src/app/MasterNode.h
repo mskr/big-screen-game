@@ -12,7 +12,7 @@
 #include <mutex>
 #include <vector>
 
-#include "roomgame\InnerInfluence.h"
+#include "roomgame/AutomatonGrid.h"
 #include "glm\gtx\quaternion.hpp"
 
 #include "../app/ApplicationNodeImplementation.h"
@@ -20,6 +20,20 @@
 #ifdef WITH_TUIO
 #include "core/TuioInputWrapper.h"
 #endif
+namespace roomgame
+{
+    class MeshInstanceGrid;
+    class InteractiveGrid;
+    class RoomSegmentMeshPool;
+    class RoomInteractiveGrid;
+    class InnerInfluence;
+}
+using roomgame::MeshInstanceGrid;
+using roomgame::InteractiveGrid;
+using roomgame::RoomSegmentMeshPool;
+using roomgame::RoomInteractiveGrid;
+using roomgame::InnerInfluence;
+
 
 namespace viscom {
 
@@ -40,10 +54,14 @@ namespace viscom {
     class MasterNode final : public ApplicationNodeImplementation
     {
         /* Holds core state of the roomgame and handles events */
-        AutomatonGrid grid_;
+        roomgame::AutomatonGrid automatonGrid_;
+
+        std::shared_ptr<MeshInstanceGrid> meshInstanceGrid_;
+        std::shared_ptr<RoomInteractiveGrid> roomInteractiveGrid_;
+        std::shared_ptr<InteractiveGrid> interactiveGrid_;
 
         /* Controls inner influence, i.e. room infection */
-        InnerInfluence cellular_automaton_;
+        std::shared_ptr<InnerInfluence> cellular_automaton_;
     
         /* Interaction modes: GRID: build rooms, CAMERA: move camera,
         AUTOMATON: define init state for testing automaton rules */
