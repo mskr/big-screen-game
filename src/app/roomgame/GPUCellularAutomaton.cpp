@@ -4,8 +4,8 @@
 
 namespace roomgame
 {
-    GPUCellularAutomaton::GPUCellularAutomaton(AutomatonGrid* automatonGrid_grid, std::shared_ptr<InteractiveGrid> interactiveGrid, double transition_time) :
-        automatonGrid_(automatonGrid_grid),
+    GPUCellularAutomaton::GPUCellularAutomaton(AutomatonUpdater* automatonGrid_grid, std::shared_ptr<InteractiveGrid> interactiveGrid, double transition_time) :
+        automatonUpdater_(automatonGrid_grid),
         interactiveGrid_(interactiveGrid),
         transition_time_(transition_time),
         last_time_(0.0),
@@ -18,7 +18,7 @@ namespace roomgame
     {
         pixel_size_ = glm::vec2(1.0f / float(interactiveGrid_->getNumColumns()), 1.0f / float(interactiveGrid_->getNumRows()));
         DEFAULT_TRANSITION_TIME = transition_time;
-        automatonGrid_->setCellularAutomaton(this);
+        automatonUpdater_->setCellularAutomaton(this);
     }
 
     void GPUCellularAutomaton::cleanup() {
@@ -114,7 +114,7 @@ namespace roomgame
                 if (c->getBuildState() == state && c->getHealthPoints() == hp)
                     continue;
                 // then update CPU side
-                automatonGrid_->updateGridAt(c, state, hp);
+                automatonUpdater_->updateGridAt(c, state, hp);
             }
         }
     }
@@ -160,7 +160,7 @@ namespace roomgame
         glBindVertexArray(0);
         glEnable(GL_DEPTH_TEST);
         // Update grid
-        automatonGrid_->onTransition();
+        automatonUpdater_->onTransition();
         copyFromTextureToGrid(current_write_index); // Performance bottleneck
                                                     // Swap buffers
         current_read_index_ = current_write_index;

@@ -1,15 +1,15 @@
-#include "AutomatonGrid.h"
+#include "AutomatonUpdater.h"
 #include "GPUCellularAutomaton.h"
 #include "InteractiveGrid.h"
 namespace roomgame
 {
-    AutomatonGrid::AutomatonGrid()
+    AutomatonUpdater::AutomatonUpdater()
     {
         automaton_ = 0;
         delayed_update_list_ = 0;
     }
 
-    AutomatonGrid::~AutomatonGrid() {
+    AutomatonUpdater::~AutomatonUpdater() {
         //DelayedUpdate* dup = delayed_update_list_;
         //while (dup) {
         //    DelayedUpdate* next = dup->next_;
@@ -18,12 +18,12 @@ namespace roomgame
         //}
     }
 
-    void AutomatonGrid::setCellularAutomaton(GPUCellularAutomaton* automaton) {
+    void AutomatonUpdater::setCellularAutomaton(GPUCellularAutomaton* automaton) {
         automaton_ = automaton;
     }
 
 
-    void AutomatonGrid::updateAutomatonAt(GridCell* c, GLuint state, GLuint hp) {
+    void AutomatonUpdater::updateAutomatonAt(GridCell* c, GLuint state, GLuint hp) {
         // When the outer influences creates a source, set full fluid level, i.e. zero health
         if (c->getBuildState() & GridCell::SOURCE) {
             c->updateHealthPoints(interactiveGrid_->vbo_, GridCell::MIN_HEALTH); //TODO TEST
@@ -31,7 +31,7 @@ namespace roomgame
         automaton_->updateCell(c, c->getBuildState(), c->getHealthPoints());
     }
 
-    void AutomatonGrid::updateGridAt(GridCell* c, GLuint state, GLuint hp) {
+    void AutomatonUpdater::updateGridAt(GridCell* c, GLuint state, GLuint hp) {
         // Called on automaton transitions (automaton update -> grid update)
 
         // Delay removals of the simulated state mesh to play remove-animation
@@ -48,7 +48,7 @@ namespace roomgame
                                          // a fixed-on-cell health is not very practical
     }
 
-    void AutomatonGrid::onTransition() {
+    void AutomatonUpdater::onTransition() {
         // Traverse delayed updates from previous transitions...
         DelayedUpdate* dup = delayed_update_list_;
         DelayedUpdate* last = 0;
@@ -75,7 +75,7 @@ namespace roomgame
         }
     }
 
-    void AutomatonGrid::populateCircleAtLastMousePosition(int radius) {
+    void AutomatonUpdater::populateCircleAtLastMousePosition(int radius) {
         /*
         glm::vec2 touchPositionNDC =
         glm::vec2(last_mouse_position_.x, 1.0 - last_mouse_position_.y)

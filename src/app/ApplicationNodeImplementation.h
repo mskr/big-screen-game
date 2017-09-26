@@ -12,7 +12,7 @@
 #include "core/ApplicationNodeBase.h"
 #include "core/camera/ArcballCamera.h"
 
-#include "app/roomgame/AutomatonGrid.h"
+#include "app/roomgame/AutomatonUpdater.h"
 #include "app/roomgame/DragAndZoomCamera.h"
 #include "app/roomgame/GameMesh.h"
 #include "app/roomgame/ShadowMap.h"

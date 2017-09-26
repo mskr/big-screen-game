@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AutomatonGrid.h"
+#include "AutomatonUpdater.h"
 #include "GPUBuffer.h"
 
 namespace viscom {
@@ -50,12 +50,12 @@ namespace roomgame {
         void copyFromGridToTexture(int tex_index);
         void copyFromTextureToGrid(int tex_index);
     public:
-        AutomatonGrid* automatonGrid_;
+        AutomatonUpdater* automatonUpdater_;
         std::shared_ptr<InteractiveGrid> interactiveGrid_;
         void updateCell(GridCell* c, GLuint state, GLuint hp);
         virtual void init(viscom::GPUProgramManager mgr);
         virtual bool transition(double time); // return false if it is not time yet
-        GPUCellularAutomaton(AutomatonGrid* automatonGrid_grid,
+        GPUCellularAutomaton(AutomatonUpdater* automatonGrid_grid,
                              std::shared_ptr<InteractiveGrid> interactiveGrid, double transition_time);
         void cleanup();
         //Setter

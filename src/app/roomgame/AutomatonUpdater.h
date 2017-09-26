@@ -7,12 +7,12 @@ namespace roomgame
 {
     class GPUCellularAutomaton;
     class InteractiveGrid;
-    /* Grid class for cellular automatons.
+    /* Class for uploading/downloading gridstates to the cellular automaton on the gpu.
     * Adds possibility to receive changes
     * a) from user input by overriding buildAt() and
     * b) from cellular automaton by offering updateCell() function.
     */
-    class AutomatonGrid {
+    class AutomatonUpdater {
         GPUCellularAutomaton* automaton_;
         // Delaying mesh instance updates allows to play smoother animations
         struct DelayedUpdate {
@@ -37,8 +37,8 @@ namespace roomgame
         std::shared_ptr<MeshInstanceBuilder> meshInstanceBuilder_;
         std::shared_ptr<InteractiveGrid> interactiveGrid_;
         static const GLuint SIMULATED_STATE = GridCell::INFECTED;
-        AutomatonGrid();
-        ~AutomatonGrid();
+        AutomatonUpdater();
+        ~AutomatonUpdater();
         void setCellularAutomaton(GPUCellularAutomaton*);
 
         void onTransition();

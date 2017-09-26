@@ -3,8 +3,8 @@
 
 namespace roomgame
 {
-    InnerInfluence::InnerInfluence(AutomatonGrid* automatonGrid_grid, std::shared_ptr<InteractiveGrid> interactiveGrid, double transition_time) :
-        GPUCellularAutomaton(automatonGrid_grid, interactiveGrid, transition_time), num_transitions_(0), NUM_DIRECTIONS_(8),
+    InnerInfluence::InnerInfluence(AutomatonUpdater* automatonUpdater, std::shared_ptr<InteractiveGrid> interactiveGrid, double transition_time) :
+        GPUCellularAutomaton(automatonUpdater, interactiveGrid, transition_time), num_transitions_(0), NUM_DIRECTIONS_(8),
         FLOW_DIRECTION(new glm::ivec2[NUM_DIRECTIONS_]{
             { 1, -1 },
             { 1, 0 },

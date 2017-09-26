@@ -1,6 +1,6 @@
 #include "InteractiveGrid.h"
 #include "MeshInstanceBuilder.h"
-#include "AutomatonGrid.h"
+#include "AutomatonUpdater.h"
 #include "RoomInteractionManager.h"
 #include "../../../extern/fwcore/extern/assimp/code/FBXDocument.h"
 

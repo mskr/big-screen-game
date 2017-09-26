@@ -22,7 +22,7 @@ namespace roomgame
         GLint uloc_CRITICAL_VALUE; GLint CRITICAL_VALUE;
         GLint uloc_FLOW_SPEED; GLuint FLOW_SPEED;
 
-        InnerInfluence(AutomatonGrid* automatonGrid_grid,
+        InnerInfluence(AutomatonUpdater* automatonUpdater,
                        std::shared_ptr<InteractiveGrid> interactiveGrid,
                        double transition_time);
         ~InnerInfluence();

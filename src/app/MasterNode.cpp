@@ -21,21 +21,21 @@ namespace viscom {
 
     MasterNode::MasterNode(ApplicationNodeInternal* appNode) :
         ApplicationNodeImplementation{ appNode },
-        automatonGrid_(),
+        automatonUpdater_(),
         interaction_mode_(InteractionMode::GRID)
     {
         meshInstanceBuilder_ = std::make_shared<MeshInstanceBuilder>(&meshpool_);
         interactiveGrid_ = std::make_shared<InteractiveGrid>(GRID_COLS_, GRID_ROWS_, GRID_HEIGHT_);
         meshInstanceBuilder_->interactiveGrid_ = interactiveGrid_;
-        meshInstanceBuilder_->automatonGrid_ = &automatonGrid_;
+        meshInstanceBuilder_->automatonUpdater_ = &automatonUpdater_;
         roomInteractionManager_ = std::make_shared<RoomInteractionManager>();
         roomInteractionManager_->interactiveGrid_ = interactiveGrid_;
         roomInteractionManager_->meshInstanceBuilder_ = meshInstanceBuilder_;
-        roomInteractionManager_->automatonGrid_ = &automatonGrid_;
+        roomInteractionManager_->automatonUpdater_ = &automatonUpdater_;
         interactiveGrid_->roomInteractionManager_ = roomInteractionManager_;
-        automatonGrid_.meshInstanceBuilder_ = meshInstanceBuilder_;
-        automatonGrid_.interactiveGrid_ = interactiveGrid_;
-        cellular_automaton_ = std::make_shared<roomgame::InnerInfluence>(&automatonGrid_,interactiveGrid_,3.0);
+        automatonUpdater_.meshInstanceBuilder_ = meshInstanceBuilder_;
+        automatonUpdater_.interactiveGrid_ = interactiveGrid_;
+        cellular_automaton_ = std::make_shared<roomgame::InnerInfluence>(&automatonUpdater_,interactiveGrid_,3.0);
         grid_state_ = {};
         automaton_transition_time_delta_ = 0.0;
         automaton_has_transitioned_ = false;
@@ -143,7 +143,7 @@ namespace viscom {
         glm::mat4 viewProj = GetCamera()->GetViewPerspectiveMatrix();
         outerInfluence_->ViewPersMat = viewProj;
 
-        automatonGrid_.interactiveGrid_->updateProjection(viewProj);
+        automatonUpdater_.interactiveGrid_->updateProjection(viewProj);
         fbo.DrawToFBO([&] {
             if (render_mode_ == RenderMode::DBG) interactiveGrid_->onFrame();
         });
@@ -308,7 +308,7 @@ namespace viscom {
                 else if (action == GLFW_RELEASE) interactiveGrid_->onRelease(-1);
             }
             else if (interaction_mode_ == InteractionMode::AUTOMATON) {
-                if (action == GLFW_PRESS) automatonGrid_.populateCircleAtLastMousePosition(1);
+                if (action == GLFW_PRESS) automatonUpdater_.populateCircleAtLastMousePosition(1);
             }
             else if (interaction_mode_ == InteractionMode::CAMERA) {
 //                camera_.HandleMouse(button, action, 0, this);

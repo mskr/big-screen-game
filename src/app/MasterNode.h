@@ -12,7 +12,7 @@
 #include <mutex>
 #include <vector>
 
-#include "roomgame/AutomatonGrid.h"
+#include "roomgame/AutomatonUpdater.h"
 #include "glm\gtx\quaternion.hpp"
 
 #include "../app/ApplicationNodeImplementation.h"
@@ -54,7 +54,7 @@ namespace viscom {
     class MasterNode final : public ApplicationNodeImplementation
     {
         /* Holds core state of the roomgame and handles events */
-        roomgame::AutomatonGrid automatonGrid_;
+        roomgame::AutomatonUpdater automatonUpdater_;
 
         std::shared_ptr<MeshInstanceBuilder> meshInstanceBuilder_;
         std::shared_ptr<RoomInteractionManager> roomInteractionManager_;

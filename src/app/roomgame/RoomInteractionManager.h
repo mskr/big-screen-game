@@ -16,7 +16,7 @@ namespace roomgame
     public:
         std::shared_ptr<InteractiveGrid> interactiveGrid_;
         std::shared_ptr<MeshInstanceBuilder> meshInstanceBuilder_;
-        AutomatonGrid* automatonGrid_;
+        AutomatonUpdater* automatonUpdater_;
         std::vector<Room*> rooms_;
         void StartNewRoomInteractionAtTouchedCell(int touchID, GridCell*);
         void AdjustTemporaryRoomSize(GridCell*, std::shared_ptr<GridInteraction> interac);

@@ -4,7 +4,7 @@ namespace roomgame
 {
     class RoomSegmentMeshPool;
     class InteractiveGrid;
-    class AutomatonGrid;
+    class AutomatonUpdater;
     /* 
      * Class that manages changing the shown meshes
      * Offers several buildAt functions for this. 
@@ -18,7 +18,7 @@ namespace roomgame
         void removeInstanceAt(GridCell*);
     public:
         std::shared_ptr<InteractiveGrid> interactiveGrid_;
-        AutomatonGrid* automatonGrid_;
+        AutomatonUpdater* automatonUpdater_;
         enum BuildMode {
             Additive = 0,
             Replace = 1,

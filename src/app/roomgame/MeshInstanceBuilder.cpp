@@ -1,7 +1,7 @@
 #include "RoomSegmentMeshPool.h"
 #include "InteractiveGrid.h"
 #include "MeshInstanceBuilder.h"
-#include "AutomatonGrid.h"
+#include "AutomatonUpdater.h"
 namespace roomgame
 {
     MeshInstanceBuilder::MeshInstanceBuilder(RoomSegmentMeshPool* meshpool)
@@ -121,7 +121,7 @@ namespace roomgame
         c->setBuildState(newSt);
         c->updateBuildState(interactiveGrid_->vbo_);
         c->updateHealthPoints(interactiveGrid_->vbo_, GridCell::MAX_HEALTH);
-        automatonGrid_->updateAutomatonAt(c, newSt, c->getHealthPoints());
+        automatonUpdater_->updateAutomatonAt(c, newSt, c->getHealthPoints());
     }
 
     void MeshInstanceBuilder::buildAt(GridCell* c, GLuint newState, BuildMode buildMode) {
@@ -148,7 +148,7 @@ namespace roomgame
         c->setBuildState(moddedState);
         c->updateBuildState(interactiveGrid_->vbo_);
         c->updateHealthPoints(interactiveGrid_->vbo_, GridCell::MAX_HEALTH);
-        automatonGrid_->updateAutomatonAt(c, moddedState, c->getHealthPoints());
+        automatonUpdater_->updateAutomatonAt(c, moddedState, c->getHealthPoints());
     }
 
     void MeshInstanceBuilder::buildAt(size_t col, size_t row, std::function<void(GridCell*)> callback) {
