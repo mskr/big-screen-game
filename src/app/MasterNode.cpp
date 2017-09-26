@@ -10,15 +10,32 @@
 #include <imgui.h>
 #include "core/imgui/imgui_impl_glfw_gl3.h"
 #include <iostream>
+#include "roomgame/MeshInstanceBuilder.h"
+#include "roomgame/InteractiveGrid.h"
+#include "roomgame/RoomSegmentMeshPool.h"
+#include "roomgame/RoomInteractionManager.h"
+#include "roomgame\InnerInfluence.h"
+
 
 namespace viscom {
 
     MasterNode::MasterNode(ApplicationNodeInternal* appNode) :
         ApplicationNodeImplementation{ appNode },
-        grid_(GRID_COLS_, GRID_ROWS_, GRID_HEIGHT_, &meshpool_),
-        cellular_automaton_(&grid_, 3.0f),
+        automatonUpdater_(),
         interaction_mode_(InteractionMode::GRID)
     {
+        meshInstanceBuilder_ = std::make_shared<MeshInstanceBuilder>(&meshpool_);
+        interactiveGrid_ = std::make_shared<InteractiveGrid>(GRID_COLS_, GRID_ROWS_, GRID_HEIGHT_);
+        meshInstanceBuilder_->interactiveGrid_ = interactiveGrid_;
+        meshInstanceBuilder_->automatonUpdater_ = &automatonUpdater_;
+        roomInteractionManager_ = std::make_shared<RoomInteractionManager>();
+        roomInteractionManager_->interactiveGrid_ = interactiveGrid_;
+        roomInteractionManager_->meshInstanceBuilder_ = meshInstanceBuilder_;
+        roomInteractionManager_->automatonUpdater_ = &automatonUpdater_;
+        interactiveGrid_->roomInteractionManager_ = roomInteractionManager_;
+        automatonUpdater_.meshInstanceBuilder_ = meshInstanceBuilder_;
+        automatonUpdater_.interactiveGrid_ = interactiveGrid_;
+        cellular_automaton_ = std::make_shared<roomgame::InnerInfluence>(&automatonUpdater_,interactiveGrid_,3.0);
         grid_state_ = {};
         automaton_transition_time_delta_ = 0.0;
         automaton_has_transitioned_ = false;
@@ -30,12 +47,12 @@ namespace viscom {
     void MasterNode::InitOpenGL() {
         ApplicationNodeImplementation::InitOpenGL();
         
-        grid_.loadShader(GetApplication()->GetGPUProgramManager()); // for viewing build states...
-        grid_.uploadVertexData(); // ...for debug purposes
+        interactiveGrid_->loadShader(GetApplication()->GetGPUProgramManager()); // for viewing build states...
+        interactiveGrid_->uploadVertexData(); // ...for debug purposes
 
-        cellular_automaton_.init(GetApplication()->GetGPUProgramManager());
-        outerInfluence_->Grid = &grid_;
-        glm::vec3 gridPos = grid_.grid_center_;
+        cellular_automaton_->init(GetApplication()->GetGPUProgramManager());
+        outerInfluence_->Grid = interactiveGrid_;
+        glm::vec3 gridPos = interactiveGrid_->grid_center_;
         glm::vec2 pos = GetCirclePos(glm::vec2(gridPos.y, gridPos.z), range, viewAngle);
         GetCamera()->SetPosition(glm::vec3(0, pos.x, pos.y));
         glm::quat lookDir = glm::toQuat(glm::lookAt(GetCamera()->GetPosition(), gridPos, glm::vec3(0, 1, 0)));
@@ -49,14 +66,14 @@ namespace viscom {
         sourceLightManager_->preSync();
         outerInfluence_->MeshComponent->preSync();
         meshpool_.preSync();
-        synchronized_grid_translation_.setVal(grid_.getTranslation());
-        synchronized_automaton_transition_time_delta_.setVal(cellular_automaton_.getTimeDeltaNormalized());
+        synchronized_grid_translation_.setVal(interactiveGrid_->getTranslation());
+        synchronized_automaton_transition_time_delta_.setVal(cellular_automaton_->getTimeDeltaNormalized());
         synchronized_automaton_has_transitioned_.setVal(automaton_has_transitioned_);
         // Grid state sync only when automaton changed it
         if (automaton_has_transitioned_) {
             synchronized_grid_state_.setVal(std::vector<roomgame::GRID_STATE_ELEMENT>(
-                cellular_automaton_.getGridBuffer(),
-                cellular_automaton_.getGridBuffer() + cellular_automaton_.getGridBufferElements()));
+                cellular_automaton_->getGridBuffer(),
+                cellular_automaton_->getGridBuffer() + cellular_automaton_->getGridBufferElements()));
         }
     }
 
@@ -112,7 +129,7 @@ namespace viscom {
 
         //cellular_automaton_.setTransitionTime(automaton_transition_time);
         //cellular_automaton_.setDamagePerCell(automaton_damage_per_cell);
-        automaton_has_transitioned_ = cellular_automaton_.transition(clock_.t_in_sec);
+        automaton_has_transitioned_ = cellular_automaton_->transition(clock_.t_in_sec);
 
 
         updateManager_.ManageUpdates(min(clock_.deltat(), 0.25));
@@ -126,9 +143,9 @@ namespace viscom {
         glm::mat4 viewProj = GetCamera()->GetViewPerspectiveMatrix();
         outerInfluence_->ViewPersMat = viewProj;
 
-        grid_.updateProjection(viewProj);
+        automatonUpdater_.interactiveGrid_->updateProjection(viewProj);
         fbo.DrawToFBO([&] {
-            if (render_mode_ == RenderMode::DBG) grid_.onFrame();
+            if (render_mode_ == RenderMode::DBG) interactiveGrid_->onFrame();
         });
 
     }
@@ -136,7 +153,10 @@ namespace viscom {
     void MasterNode::Draw2D(FrameBuffer& fbo) {
         int attackChanceGrowth = outerInfluence_->getAttackChanceGrowth();
         float outInfluenceSpeed = outerInfluence_->getBaseSpeed();
-        float innerInfluenceTransition = (float) cellular_automaton_.getTransitionTime();
+        float innerInfluenceTransition = (float) cellular_automaton_->getTransitionTime();
+        int innerInfluenceFlowSpeed = cellular_automaton_->FLOW_SPEED;
+        int innerInfluenceCriticalValue = cellular_automaton_->CRITICAL_VALUE;
+        float repairPerClickValue = roomInteractionManager_->healAmount_;
 
         fbo.DrawToFBO([&]() {
             ImGui::SetNextWindowPos(ImVec2(700, 60), ImGuiSetCond_FirstUseEver);
@@ -167,7 +187,22 @@ namespace viscom {
                 ImGui::Text("Inner Influence");
                 ImGui::Spacing();
                 if (ImGui::SliderFloat("Transition time", &innerInfluenceTransition, 0.2f, 10.0f)) {
-                    cellular_automaton_.setTransitionTime(glm::clamp(innerInfluenceTransition,0.2f,10.0f));
+                    cellular_automaton_->setTransitionTime(glm::clamp(innerInfluenceTransition, 0.2f, 10.0f));
+                }
+                ImGui::Spacing();
+                if (ImGui::SliderInt("Flow Speed", &innerInfluenceFlowSpeed, 1, 40)) {
+                    cellular_automaton_->FLOW_SPEED = (glm::clamp(innerInfluenceFlowSpeed, 1, 40));
+                }
+                ImGui::Spacing();
+                if (ImGui::SliderInt("Critical Value", &innerInfluenceCriticalValue, 1, 100)) {
+                    cellular_automaton_->CRITICAL_VALUE = (glm::clamp(innerInfluenceCriticalValue, 1, 100));
+                }
+
+                ImGui::Spacing();
+                ImGui::Text("Repairs");
+                ImGui::Spacing();
+                if (ImGui::SliderFloat("Heal per click", &repairPerClickValue, 0.1f, 1.1f)) {
+                    roomInteractionManager_->healAmount_ = glm::clamp(repairPerClickValue, 0.1f, 1.1f);
                 }
 
                 ImGui::Spacing();
@@ -193,8 +228,8 @@ namespace viscom {
     }
 
     void MasterNode::CleanUp() {
-        grid_.cleanup();
-        cellular_automaton_.cleanup();
+        interactiveGrid_->cleanup();
+        cellular_automaton_->cleanup();
         ApplicationNodeImplementation::CleanUp();
     }
 
@@ -223,7 +258,7 @@ namespace viscom {
             }
         }
         else if (interaction_mode_ == InteractionMode::CAMERA) {
-            glm::vec3 gridPos = grid_.grid_center_;
+            glm::vec3 gridPos = interactiveGrid_->grid_center_;
 
             int right = key == GLFW_KEY_D ? 1 : 0;
             int left = key == GLFW_KEY_A ? 1 : 0;
@@ -269,11 +304,11 @@ namespace viscom {
     bool MasterNode::MouseButtonCallback(int button, int action) {
         if (button == GLFW_MOUSE_BUTTON_LEFT) {
             if (interaction_mode_ == InteractionMode::GRID) {
-                if (action == GLFW_PRESS) grid_.onTouch(-1);
-                else if (action == GLFW_RELEASE) grid_.onRelease(-1);
+                if (action == GLFW_PRESS) interactiveGrid_->onTouch(-1);
+                else if (action == GLFW_RELEASE) interactiveGrid_->onRelease(-1);
             }
             else if (interaction_mode_ == InteractionMode::AUTOMATON) {
-                if (action == GLFW_PRESS) grid_.populateCircleAtLastMousePosition(1);
+                if (action == GLFW_PRESS) automatonUpdater_.populateCircleAtLastMousePosition(1);
             }
             else if (interaction_mode_ == InteractionMode::CAMERA) {
 //                camera_.HandleMouse(button, action, 0, this);
@@ -291,7 +326,7 @@ namespace viscom {
     */
     bool MasterNode::MousePosCallback(double x, double y) {
         viscom::math::Line3<float> ray = GetCamera()->GetPickRay({ x,y });
-        grid_.onMouseMove(-1, ray[0], ray[1]);
+        interactiveGrid_->onMouseMove(-1, ray[0], ray[1]);
 #ifndef VISCOM_CLIENTGUI
         ImGui_ImplGlfwGL3_MousePositionCallback(x, y);
 #endif
@@ -302,10 +337,10 @@ namespace viscom {
     bool MasterNode::MouseScrollCallback(double xoffset, double yoffset) {
         if (interaction_mode_ == InteractionMode::CAMERA) {
             float change = (float)yoffset*0.1f;
-            glm::vec3 camToGrid = GetCamera()->GetPosition() - grid_.grid_center_;
+            glm::vec3 camToGrid = GetCamera()->GetPosition() - interactiveGrid_->grid_center_;
             if (glm::length(camToGrid) > 0.5 || yoffset > 0) {
                 GetCamera()->SetPosition(GetCamera()->GetPosition() + camToGrid*change);
-                range = glm::distance(GetCamera()->GetPosition(), grid_.grid_center_);
+                range = glm::distance(GetCamera()->GetPosition(), interactiveGrid_->grid_center_);
             }
 //            camera_.HandleMouse(0, 0, (float)yoffset, this);
         }
@@ -325,10 +360,10 @@ namespace viscom {
     bool MasterNode::AddTuioCursor(TUIO::TuioCursor* tcur)
     {
         // grid_.onTouch(-1); //TODO @Tobias: pass the CursorID here,
-        // ID is saved in interaction object by RoomInteractiveGrid::handleTouchedCell,
+        // ID is saved in interaction object by RoomInteractionManager::StartNewRoomInteractionAtTouchedCell,
             // this object lives for the duration of one touch gesture
             // and is used to distinguish clicks/touches, to reuse IDs of accidentally interrupted touch gestures, etc.
-            // (see RoomInteractiveGrid::handleHoveredCell + handleRelease + GridInteraction::testTemporalAndSpatialProximity)
+            // (see RoomInteractionManager::AdjustTemporaryRoomSize + FinalizeTemporaryRoom + GridInteraction::testTemporalAndSpatialProximity)
 #ifdef WITH_TUIO
         mtx.lock();
         inputBuffer.push_back(input{ INPUT_ADD,tcur->getX(),tcur->getY(), tcur->getCursorID() });
@@ -369,15 +404,15 @@ namespace viscom {
                 input tmp = inputBuffer.at(i);
                 viscom::math::Line3<float> ray = GetCamera()->GetPickRay({ tmp.x,tmp.y });
                 if (tmp.type == INPUT_UPDATE) {
-                    grid_.onMouseMove(tmp.id, ray[0], ray[1]);
+                    interactiveGrid_->onMouseMove(tmp.id, ray[0], ray[1]);
                 }
                 else if (tmp.type == INPUT_ADD) {
-                    grid_.onMouseMove(tmp.id, ray[0], ray[1]);
-                    grid_.onTouch(tmp.id);
+                    interactiveGrid_->onMouseMove(tmp.id, ray[0], ray[1]);
+                    interactiveGrid_->onTouch(tmp.id);
                 }
                 else if (tmp.type == INPUT_REMOVE) {
-                    grid_.onMouseMove(tmp.id, ray[0], ray[1]);
-                    grid_.onRelease(tmp.id);
+                    interactiveGrid_->onMouseMove(tmp.id, ray[0], ray[1]);
+                    interactiveGrid_->onRelease(tmp.id);
                 }
             }
             inputBuffer.clear();
@@ -393,10 +428,10 @@ namespace viscom {
     }
 
     void MasterNode::reset() {
-        grid_.forEachCell([&](GridCell *cell) {
-            grid_.buildAt(cell->getCol(), cell->getRow(), GridCell::EMPTY, InteractiveGrid::BuildMode::Replace);
-            grid_.updateHealthPoints(cell, GridCell::MAX_HEALTH);
-            grid_.reset();
+        interactiveGrid_->forEachCell([&](GridCell *cell) {
+            meshInstanceBuilder_->buildAt(cell->getCol(), cell->getRow(), GridCell::EMPTY, MeshInstanceBuilder::BuildMode::Replace);
+            roomInteractionManager_->updateHealthPoints(cell, GridCell::MAX_HEALTH);
+            roomInteractionManager_->reset();
         });
         sourceLightManager_->sourcePositions_.clear();
     }
@@ -404,6 +439,8 @@ namespace viscom {
     void MasterNode::resetPlaygroundValues()
     {
         outerInfluence_->resetValues();
-        cellular_automaton_.reset();
+        cellular_automaton_->ResetTransitionTime();
+        cellular_automaton_->Reset();
+        roomInteractionManager_->ResetHealAmount();
     }
 }
