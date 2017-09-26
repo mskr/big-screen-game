@@ -12,8 +12,8 @@ InnerInfluence::InnerInfluence(AutomatonGrid* grid, double transition_time) :
         { -1, -1 },
         { 0, -1 }
     }),
-    FLOW_SPEED(10),
-    CRITICAL_VALUE(20)
+    FLOW_SPEED(DEFAULT_FLOW_SPEED),
+    CRITICAL_VALUE(DEFAULT_CRITICAL_VALUE)
 {
 }
 
@@ -51,4 +51,10 @@ bool InnerInfluence::transition(double time) {
         }
 	}
     return false;
+}
+
+void InnerInfluence::Reset()
+{
+    FLOW_SPEED = DEFAULT_FLOW_SPEED;
+    CRITICAL_VALUE = DEFAULT_CRITICAL_VALUE;
 }

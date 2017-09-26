@@ -68,7 +68,7 @@ public:
     double getTransitionTime();
 
     //reset
-    void reset();
+    void ResetTransitionTime();
 };
 
 #endif

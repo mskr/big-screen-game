@@ -199,7 +199,7 @@ double GPUCellularAutomaton::getTransitionTime()
     return transition_time_;
 }
 
-void GPUCellularAutomaton::reset()
+void GPUCellularAutomaton::ResetTransitionTime()
 {
     transition_time_ = DEFAULT_TRANSITION_TIME;
 }

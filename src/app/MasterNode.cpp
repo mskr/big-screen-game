@@ -137,6 +137,8 @@ namespace viscom {
         int attackChanceGrowth = outerInfluence_->getAttackChanceGrowth();
         float outInfluenceSpeed = outerInfluence_->getBaseSpeed();
         float innerInfluenceTransition = (float) cellular_automaton_.getTransitionTime();
+        int innerInfluenceFlowSpeed = cellular_automaton_.FLOW_SPEED;
+        int innerInfluenceCriticalValue = cellular_automaton_.CRITICAL_VALUE;
 
         fbo.DrawToFBO([&]() {
             ImGui::SetNextWindowPos(ImVec2(700, 60), ImGuiSetCond_FirstUseEver);
@@ -167,7 +169,15 @@ namespace viscom {
                 ImGui::Text("Inner Influence");
                 ImGui::Spacing();
                 if (ImGui::SliderFloat("Transition time", &innerInfluenceTransition, 0.2f, 10.0f)) {
-                    cellular_automaton_.setTransitionTime(glm::clamp(innerInfluenceTransition,0.2f,10.0f));
+                    cellular_automaton_.setTransitionTime(glm::clamp(innerInfluenceTransition, 0.2f, 10.0f));
+                }
+                ImGui::Spacing();
+                if (ImGui::SliderInt("Flow Speed", &innerInfluenceFlowSpeed, 1, 40)) {
+                    cellular_automaton_.FLOW_SPEED = (glm::clamp(innerInfluenceFlowSpeed, 1, 40));
+                }
+                ImGui::Spacing();
+                if (ImGui::SliderInt("Critical Value", &innerInfluenceCriticalValue, 1, 100)) {
+                    cellular_automaton_.CRITICAL_VALUE = (glm::clamp(innerInfluenceCriticalValue, 1, 100));
                 }
 
                 ImGui::Spacing();
@@ -404,6 +414,7 @@ namespace viscom {
     void MasterNode::resetPlaygroundValues()
     {
         outerInfluence_->resetValues();
-        cellular_automaton_.reset();
+        cellular_automaton_.ResetTransitionTime();
+        cellular_automaton_.Reset();
     }
 }
