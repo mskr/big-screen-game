@@ -15,8 +15,12 @@ namespace roomgame {
 	    void UpdateSlow(double deltaTime) override;
 
         // Modify the outer influence on the fly
-        int getAttackChanceGrowth();
-        void setAttackChanceGrowth(int newChance);
+        int getMaxPatrolTime();
+        void setMaxPatrolTime(int newChance);
+        int getMinPatrolTime();
+        void setMinPatrolTime(int newChance);
+        int getCurrentPatrolTime() { return currentPatrolTime_; }
+        int getPatrolTime() { return patrolTime_; }
 
         float getBaseSpeed();
         void setBaseSpeed(float speed);
@@ -33,8 +37,10 @@ namespace roomgame {
         float speed_;
         float distance_;
         float baseSpeed_;
-        int attackChance_;
-        int attackChanceGrowth_;
+        int currentPatrolTime_;
+        int patrolTime_;
+        int minPatrolTime_;
+        int maxPatrolTime_;
         std::default_random_engine rndGenerator_;
         std::uniform_int_distribution<int> distributor100_;
         GridCell* targetCell_;
@@ -46,7 +52,8 @@ namespace roomgame {
 		glm::vec3 posDiff_;
 		void CalcPositions(bool init);
 		void CheckForPatrolEnd();
-		void Attack();
+	    void EngageInNewRandomPatrol();
+	    void Attack();
 		void Retreat();
 		void Move() const;
         void ChooseTarget();

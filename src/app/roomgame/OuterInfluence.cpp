@@ -7,10 +7,10 @@ namespace roomgame {
 	const int PATROL = 0;
 	const int ATTACK = 1;
 	const int RETREAT = 2;
-    const int ATTACK_CHANCE_BASE = 0;
-    const int DEFAULT_ATTACK_CHANCE_GROWTH = 2;
     const float DEFAULT_BASE_SPEED = 0.5f;
     const float ROT_SPEED_MULTIPLIER = 50.0f;
+    const int DEFAULT_MIN_PATROL_TIME = 4;
+    const int DEFAULT_MAX_PATROL_TIME = 10;
 
 	OuterInfluence::OuterInfluence(std::shared_ptr<SourceLightManager> sourceLightManager): MeshComponent(nullptr), distance_(0), targetCell_(nullptr), deltaTime_(0)
     {
@@ -24,11 +24,11 @@ namespace roomgame {
         ViewPersMat = glm::mat4(1);
         baseSpeed_ = DEFAULT_BASE_SPEED;
         speed_ = DEFAULT_BASE_SPEED;
-        attackChance_ = ATTACK_CHANCE_BASE;
-        attackChanceGrowth_ = DEFAULT_ATTACK_CHANCE_GROWTH;
         const auto seed1 = static_cast<unsigned>(std::chrono::system_clock::now().time_since_epoch().count());
         rndGenerator_ = std::default_random_engine(seed1);
-        distributor100_ = std::uniform_int_distribution<int>(0, 100);
+        minPatrolTime_ = DEFAULT_MIN_PATROL_TIME;
+        maxPatrolTime_ = DEFAULT_MAX_PATROL_TIME;
+        distributor100_ = std::uniform_int_distribution<int>(minPatrolTime_, maxPatrolTime_);
     }
 
 
@@ -56,7 +56,6 @@ namespace roomgame {
         else if (mode_ == RETREAT) {
             movementType_ = max(movementType_ - changeSpeed_*(float)deltaTime_, 0);
             speed_ = min(speed_ + changeSpeed_*0.1f*(float)deltaTime_, baseSpeed_ - 0.1f);
-//            speed_ = max(speed_ - changeSpeed_*10*(float)deltaTime_, 0.5f);
         }else
         {
             speed_ = min(speed_ + changeSpeed_*0.1f*(float)deltaTime_, baseSpeed_ - 0.1f);
@@ -102,15 +101,28 @@ namespace roomgame {
         }
     }
 
-    int OuterInfluence::getAttackChanceGrowth()
+    int OuterInfluence::getMaxPatrolTime()
     {
-        return attackChanceGrowth_;
+        return maxPatrolTime_;
     }
 
-    void OuterInfluence::setAttackChanceGrowth(int newChance)
+    void OuterInfluence::setMaxPatrolTime(int newChance)
     {
-        glm::clamp(newChance, 1, 10);
-        attackChanceGrowth_ = newChance;
+        glm::clamp(newChance, minPatrolTime_+1, 30);
+        maxPatrolTime_ = newChance;
+        distributor100_ = std::uniform_int_distribution<int>(minPatrolTime_, maxPatrolTime_);
+    }
+
+    int OuterInfluence::getMinPatrolTime()
+    {
+        return minPatrolTime_;
+    }
+
+    void OuterInfluence::setMinPatrolTime(int newChance)
+    {
+        glm::clamp(newChance, 2, maxPatrolTime_-1);
+        minPatrolTime_ = newChance;
+        distributor100_ = std::uniform_int_distribution<int>(minPatrolTime_, maxPatrolTime_);
     }
 
     float OuterInfluence::getBaseSpeed()
@@ -125,22 +137,29 @@ namespace roomgame {
 
     void OuterInfluence::resetValues()
     {
-        attackChanceGrowth_ = DEFAULT_ATTACK_CHANCE_GROWTH;
+        minPatrolTime_ = DEFAULT_MIN_PATROL_TIME;
+        maxPatrolTime_ = DEFAULT_MAX_PATROL_TIME;
         baseSpeed_ = DEFAULT_BASE_SPEED;
     }
 
 	void OuterInfluence::CheckForPatrolEnd() {
-	    const auto randNumber = distributor100_(rndGenerator_);
-        if (randNumber > 100-attackChance_) {
-            attackChance_ = ATTACK_CHANCE_BASE;
+        if (currentPatrolTime_ >= patrolTime_) {
+            currentPatrolTime_ = 0;
             oldPosition_ = glm::vec3(MeshComponent->model_matrix_[3][0], MeshComponent->model_matrix_[3][1], MeshComponent->model_matrix_[3][2]);
 			mode_ = ATTACK;
             ChooseTarget();
         }
         else {
-            attackChance_ += attackChanceGrowth_;
+            currentPatrolTime_++;
         }
 	}
+
+    void OuterInfluence::EngageInNewRandomPatrol()
+    {
+        mode_ = PATROL;
+        const auto randNumber = distributor100_(rndGenerator_);
+        patrolTime_ = randNumber;
+    }
 
     void OuterInfluence::ChooseTarget() {
         //Set the closest cell with wall build state as moveTarget (move towards it until collison)
@@ -172,7 +191,7 @@ namespace roomgame {
             targetCell_ = closestWallCell;
         }
         else {
-            mode_ = PATROL;
+            EngageInNewRandomPatrol();
         }
     }
 
@@ -207,7 +226,7 @@ namespace roomgame {
 	    const auto dist = glm::distance(oldPosition_, currentPos);
         if (dist>distance_) {
             speed_ = 0;
-            mode_ = PATROL;
+            EngageInNewRandomPatrol();
         }
     }
 }

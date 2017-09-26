@@ -151,12 +151,15 @@ namespace viscom {
     }
 
     void MasterNode::Draw2D(FrameBuffer& fbo) {
-        int attackChanceGrowth = outerInfluence_->getAttackChanceGrowth();
+        int maxPatrolTime = outerInfluence_->getMaxPatrolTime();
+        int minPatrolTime = outerInfluence_->getMinPatrolTime();
         float outInfluenceSpeed = outerInfluence_->getBaseSpeed();
         float innerInfluenceTransition = (float) cellular_automaton_->getTransitionTime();
         int innerInfluenceFlowSpeed = cellular_automaton_->FLOW_SPEED;
         int innerInfluenceCriticalValue = cellular_automaton_->CRITICAL_VALUE;
         float repairPerClickValue = roomInteractionManager_->healAmount_;
+        int currentPatrolTime = outerInfluence_->getCurrentPatrolTime();
+        int patrolTime = outerInfluence_->getPatrolTime();
 
         fbo.DrawToFBO([&]() {
             ImGui::SetNextWindowPos(ImVec2(700, 60), ImGuiSetCond_FirstUseEver);
@@ -174,8 +177,14 @@ namespace viscom {
                 ImGui::Spacing();
                 ImGui::Text("Outer Influence");
                 ImGui::Spacing();
-                if (ImGui::SliderInt("Attack chance", &attackChanceGrowth, 1, 10, "%.0f%%")) {
-                    outerInfluence_->setAttackChanceGrowth(attackChanceGrowth);
+                ImGui::Text("Patrol Completion: (%i/ %i)",currentPatrolTime,patrolTime);
+                ImGui::Spacing();
+                if (ImGui::SliderInt("Max Patrol Time", &maxPatrolTime, minPatrolTime+1, 30, "%.0f%")) {
+                    outerInfluence_->setMaxPatrolTime(maxPatrolTime);
+                }
+                ImGui::Spacing();
+                if (ImGui::SliderInt("Min Patrol Time", &minPatrolTime, 2, maxPatrolTime-1, "%.0f%")) {
+                    outerInfluence_->setMinPatrolTime(minPatrolTime);
                 }
 
                 ImGui::Spacing();
