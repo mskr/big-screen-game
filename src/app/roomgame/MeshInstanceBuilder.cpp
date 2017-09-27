@@ -18,9 +18,13 @@ namespace roomgame
         instance.translation += glm::vec3(c->getPosition(), 0.0f); // + relative cell translation
         instance.translation += glm::vec3(cell_size_ / 2.0f, -cell_size_ / 2.0f, 0.0f); // + origin to middle of cell
         instance.health = c->getHealthPoints();
+
         // get a mesh instance for all given buildstate bits that have a mapping in the meshpool
         meshpool_->filter(buildStateBits, [&](GLuint renderableBuildState) {
-            instance.buildState = renderableBuildState; // helps differentiating 2 meshes on 1 cell in shader
+
+            // make the shader see only the subset of build states for which this mesh was added to the pool
+            instance.buildState = renderableBuildState;
+            
             RoomSegmentMesh* mesh = meshpool_->getMeshOfType(renderableBuildState);
             if (!mesh) {
                 return;

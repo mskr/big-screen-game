@@ -62,10 +62,41 @@ namespace roomgame
         }
         else {
             //std::cout << "Cure infected Cell" << std::endl;
-            touchedCell->updateHealthPoints(interactiveGrid_->vbo_, updatedHealth);
-            automatonUpdater_->updateAutomatonAt(touchedCell, touchedCell->getBuildState(), touchedCell->getHealthPoints());
-            if (currentHealth >= GridCell::MAX_HEALTH) {
-                meshInstanceBuilder_->buildAt(touchedCell->getCol(), touchedCell->getRow(), GridCell::INFECTED, MeshInstanceBuilder::BuildMode::RemoveSpecific);
+            
+            //touchedCell->updateHealthPoints(interactiveGrid_->vbo_, updatedHealth);
+            //automatonUpdater_->updateAutomatonAt(touchedCell, touchedCell->getBuildState(), touchedCell->getHealthPoints());
+            
+            // Problem:
+            // The updated automaton texture is synced and copied into the texture used for rendering (interpolation) not until the next transition
+            // The next transition finds a high gradient at the repaired border cell (because otherwise the cell wouldn't have been infected in the first place)
+            // The repaired cell is instantly replaced with infection again and the synced rendering/interpolation-texture appears as if nothing has changed
+            // In the meantime (before the transition) the infection mesh could have already been removed and therefore a rectangular hole appears
+            // Solution: mark cells as REPAIRING with a new build state and let the automaton handle the rest
+
+            if (touchedCell->getBuildState() & GridCell::REPAIRING) return;
+
+            int radius = 2;
+            for (int x = -radius; x < radius; x++) {
+                for (int y = -radius; y < radius; y++) {
+                    GridCell* c = interactiveGrid_->getCellAt(touchedCell->getCol() + x, touchedCell->getRow() + y);
+                    if (!c) continue;
+                    if (c->getDistanceTo(touchedCell) > radius) continue;
+                    if (c->getBuildState() & GridCell::SOURCE) continue;
+                    currentHealth = c->getHealthPoints();
+                    float dampedHeal = healAmount_ / ( (1.0f + c->getDistanceTo(touchedCell)) * (1.0f + c->getDistanceTo(touchedCell)) );
+
+                    //std::cout << "Cure infected Cell. HP += " << (GridCell::MAX_HEALTH - GridCell::MIN_HEALTH) * dampedHeal << std::endl;
+
+                    // calc HP
+                    updatedHealth = min(
+                        currentHealth + static_cast<GLuint>((GridCell::MAX_HEALTH - GridCell::MIN_HEALTH) * dampedHeal),
+                        GridCell::MAX_HEALTH);
+                    // update HP on master CPU-side grid
+                    c->updateHealthPoints(interactiveGrid_->vbo_, updatedHealth);
+                    // update HP and Build State on master CPU-side grid, automaton (GPU-side) grid and in mesh instance shader
+                    meshInstanceBuilder_->buildAt(c->getCol(), c->getRow(), GridCell::REPAIRING, MeshInstanceBuilder::BuildMode::Additive);
+                    // now the automaton knows that the cell is in repair and handles the rest
+                }
             }
         }
     }

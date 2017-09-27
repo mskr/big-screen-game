@@ -17,6 +17,8 @@ uniform usampler2D inputGrid;
 #define SOURCE 256U
 #define INFECTED 512U
 #define OUTER_INFLUENCE 1024U
+#define TEMPORARY 2048U
+#define REPAIRING 4096U
 
 #define UINT_MAXVAL 0xFFFFFFFFU //4294967295U
 
@@ -96,10 +98,21 @@ void main() {
     uint health = cell[1];
     uint fluid = MAX_HEALTH - health;
 
-    // CASE 1: cell is SOURCE (& WALL)
+    // CASE 1A: cell is SOURCE (& WALL)
     if((bstate & SOURCE) > 0U) {
         // constantly decrease health, while player repairs
         setOutput(bstate | INFECTED, int(health) - int(FLOW_SPEED));
+        return;
+    }
+
+    // CASE 1B: cell is REPAIRING
+    if((bstate & REPAIRING) > 0U) {
+        // pass on the already increased health, remove REPAIRING state and remove INFECTED state if fully repaired
+        uint newState = bstate & ~REPAIRING;
+        if(health >= MAX_HEALTH) {
+            newState = newState & ~INFECTED;
+        }
+        setOutput(newState, int(health));
         return;
     }
 

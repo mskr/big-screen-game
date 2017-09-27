@@ -8,14 +8,17 @@ namespace viscom {
 }
 
 namespace roomgame {
-    /* Minimal version of grid state (32 bit unsigned integers)
-     * Channel R: build state
-     * Channel G: health
-     * Channel B: infected states only */
+    /* Minimal version of grid state
+     * Channel R: build state as UINT bitfield
+     * Channel G: health as UINT
+     * Channel B: is-infected as UNORM
+     * Channel A: health as UNORM
+    */
     const unsigned int GRID_STATE_TEXTURE_CHANNELS = 4;
     const GPUBuffer::Tex GRID_STATE_TEXTURE = { 0, 0, GL_RGBA32UI, GL_RGBA_INTEGER, GL_UNSIGNED_INT };
     const GPUBuffer::Tex FILTERABLE_GRID_STATE_TEXTURE = { 0, 0, GL_RGBA32F, GL_RGBA, GL_UNSIGNED_INT };
     using GRID_STATE_ELEMENT = GLuint;
+    //TODO reduce bits per channel for transferring less data during sync (could be major bottleneck)
 
     /* Implementation of a parallelized cellular automaton with interactive grid.
     * Construct with grid and time between transitions.
