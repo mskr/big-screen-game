@@ -15,8 +15,8 @@ namespace roomgame
     class InnerInfluence : public GPUCellularAutomaton {
         unsigned int num_transitions_;
         const unsigned int NUM_DIRECTIONS_;
-        const GLint DEFAULT_FLOW_SPEED = 10;
-        const GLint DEFAULT_CRITICAL_VALUE = 20;
+        const GLint DEFAULT_FLOW_SPEED = 2;
+        const GLint DEFAULT_CRITICAL_VALUE = 10;
     public:
         GLint uloc_FLOW_DIRECTION; glm::ivec2* FLOW_DIRECTION;
         GLint uloc_CRITICAL_VALUE; GLint CRITICAL_VALUE;

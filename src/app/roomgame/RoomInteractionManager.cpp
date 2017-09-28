@@ -25,78 +25,60 @@ namespace roomgame
     void RoomInteractionManager::TryRepair(GridCell* touchedCell)
     {
         //std::cout << "Touched infected cell" << std::endl;
-        GLuint north = touchedCell->getNorthNeighbor()->getBuildState();
-        GLuint east = touchedCell->getEastNeighbor()->getBuildState();
-        GLuint south = touchedCell->getSouthNeighbor()->getBuildState();
-        GLuint west = touchedCell->getWestNeighbor()->getBuildState();
-
-        GLuint test = GridCell::SOURCE | GridCell::INFECTED;
-
+        bool repairable = false;
+        size_t targetCol = touchedCell->getCol();
+        size_t targetRow = touchedCell->getRow();
+        for(size_t i = targetCol - 1; i <= targetCol + 1; i++)
+        {
+            for (size_t j = targetRow - 1; j <= targetRow + 1; j++)
+            {
+                GLuint bs = interactiveGrid_->cells_[i][j].getBuildState();
+                if((j != targetRow || i != targetCol) && (bs != GridCell::EMPTY) && ((bs & GridCell::INFECTED) == 0))
+                {
+                    repairable = true;
+                    break;
+                }
+            }
+        }
+        if (!repairable)return;
         GLuint currentHealth = touchedCell->getHealthPoints();
         GLuint updatedHealth = min(currentHealth + static_cast<GLuint>((GridCell::MAX_HEALTH - GridCell::MIN_HEALTH) * healAmount_), GridCell::MAX_HEALTH);
 
-        GLuint andSides = north & south & east & west;
-
-        if (andSides & test) {
-            //std::cout << "Cell is in the middle of 4 infected cells" << std::endl;
-            return;
-        }
-        else if (touchedCell->getBuildState() & GridCell::SOURCE) {
-            if (((north & test) && !(north & GridCell::SOURCE)) |
-                ((south & test) && !(south & GridCell::SOURCE)) |
-                ((east & test) && !(east & GridCell::SOURCE)) |
-                ((west & test) && !(west & GridCell::SOURCE))) {
-                //std::cout << "Try to cure Source Cell but there are infected cells nerby" << std::endl;
-            }
-            else {
-                //std::cout << "Cure source Cell" << std::endl;
-                touchedCell->updateHealthPoints(interactiveGrid_->vbo_, updatedHealth);
-                automatonUpdater_->updateAutomatonAt(touchedCell, touchedCell->getBuildState(), touchedCell->getHealthPoints());
-                if (currentHealth >= GridCell::MAX_HEALTH) {
-                    meshInstanceBuilder_->buildAt(touchedCell->getCol(), touchedCell->getRow(), GridCell::WALL, MeshInstanceBuilder::BuildMode::Additive);
-                    meshInstanceBuilder_->buildAt(touchedCell->getCol(), touchedCell->getRow(), GridCell::SOURCE | GridCell::INFECTED, MeshInstanceBuilder::BuildMode::RemoveSpecific);
-                    sourceLightManager_->DeleteClosestSourcePos(interactiveGrid_->getWorldCoordinates(touchedCell->getPosition()));
-                }
-
+        if (touchedCell->getBuildState() & GridCell::SOURCE) {
+            touchedCell->updateHealthPoints(interactiveGrid_->vbo_, updatedHealth);
+            automatonUpdater_->updateAutomatonAt(touchedCell, touchedCell->getBuildState(), touchedCell->getHealthPoints());
+            if (currentHealth >= GridCell::MAX_HEALTH) {
+                meshInstanceBuilder_->buildAt(touchedCell->getCol(), touchedCell->getRow(), GridCell::WALL, MeshInstanceBuilder::BuildMode::Additive);
+                meshInstanceBuilder_->buildAt(touchedCell->getCol(), touchedCell->getRow(), GridCell::SOURCE | GridCell::INFECTED, MeshInstanceBuilder::BuildMode::RemoveSpecific);
+                sourceLightManager_->DeleteClosestSourcePos(interactiveGrid_->getWorldCoordinates(touchedCell->getPosition()));
             }
         }
-        else {
-            //std::cout << "Cure infected Cell" << std::endl;
-            
-            //touchedCell->updateHealthPoints(interactiveGrid_->vbo_, updatedHealth);
-            //automatonUpdater_->updateAutomatonAt(touchedCell, touchedCell->getBuildState(), touchedCell->getHealthPoints());
-            
-            // Problem:
-            // The updated automaton texture is synced and copied into the texture used for rendering (interpolation) not until the next transition
-            // The next transition finds a high gradient at the repaired border cell (because otherwise the cell wouldn't have been infected in the first place)
-            // The repaired cell is instantly replaced with infection again and the synced rendering/interpolation-texture appears as if nothing has changed
-            // In the meantime (before the transition) the infection mesh could have already been removed and therefore a rectangular hole appears
-            // Solution: mark cells as REPAIRING with a new build state and let the automaton handle the rest
+        int radius = 1;
+        for (int x = -radius; x <= radius; x++) {
+            for (int y = -radius; y <= radius; y++) {
+                GridCell* c = interactiveGrid_->getCellAt(touchedCell->getCol() + x, touchedCell->getRow() + y);
+                if (!c) continue;
+                GLuint buildState = c->getBuildState();
+                if ((buildState & GridCell::INFECTED) == 0) continue;
+                if (buildState & GridCell::SOURCE) continue;
+                currentHealth = c->getHealthPoints();
+                float dampedHeal = healAmount_ / (1+abs(x)+abs(y));
 
-            if (touchedCell->getBuildState() & GridCell::REPAIRING) return;
 
-            int radius = 2;
-            for (int x = -radius; x < radius; x++) {
-                for (int y = -radius; y < radius; y++) {
-                    GridCell* c = interactiveGrid_->getCellAt(touchedCell->getCol() + x, touchedCell->getRow() + y);
-                    if (!c) continue;
-                    if (c->getDistanceTo(touchedCell) > radius) continue;
-                    if (c->getBuildState() & GridCell::SOURCE) continue;
-                    currentHealth = c->getHealthPoints();
-                    float dampedHeal = healAmount_ / ( (1.0f + c->getDistanceTo(touchedCell)) * (1.0f + c->getDistanceTo(touchedCell)) );
-
-                    //std::cout << "Cure infected Cell. HP += " << (GridCell::MAX_HEALTH - GridCell::MIN_HEALTH) * dampedHeal << std::endl;
-
-                    // calc HP
-                    updatedHealth = min(
-                        currentHealth + static_cast<GLuint>((GridCell::MAX_HEALTH - GridCell::MIN_HEALTH) * dampedHeal),
-                        GridCell::MAX_HEALTH);
-                    // update HP on master CPU-side grid
-                    c->updateHealthPoints(interactiveGrid_->vbo_, updatedHealth);
-                    // update HP and Build State on master CPU-side grid, automaton (GPU-side) grid and in mesh instance shader
-                    meshInstanceBuilder_->buildAt(c->getCol(), c->getRow(), GridCell::REPAIRING, MeshInstanceBuilder::BuildMode::Additive);
-                    // now the automaton knows that the cell is in repair and handles the rest
+                // calc HP
+                updatedHealth = min(
+                    currentHealth + static_cast<GLuint>((GridCell::MAX_HEALTH - GridCell::MIN_HEALTH) * dampedHeal),
+                    GridCell::MAX_HEALTH);
+                // update HP on master CPU-side grid
+                c->updateHealthPoints(interactiveGrid_->vbo_, updatedHealth);
+                // update HP and Build State on master CPU-side grid, automaton (GPU-side) grid and in mesh instance shader
+                meshInstanceBuilder_->buildAt(c->getCol(), c->getRow(), GridCell::REPAIRING, MeshInstanceBuilder::BuildMode::Additive);
+                if (updatedHealth >= GridCell::MAX_HEALTH)
+                {
+                    c->setBuildState((buildState | GridCell::INFECTED) ^ GridCell::INFECTED);
+                    //                        meshInstanceBuilder_->buildAt(c->getCol(), c->getRow(), GridCell::INFECTED, MeshInstanceBuilder::BuildMode::RemoveSpecific);
                 }
+                // now the automaton knows that the cell is in repair and handles the rest
             }
         }
     }
@@ -108,7 +90,7 @@ namespace roomgame
             startNewRoom(touchID, touchedCell);
         }
         // check if infected or source
-        else if (touchedCell->getBuildState() & (GridCell::SOURCE | GridCell::INFECTED)) {
+        else /*if (touchedCell->getBuildState() & (GridCell::SOURCE | GridCell::INFECTED))*/ {
             TryRepair(touchedCell);
         }
     }

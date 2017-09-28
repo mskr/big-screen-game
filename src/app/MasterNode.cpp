@@ -35,7 +35,7 @@ namespace viscom {
         interactiveGrid_->roomInteractionManager_ = roomInteractionManager_;
         automatonUpdater_.meshInstanceBuilder_ = meshInstanceBuilder_;
         automatonUpdater_.interactiveGrid_ = interactiveGrid_;
-        cellular_automaton_ = std::make_shared<roomgame::InnerInfluence>(&automatonUpdater_,interactiveGrid_,3.0);
+        cellular_automaton_ = std::make_shared<roomgame::InnerInfluence>(&automatonUpdater_,interactiveGrid_,1.0);
         grid_state_ = {};
         automaton_transition_time_delta_ = 0.0;
         automaton_has_transitioned_ = false;
