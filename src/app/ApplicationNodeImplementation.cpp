@@ -61,7 +61,7 @@ namespace viscom {
         meshpool_.addMesh({ GridCell::WALL },
             GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/newModels/RoomWall.obj"));
         meshpool_.addMesh({ GridCell::INVALID | GridCell::TEMPORARY, GridCell::TEMPORARY,
-            GridCell::INFECTED, GridCell::SOURCE | GridCell::INFECTED },
+            GridCell::INFECTED, GridCell::SOURCE | GridCell::INFECTED, GridCell::REPAIRING | GridCell::INFECTED },
             GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/newModels/InnerInfluence.obj"));
         meshpool_.addMesh({ GridCell::SOURCE},
             GetApplication()->GetMeshManager().GetResource("/models/roomgame_models/newModels/RoomWallBrokenWater.obj"));
