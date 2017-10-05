@@ -56,6 +56,7 @@ namespace roomgame {
         AutomatonUpdater* automatonUpdater_;
         std::shared_ptr<InteractiveGrid> interactiveGrid_;
         void updateCell(GridCell* c, GLuint state, GLuint hp);
+        bool checkForTransitionTexSwap(double time, bool oldVal);
         virtual void init(viscom::GPUProgramManager mgr);
         virtual bool transition(double time); // return false if it is not time yet
         GPUCellularAutomaton(AutomatonUpdater* automatonGrid_grid,

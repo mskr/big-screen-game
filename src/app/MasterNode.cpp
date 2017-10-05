@@ -70,11 +70,11 @@ namespace viscom {
         synchronized_automaton_transition_time_delta_.setVal(cellular_automaton_->getTimeDeltaNormalized());
         synchronized_automaton_has_transitioned_.setVal(automaton_has_transitioned_);
         // Grid state sync only when automaton changed it
-        if (automaton_has_transitioned_) {
-            synchronized_grid_state_.setVal(std::vector<roomgame::GRID_STATE_ELEMENT>(
-                cellular_automaton_->getGridBuffer(),
-                cellular_automaton_->getGridBuffer() + cellular_automaton_->getGridBufferElements()));
-        }
+        synchronized_grid_state_.setVal(std::vector<roomgame::GRID_STATE_ELEMENT>(
+            cellular_automaton_->getGridBuffer(),
+            cellular_automaton_->getGridBuffer() + cellular_automaton_->getGridBufferElements()));
+        //if (automaton_has_transitioned_) {
+        //}
     }
 
     /* Sync step 2: Master sends shared objects to the central SharedData singleton
@@ -88,8 +88,8 @@ namespace viscom {
         sgct::SharedData::instance()->writeObj<glm::vec3>(&synchronized_grid_translation_);
         sgct::SharedData::instance()->writeFloat(&synchronized_automaton_transition_time_delta_);
         sgct::SharedData::instance()->writeBool(&synchronized_automaton_has_transitioned_);
-        if (automaton_has_transitioned_)
-            sgct::SharedData::instance()->writeVector(&synchronized_grid_state_);
+        sgct::SharedData::instance()->writeVector(&synchronized_grid_state_);
+        //if (automaton_has_transitioned_)
     }
 
     /* Sync step 3: Master updates its copies of cluster-wide variables with data it just synced
@@ -107,14 +107,8 @@ namespace viscom {
         // but help to write "unified" code in ApplicationNodeImplementation
         grid_translation_ = synchronized_grid_translation_.getVal();
         automaton_transition_time_delta_ = synchronized_automaton_transition_time_delta_.getVal();
-        automaton_has_transitioned_ = synchronized_automaton_has_transitioned_.getVal();
+        //automaton_has_transitioned_ = synchronized_automaton_has_transitioned_.getVal();
         // GPU data upload behind check if GL was initialized
-        if (last_grid_state_texture_.id > 0 && current_grid_state_texture_.id > 0) {
-            // ensure that this happens only once after a automaton transition to have last and current state right
-            if (automaton_has_transitioned_) {
-                uploadGridStateToGPU();
-            }
-        }
     }
 
     /* This SGCT stage is called only once before each frame, regardless of the number of viewports */
@@ -129,8 +123,19 @@ namespace viscom {
 
         //cellular_automaton_.setTransitionTime(automaton_transition_time);
         //cellular_automaton_.setDamagePerCell(automaton_damage_per_cell);
-        automaton_has_transitioned_ = cellular_automaton_->transition(clock_.t_in_sec);
-
+        bool oldTex = automaton_has_transitioned_;
+        automaton_has_transitioned_ = cellular_automaton_->checkForTransitionTexSwap(clock_.t_in_sec,oldTex);
+        if(oldTex!=automaton_has_transitioned_)
+        {
+            cellular_automaton_->transition(clock_.t_in_sec);
+            masterTransitionNumber++;
+            if (last_grid_state_texture_.id > 0 && current_grid_state_texture_.id > 0) {
+                // ensure that this happens only once after a automaton transition to have last and current state right
+                //if (automaton_has_transitioned_) {
+                uploadGridStateToGPU();
+                //}
+            }
+        }
 
         updateManager_.ManageUpdates(min(clock_.deltat(), 0.25));
     }
@@ -148,6 +153,33 @@ namespace viscom {
             if (render_mode_ == RenderMode::DBG) interactiveGrid_->onFrame();
         });
 
+    }
+
+    bool MasterNode::DataTransferCallback(void* receivedData, int
+        receivedLength, int packageID, int clientID)
+    {
+        int transNr;
+        switch (packageID) {
+        case 0:
+        {
+            transNr = *reinterpret_cast<int*>(receivedData);
+            bool newSlave = true;
+            for (auto msg = slaveTransitionNumbers_.begin(); msg != slaveTransitionNumbers_.end(); ++msg){
+                if(msg->clientId==clientID)
+                {
+                    msg->transitionNr = transNr;
+                    newSlave = false;
+                    break;
+                }
+            }
+            if (newSlave)
+            {
+                slaveTransitionNumbers_.push_back(TransitionMsg(clientID, transNr));
+            }
+        }
+        return true;
+        default: return false;
+        }
     }
 
     void MasterNode::Draw2D(FrameBuffer& fbo) {
@@ -224,6 +256,16 @@ namespace viscom {
             if (ImGui::Button("Reset Playground")) {
                 resetPlaygroundValues();
                 reset();
+            }
+
+            ImGui::Spacing();
+            if(ImGui::CollapsingHeader("Transition Numbers"))
+            {
+                ImGui::Text("Master: %i", masterTransitionNumber);
+                for (auto msg = slaveTransitionNumbers_.begin(); msg != slaveTransitionNumbers_.end(); ++msg)
+                {
+                    ImGui::Text("Slave %i: %i", msg->clientId, msg->transitionNr);
+                }
             }
 
             ImGui::End();

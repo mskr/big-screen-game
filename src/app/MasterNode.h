@@ -68,6 +68,19 @@ namespace viscom {
         enum InteractionMode { GRID, CAMERA, AUTOMATON } interaction_mode_;
 
     public:
+        class TransitionMsg
+        {
+        public:
+            TransitionMsg(int clientId, int transitionNr)
+                : clientId(clientId),
+                  transitionNr(transitionNr)
+            {
+            }
+
+            int clientId;
+            int transitionNr;
+        };
+
         explicit MasterNode(ApplicationNodeInternal* appNode);
         virtual ~MasterNode() override;
 
@@ -94,6 +107,7 @@ namespace viscom {
         /* This SGCT stage draws the scene to the current back buffer (left, right or both). 
         This stage can be called several times per frame if multiple viewports and/or if stereoscopic rendering is active.*/
         void DrawFrame(FrameBuffer& fbo) override;
+        bool DataTransferCallback(void * receivedData, int receivedLength, int packageID, int clientID) override;
         void Draw2D(FrameBuffer& fbo) override;
 
         /* This SGCT stage is called after the rendering is finalized. */
@@ -147,5 +161,7 @@ namespace viscom {
         
         void reset();
         void resetPlaygroundValues();
+        std::list<TransitionMsg> slaveTransitionNumbers_;
+        int masterTransitionNumber = 0;
     };
 }

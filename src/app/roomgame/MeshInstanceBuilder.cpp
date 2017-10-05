@@ -115,7 +115,7 @@ namespace roomgame
             removeInstanceAt(c);
             addInstanceAt(c, newSt);
         }
-        if (newSt & (GridCell::SOURCE | GridCell::INFECTED | GridCell::TEMPORARY) == 0)
+        if ((newSt & (GridCell::SOURCE | GridCell::INFECTED | GridCell::TEMPORARY)) == 0)
         {
             c->updateHealthPoints(interactiveGrid_->vbo_, GridCell::MAX_HEALTH);
         }

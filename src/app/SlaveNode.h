@@ -18,12 +18,15 @@ namespace viscom {
 
         explicit SlaveNode(ApplicationNodeInternal* appNode);
         virtual ~SlaveNode() override;
-		void DecodeData();
-		void UpdateSyncedInfo();
+		void DecodeData() override;
+		void UpdateSyncedInfo() override;
+
+        void ConfirmCurrentState() const;
 
 		void UpdateFrame(double, double) override;
         void Draw2D(FrameBuffer& fbo) override;
 		virtual void PostDraw() override;
-
+    private:
+        int automatonTransitionNr_ = 0;
     };
 }

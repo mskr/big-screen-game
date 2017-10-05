@@ -133,14 +133,20 @@ namespace roomgame
             texture_pair_[0].format, texture_pair_[0].datatype, data);
     }
 
-    bool GPUCellularAutomaton::transition(double time) {
-        // Test if it is time for the next generation
+    bool GPUCellularAutomaton::checkForTransitionTexSwap(double time, bool oldVal)
+    {
         delta_time_ = time - last_time_;
         if (delta_time_ >= transition_time_) {
             last_time_ = time;
             delta_time_ = 0;
+            return !oldVal;
         }
-        else return false;
+        return oldVal;
+    }
+
+    bool GPUCellularAutomaton::transition(double time) {
+        // Test if it is time for the next generation
+
         int current_write_index = (current_read_index_ == 0) ? 1 : 0;
         // Do transition on gpu
         framebuffer_pair_[current_write_index]->bind();
