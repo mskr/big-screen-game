@@ -61,7 +61,7 @@ namespace roomgame {
         AutomatonUpdater* automatonUpdater_;
         std::shared_ptr<InteractiveGrid> interactiveGrid_;
         void updateCell(GridCell* c, GLuint state, GLuint hp);
-        bool checkForTransitionTexSwap(double time, bool oldVal);
+        bool checkForTransitionTexSwapWithDeltaReset(double time, bool oldVal);
         virtual void init(viscom::GPUProgramManager mgr);
         virtual void transition();
         GPUCellularAutomaton(AutomatonUpdater* automatonGrid_grid,
@@ -79,6 +79,7 @@ namespace roomgame {
         size_t getGridBufferElements();
         roomgame::GRID_STATE_ELEMENT* getGridBuffer();
         double getTransitionTime();
+        int getCurrentReadIndex() { return current_read_index_; }
 
         //reset
         void ResetTransitionTime();

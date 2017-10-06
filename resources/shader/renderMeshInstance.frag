@@ -143,7 +143,7 @@ void main() {
         float infectedness = mix(last.b, curr.b, automatonTimeDelta);
         if(infectedness < 0.7) discard;
         float fluid = mix(1.0 - last.a, 1.0 - curr.a, automatonTimeDelta);
-        color = vec4(vec3(.0,.0,.5) + fluid * vec3(1.,.0,.0), 1);
+        color = vec4(vec3(.0,.0,.5) + fluid * vec3(1.,.8,.9), 1);
         if((st & REPAIRING) > 0U) color += vec4(clamp(curr.a - .5, .0, 1.));
     }
     else if((st & TEMPORARY) > 0U) {

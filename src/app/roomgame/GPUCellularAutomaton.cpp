@@ -135,7 +135,7 @@ namespace roomgame
             texture_pair_[0].format, texture_pair_[0].datatype, data);
     }
 
-    bool GPUCellularAutomaton::checkForTransitionTexSwap(double time, bool oldVal)
+    bool GPUCellularAutomaton::checkForTransitionTexSwapWithDeltaReset(double time, bool oldVal)
     {
         delta_time_ = time - last_time_;
         if (delta_time_ >= transition_time_) {

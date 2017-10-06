@@ -150,13 +150,13 @@ void main() {
         // CASE 2: cell is INFECTED
         if((bstate & INFECTED) > 0U) {
             // compute flow assuming that fluid flows "down hill"
-            if(left_gradient > CRITICAL_VALUE) // incoming from left
+            if(left_gradient+CRITICAL_VALUE > CRITICAL_VALUE) // incoming from left
                 result -= int(FLOW_SPEED);
-            else if(left_gradient < -CRITICAL_VALUE) // outgoing to left
+            else if(left_gradient-CRITICAL_VALUE < -CRITICAL_VALUE) // outgoing to left
                 result += int(FLOW_SPEED);
-            if(right_gradient > CRITICAL_VALUE) // incoming from right
+            if(right_gradient+CRITICAL_VALUE > CRITICAL_VALUE) // incoming from right
                 result -= int(FLOW_SPEED);
-            else if(right_gradient < -CRITICAL_VALUE) // outgoing to right
+            else if(right_gradient-CRITICAL_VALUE < -CRITICAL_VALUE) // outgoing to right
                 result += int(FLOW_SPEED);
         }
 

@@ -89,6 +89,8 @@ namespace viscom {
         std::shared_ptr<MeshInstanceBuilder> meshInstanceBuilder_;
         std::shared_ptr<RoomInteractionManager> roomInteractionManager_;
         std::shared_ptr<InteractiveGrid> interactiveGrid_;
+        /* Copy of part of grid state for use by each node's GPU (same as used by automaton) */
+        GPUBuffer::Tex current_grid_state_texture_, last_grid_state_texture_;
 
         /* Update Manager */
 		roomgame::UpdateManager updateManager_;

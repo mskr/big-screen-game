@@ -104,23 +104,22 @@ namespace viscom {
             glUniform1f(uloc, GRID_CELL_SIZE_);
         });
 
-        GLuint currentGridStateTextureID;
-        GLuint lastGridStateTextureID;
-        currentGridStateTextureID = GPUBuffer::alloc_texture2D(GRID_COLS_, GRID_ROWS_,
+        current_grid_state_texture_.id = GPUBuffer::alloc_texture2D(GRID_COLS_, GRID_ROWS_,
             roomgame::FILTERABLE_GRID_STATE_TEXTURE.sized_format, 
             roomgame::FILTERABLE_GRID_STATE_TEXTURE.format, 
             roomgame::FILTERABLE_GRID_STATE_TEXTURE.datatype);
-        lastGridStateTextureID = GPUBuffer::alloc_texture2D(GRID_COLS_, GRID_ROWS_,
+        last_grid_state_texture_.id = GPUBuffer::alloc_texture2D(GRID_COLS_, GRID_ROWS_,
             roomgame::FILTERABLE_GRID_STATE_TEXTURE.sized_format,
             roomgame::FILTERABLE_GRID_STATE_TEXTURE.format,
             roomgame::FILTERABLE_GRID_STATE_TEXTURE.datatype);
 
-        automatonUpdater_.currGridStateTexID = currentGridStateTextureID;
-        automatonUpdater_.lastGridStateTexID = lastGridStateTextureID;
+        automatonUpdater_.currGridStateTexID = current_grid_state_texture_.id;
+        automatonUpdater_.lastGridStateTexID = last_grid_state_texture_.id;
+
         meshpool_.updateUniformEveryFrame("curr_grid_state", [&](GLint uloc) {
             GLuint texture_unit = GL_TEXTURE0 + 0;
             glActiveTexture(texture_unit);
-            glBindTexture(GL_TEXTURE_2D, currentGridStateTextureID);
+            glBindTexture(GL_TEXTURE_2D, current_grid_state_texture_.id);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
@@ -133,7 +132,7 @@ namespace viscom {
         meshpool_.updateUniformEveryFrame("last_grid_state", [&](GLint uloc) {
             GLuint texture_unit = GL_TEXTURE0 + 1;
             glActiveTexture(texture_unit);
-            glBindTexture(GL_TEXTURE_2D, lastGridStateTextureID);
+            glBindTexture(GL_TEXTURE_2D, last_grid_state_texture_.id);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);

@@ -35,12 +35,10 @@ namespace roomgame
     public:
         GPUCellularAutomaton* automaton_;
         int automatonTransitionNr_ = 0;
-
         sgct::SharedFloat synchronized_automaton_transition_time_delta_;
         float automaton_transition_time_delta_;
         sgct::SharedBool synchronized_automaton_has_transitioned_;
         bool automaton_has_transitioned_;
-
         GLuint currGridStateTexID;
         GLuint lastGridStateTexID;
         // use vector although grid state is not dynamic because sgct provides no shared array

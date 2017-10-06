@@ -77,14 +77,14 @@ namespace roomgame
 
     void AutomatonUpdater::updateMaster(double currentTimeInSec)
     {
-        automaton_transition_time_delta_ = automaton_->getTimeDeltaNormalized();
         bool oldTex = automaton_has_transitioned_;
-        automaton_has_transitioned_ = automaton_->checkForTransitionTexSwap(currentTimeInSec, oldTex);
+        automaton_has_transitioned_ = automaton_->checkForTransitionTexSwapWithDeltaReset(currentTimeInSec, oldTex);
+        automaton_transition_time_delta_ = automaton_->getTimeDeltaNormalized();
         if (oldTex != automaton_has_transitioned_)
         {
             automaton_->transition();
-            automatonTransitionNr_++;
             uploadGridStateToGPU(true);
+            automatonTransitionNr_++;
         }
     }
 
