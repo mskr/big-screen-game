@@ -7,6 +7,9 @@ namespace roomgame
     {
         automaton_ = 0;
         delayed_update_list_ = 0;
+        automaton_transition_time_delta_ = 0.0;
+        automaton_has_transitioned_ = false;
+        grid_state_ = {};
     }
 
     AutomatonUpdater::~AutomatonUpdater() {
@@ -71,6 +74,56 @@ namespace roomgame
             }
         }
     }
+
+    void AutomatonUpdater::updateMaster(double currentTimeInSec)
+    {
+        automaton_transition_time_delta_ = automaton_->getTimeDeltaNormalized();
+        bool oldTex = automaton_has_transitioned_;
+        automaton_has_transitioned_ = automaton_->checkForTransitionTexSwap(currentTimeInSec, oldTex);
+        if (oldTex != automaton_has_transitioned_)
+        {
+            automaton_->transition();
+            automatonTransitionNr_++;
+            uploadGridStateToGPU(true);
+        }
+    }
+
+    void AutomatonUpdater::uploadGridStateToGPU(bool masterNode) {
+        if (currGridStateTexID <= 0 || lastGridStateTexID <= 0) {
+            return;
+        }
+        // Grid state: type UINT has to be converted to UNORM to make use of bilinear interpolation when rendering
+        glBindTexture(GL_TEXTURE_2D, lastGridStateTexID);
+        const auto numCols = static_cast<GLsizei>(interactiveGrid_->getNumColumns());
+        const auto numRows = static_cast<GLsizei>(interactiveGrid_->getNumRows());
+        glTexImage2D(GL_TEXTURE_2D, 0,
+            // 32 bit UNORM means 1.0F is represented by (2^31 - 1)U
+            roomgame::FILTERABLE_GRID_STATE_TEXTURE.sized_format,
+            numCols, numRows, 0,
+            // no "_INTEGER" postfix means data is treated as NORM and sampling delivers float
+            roomgame::FILTERABLE_GRID_STATE_TEXTURE.format,
+            // pixel data points to integers treated as UNORM
+            roomgame::FILTERABLE_GRID_STATE_TEXTURE.datatype,
+            grid_state_.data());
+        if (masterNode)
+        {
+            grid_state_ = std::vector<roomgame::GRID_STATE_ELEMENT>(
+                automaton_->getGridBuffer(),
+                automaton_->getGridBuffer() + automaton_->getGridBufferElements());
+        }
+        else
+        {
+            grid_state_ = synchronized_grid_state_.getVal(); // fetch new Grid state
+        }
+        glBindTexture(GL_TEXTURE_2D, currGridStateTexID);
+        glTexImage2D(GL_TEXTURE_2D, 0,
+            roomgame::FILTERABLE_GRID_STATE_TEXTURE.sized_format,
+            numCols, numRows, 0,
+            roomgame::FILTERABLE_GRID_STATE_TEXTURE.format,
+            roomgame::FILTERABLE_GRID_STATE_TEXTURE.datatype,
+            grid_state_.data());
+    }
+
 
     void AutomatonUpdater::populateCircleAtLastMousePosition(int radius) {
         /*

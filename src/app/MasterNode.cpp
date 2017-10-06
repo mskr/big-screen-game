@@ -21,24 +21,20 @@ namespace viscom {
 
     MasterNode::MasterNode(ApplicationNodeInternal* appNode) :
         ApplicationNodeImplementation{ appNode },
-        automatonUpdater_(),
         interaction_mode_(InteractionMode::GRID)
     {
-        meshInstanceBuilder_ = std::make_shared<MeshInstanceBuilder>(&meshpool_);
-        interactiveGrid_ = std::make_shared<InteractiveGrid>(GRID_COLS_, GRID_ROWS_, GRID_HEIGHT_);
-        meshInstanceBuilder_->interactiveGrid_ = interactiveGrid_;
-        meshInstanceBuilder_->automatonUpdater_ = &automatonUpdater_;
-        roomInteractionManager_ = std::make_shared<RoomInteractionManager>();
-        roomInteractionManager_->interactiveGrid_ = interactiveGrid_;
-        roomInteractionManager_->meshInstanceBuilder_ = meshInstanceBuilder_;
-        roomInteractionManager_->automatonUpdater_ = &automatonUpdater_;
-        interactiveGrid_->roomInteractionManager_ = roomInteractionManager_;
-        automatonUpdater_.meshInstanceBuilder_ = meshInstanceBuilder_;
-        automatonUpdater_.interactiveGrid_ = interactiveGrid_;
+        //meshInstanceBuilder_ = std::make_shared<MeshInstanceBuilder>(&meshpool_);
+        //interactiveGrid_ = std::make_shared<InteractiveGrid>(GRID_COLS_, GRID_ROWS_, GRID_HEIGHT_);
+        //meshInstanceBuilder_->interactiveGrid_ = interactiveGrid_;
+        //meshInstanceBuilder_->automatonUpdater_ = &automatonUpdater_;
+        //roomInteractionManager_ = std::make_shared<RoomInteractionManager>();
+        //roomInteractionManager_->interactiveGrid_ = interactiveGrid_;
+        //roomInteractionManager_->meshInstanceBuilder_ = meshInstanceBuilder_;
+        //roomInteractionManager_->automatonUpdater_ = &automatonUpdater_;
+        //interactiveGrid_->roomInteractionManager_ = roomInteractionManager_;
+        //automatonUpdater_.meshInstanceBuilder_ = meshInstanceBuilder_;
+        //automatonUpdater_.interactiveGrid_ = interactiveGrid_;
         cellular_automaton_ = std::make_shared<roomgame::InnerInfluence>(&automatonUpdater_,interactiveGrid_,1.0);
-        grid_state_ = {};
-        automaton_transition_time_delta_ = 0.0;
-        automaton_has_transitioned_ = false;
     }
 
     MasterNode::~MasterNode() = default;
@@ -66,15 +62,8 @@ namespace viscom {
         sourceLightManager_->preSync();
         outerInfluence_->MeshComponent->preSync();
         meshpool_.preSync();
-        synchronized_grid_translation_.setVal(interactiveGrid_->getTranslation());
-        synchronized_automaton_transition_time_delta_.setVal(cellular_automaton_->getTimeDeltaNormalized());
-        synchronized_automaton_has_transitioned_.setVal(automaton_has_transitioned_);
-        // Grid state sync only when automaton changed it
-        synchronized_grid_state_.setVal(std::vector<roomgame::GRID_STATE_ELEMENT>(
-            cellular_automaton_->getGridBuffer(),
-            cellular_automaton_->getGridBuffer() + cellular_automaton_->getGridBufferElements()));
-        //if (automaton_has_transitioned_) {
-        //}
+        synchronized_grid_translation_.setVal(grid_translation_);
+        automatonUpdater_.preSync();
     }
 
     /* Sync step 2: Master sends shared objects to the central SharedData singleton
@@ -86,10 +75,7 @@ namespace viscom {
         outerInfluence_->MeshComponent->encode();
         meshpool_.encode();
         sgct::SharedData::instance()->writeObj<glm::vec3>(&synchronized_grid_translation_);
-        sgct::SharedData::instance()->writeFloat(&synchronized_automaton_transition_time_delta_);
-        sgct::SharedData::instance()->writeBool(&synchronized_automaton_has_transitioned_);
-        sgct::SharedData::instance()->writeVector(&synchronized_grid_state_);
-        //if (automaton_has_transitioned_)
+        automatonUpdater_.encode();
     }
 
     /* Sync step 3: Master updates its copies of cluster-wide variables with data it just synced
@@ -100,15 +86,7 @@ namespace viscom {
     */
     void MasterNode::UpdateSyncedInfo() {
         ApplicationNodeImplementation::UpdateSyncedInfo();
-        sourceLightManager_->updateSyncedMaster();
-        outerInfluence_->MeshComponent->updateSyncedMaster();
         meshpool_.updateSyncedMaster();
-        // Of course the following variables are redundant on master 
-        // but help to write "unified" code in ApplicationNodeImplementation
-        grid_translation_ = synchronized_grid_translation_.getVal();
-        automaton_transition_time_delta_ = synchronized_automaton_transition_time_delta_.getVal();
-        //automaton_has_transitioned_ = synchronized_automaton_has_transitioned_.getVal();
-        // GPU data upload behind check if GL was initialized
     }
 
     /* This SGCT stage is called only once before each frame, regardless of the number of viewports */
@@ -120,23 +98,8 @@ namespace viscom {
             handleInputBuffer();
         }
 #endif
-
-        //cellular_automaton_.setTransitionTime(automaton_transition_time);
-        //cellular_automaton_.setDamagePerCell(automaton_damage_per_cell);
-        bool oldTex = automaton_has_transitioned_;
-        automaton_has_transitioned_ = cellular_automaton_->checkForTransitionTexSwap(clock_.t_in_sec,oldTex);
-        if(oldTex!=automaton_has_transitioned_)
-        {
-            cellular_automaton_->transition(clock_.t_in_sec);
-            masterTransitionNumber++;
-            if (last_grid_state_texture_.id > 0 && current_grid_state_texture_.id > 0) {
-                // ensure that this happens only once after a automaton transition to have last and current state right
-                //if (automaton_has_transitioned_) {
-                uploadGridStateToGPU();
-                //}
-            }
-        }
-
+        grid_translation_ = interactiveGrid_->getTranslation();
+        automatonUpdater_.updateMaster(clock_.t_in_sec);
         updateManager_.ManageUpdates(min(clock_.deltat(), 0.25));
     }
 
@@ -192,6 +155,7 @@ namespace viscom {
         float repairPerClickValue = roomInteractionManager_->healAmount_;
         int currentPatrolTime = outerInfluence_->getCurrentPatrolTime();
         int patrolTime = outerInfluence_->getPatrolTime();
+        int masterTransitionNr = automatonUpdater_.automatonTransitionNr_;
 
         fbo.DrawToFBO([&]() {
             ImGui::SetNextWindowPos(ImVec2(700, 60), ImGuiSetCond_FirstUseEver);
@@ -261,7 +225,7 @@ namespace viscom {
             ImGui::Spacing();
             if(ImGui::CollapsingHeader("Transition Numbers"))
             {
-                ImGui::Text("Master: %i", masterTransitionNumber);
+                ImGui::Text("Master: %i", masterTransitionNr);
                 for (auto msg = slaveTransitionNumbers_.begin(); msg != slaveTransitionNumbers_.end(); ++msg)
                 {
                     ImGui::Text("Slave %i: %i", msg->clientId, msg->transitionNr);

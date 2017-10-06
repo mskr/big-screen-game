@@ -12,7 +12,6 @@
 #include <mutex>
 #include <vector>
 
-#include "roomgame/AutomatonUpdater.h"
 #include "glm\gtx\quaternion.hpp"
 
 #include "../app/ApplicationNodeImplementation.h"
@@ -22,18 +21,9 @@
 #endif
 namespace roomgame
 {
-    class MeshInstanceBuilder;
-    class InteractiveGrid;
-    class RoomSegmentMeshPool;
-    class RoomInteractionManager;
     class InnerInfluence;
 }
-using roomgame::MeshInstanceBuilder;
-using roomgame::InteractiveGrid;
-using roomgame::RoomSegmentMeshPool;
-using roomgame::RoomInteractionManager;
 using roomgame::InnerInfluence;
-
 
 namespace viscom {
 
@@ -53,16 +43,11 @@ namespace viscom {
     */
     class MasterNode final : public ApplicationNodeImplementation
     {
-        /* Holds core state of the roomgame and handles events */
-        roomgame::AutomatonUpdater automatonUpdater_;
 
-        std::shared_ptr<MeshInstanceBuilder> meshInstanceBuilder_;
-        std::shared_ptr<RoomInteractionManager> roomInteractionManager_;
-        std::shared_ptr<InteractiveGrid> interactiveGrid_;
 
         /* Controls inner influence, i.e. room infection */
         std::shared_ptr<InnerInfluence> cellular_automaton_;
-    
+
         /* Interaction modes: GRID: build rooms, CAMERA: move camera,
         AUTOMATON: define init state for testing automaton rules */
         enum InteractionMode { GRID, CAMERA, AUTOMATON } interaction_mode_;
@@ -162,6 +147,5 @@ namespace viscom {
         void reset();
         void resetPlaygroundValues();
         std::list<TransitionMsg> slaveTransitionNumbers_;
-        int masterTransitionNumber = 0;
     };
 }

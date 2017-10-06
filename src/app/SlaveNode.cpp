@@ -43,10 +43,7 @@ namespace viscom {
         outerInfluence_->MeshComponent->decode();
         meshpool_.decode();
         sgct::SharedData::instance()->readObj<glm::vec3>(&synchronized_grid_translation_);
-        sgct::SharedData::instance()->readFloat(&synchronized_automaton_transition_time_delta_);
-        sgct::SharedData::instance()->readBool(&synchronized_automaton_has_transitioned_);
-        //if(synchronized_automaton_has_transitioned_.getVal())
-            sgct::SharedData::instance()->readVector(&synchronized_grid_state_);
+        automatonUpdater_.decode();
     }
 
     /* Sync step 2: Slaves set their copies of cluster-wide variables to values received from master 
@@ -58,30 +55,14 @@ namespace viscom {
         outerInfluence_->MeshComponent->updateSyncedSlave();
         meshpool_.updateSyncedSlave();
         grid_translation_ = synchronized_grid_translation_.getVal();
-        automaton_transition_time_delta_ = synchronized_automaton_transition_time_delta_.getVal();
-        bool oldVal = automaton_has_transitioned_;
-        automaton_has_transitioned_ = synchronized_automaton_has_transitioned_.getVal();
-        if (oldVal!=automaton_has_transitioned_) {
-            automatonTransitionNr_++;
-        }
-        // GPU data upload behind check if GL was initialized
-        if (last_grid_state_texture_.id > 0 && current_grid_state_texture_.id > 0) {
-            // ensure that this happens only once after a automaton transition to have last and current state right
-            //if (automaton_has_transitioned_) {
-            if (oldVal != automaton_has_transitioned_) {
-                uploadGridStateToGPU();
-            }
-            //}
-        }
+        automatonUpdater_.updateSyncedSlave();
         ConfirmCurrentState();
     }
 
     void SlaveNode::ConfirmCurrentState() const
     {
-        //calibration::StateConfirm stateConfirm{
-        //    calibration::StateChange{ currentSlave_, currentWindow_, currentState_
-        //}, NodeToSlaveID(slave_->GetNodeID()) };
-        sgct::Engine::instance()->transferDataToNode(&automatonTransitionNr_,
+        sgct::Engine::instance()->transferDataToNode(
+            &automatonUpdater_.automatonTransitionNr_,
             sizeof(int), 0,
             0);
     }

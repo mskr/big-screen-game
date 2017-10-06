@@ -31,29 +31,14 @@ namespace roomgame
         uloc_CRITICAL_VALUE = shader_->getUniformLocation("CRITICAL_VALUE");
     }
 
-    bool InnerInfluence::transition(double time) {
+    void InnerInfluence::transition() {
         if (GPUCellularAutomaton::isInitialized()) {
             glUseProgram(shader_->getProgramId());
-            /*
-            glUniform2i(uloc_FLOW_DIRECTION,
-            FLOW_DIRECTION[num_transitions_ % NUM_DIRECTIONS_].x,
-            FLOW_DIRECTION[num_transitions_ % NUM_DIRECTIONS_].y);
-            */
             glUniform1ui(uloc_FLOW_SPEED, FLOW_SPEED);
             glUniform1i(uloc_CRITICAL_VALUE, CRITICAL_VALUE);
-            if (GPUCellularAutomaton::transition(time)) {
-                /*
-                // rotate flow direction 90 degrees clockwise
-                glm::ivec2 tmp = FLOW_DIRECTION;
-                tmp.x = 0 * FLOW_DIRECTION.x + 1 * FLOW_DIRECTION.y;
-                tmp.y = -1 * FLOW_DIRECTION.x + 0 * FLOW_DIRECTION.y;
-                FLOW_DIRECTION = tmp;
-                */
-                num_transitions_++;
-                return true;
-            }
+            GPUCellularAutomaton::transition();
+            num_transitions_++;
         }
-        return false;
     }
 
     void InnerInfluence::Reset()

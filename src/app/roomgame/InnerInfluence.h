@@ -27,8 +27,8 @@ namespace roomgame
                        double transition_time);
         ~InnerInfluence();
 
-        void init(viscom::GPUProgramManager mgr);
-        bool transition(double time);
+        void init(viscom::GPUProgramManager mgr) override;
+        void transition() override;
         void Reset();
     };
 }

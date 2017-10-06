@@ -35,7 +35,6 @@ namespace roomgame {
         glm::vec3 grid_center_;
         GLuint vao_, vbo_;
 
-
         /* Computes cell positions by iteratively adding (height/rows, height/rows) to (-1, -1) */
         InteractiveGrid(size_t columns, size_t rows, float height);
         ~InteractiveGrid();

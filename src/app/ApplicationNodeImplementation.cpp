@@ -19,6 +19,11 @@
 #include <glm/detail/type_mat.hpp>
 #include <glm/detail/_vectorize.hpp>
 #include "../../extern/fwcore/extern/assimp/code/ColladaHelper.h"
+#include "roomgame/MeshInstanceBuilder.h"
+#include "roomgame/InteractiveGrid.h"
+#include "roomgame/RoomSegmentMeshPool.h"
+#include "roomgame/RoomInteractionManager.h"
+#include "roomgame\InnerInfluence.h"
 
 namespace viscom {
 
@@ -28,12 +33,22 @@ namespace viscom {
         render_mode_(NORMAL),
         clock_{ 0.0 },
         updateManager_(),
-        current_grid_state_texture_(roomgame::GRID_STATE_TEXTURE),
-        last_grid_state_texture_(roomgame::GRID_STATE_TEXTURE),
+        automatonUpdater_(),
         camera_(glm::vec3(0,0,4), (viscom::CameraHelper&)(*GetCamera()))
     {
         sourceLightManager_ = std::make_shared<roomgame::SourceLightManager>();
         outerInfluence_ = std::make_shared<roomgame::OuterInfluence>(sourceLightManager_);
+        meshInstanceBuilder_ = std::make_shared<MeshInstanceBuilder>(&meshpool_);
+        interactiveGrid_ = std::make_shared<InteractiveGrid>(GRID_COLS_, GRID_ROWS_, GRID_HEIGHT_);
+        meshInstanceBuilder_->interactiveGrid_ = interactiveGrid_;
+        meshInstanceBuilder_->automatonUpdater_ = &automatonUpdater_;
+        roomInteractionManager_ = std::make_shared<RoomInteractionManager>();
+        roomInteractionManager_->interactiveGrid_ = interactiveGrid_;
+        roomInteractionManager_->meshInstanceBuilder_ = meshInstanceBuilder_;
+        roomInteractionManager_->automatonUpdater_ = &automatonUpdater_;
+        interactiveGrid_->roomInteractionManager_ = roomInteractionManager_;
+        automatonUpdater_.meshInstanceBuilder_ = meshInstanceBuilder_;
+        automatonUpdater_.interactiveGrid_ = interactiveGrid_;
     }
 
     ApplicationNodeImplementation::~ApplicationNodeImplementation() = default;
@@ -71,7 +86,7 @@ namespace viscom {
         });
 
         meshpool_.updateUniformEveryFrame("automatonTimeDelta", [&](GLint uloc) {
-            GLfloat time_delta = automaton_transition_time_delta_;
+            GLfloat time_delta = automatonUpdater_.automaton_transition_time_delta_;
             glUniform1f(uloc, time_delta);
         });
 
@@ -89,19 +104,23 @@ namespace viscom {
             glUniform1f(uloc, GRID_CELL_SIZE_);
         });
 
-        current_grid_state_texture_.id = GPUBuffer::alloc_texture2D(GRID_COLS_, GRID_ROWS_, 
+        GLuint currentGridStateTextureID;
+        GLuint lastGridStateTextureID;
+        currentGridStateTextureID = GPUBuffer::alloc_texture2D(GRID_COLS_, GRID_ROWS_,
             roomgame::FILTERABLE_GRID_STATE_TEXTURE.sized_format, 
             roomgame::FILTERABLE_GRID_STATE_TEXTURE.format, 
             roomgame::FILTERABLE_GRID_STATE_TEXTURE.datatype);
-        last_grid_state_texture_.id = GPUBuffer::alloc_texture2D(GRID_COLS_, GRID_ROWS_,
+        lastGridStateTextureID = GPUBuffer::alloc_texture2D(GRID_COLS_, GRID_ROWS_,
             roomgame::FILTERABLE_GRID_STATE_TEXTURE.sized_format,
             roomgame::FILTERABLE_GRID_STATE_TEXTURE.format,
             roomgame::FILTERABLE_GRID_STATE_TEXTURE.datatype);
 
+        automatonUpdater_.currGridStateTexID = currentGridStateTextureID;
+        automatonUpdater_.lastGridStateTexID = lastGridStateTextureID;
         meshpool_.updateUniformEveryFrame("curr_grid_state", [&](GLint uloc) {
             GLuint texture_unit = GL_TEXTURE0 + 0;
             glActiveTexture(texture_unit);
-            glBindTexture(GL_TEXTURE_2D, current_grid_state_texture_.id);
+            glBindTexture(GL_TEXTURE_2D, currentGridStateTextureID);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
@@ -114,7 +133,7 @@ namespace viscom {
         meshpool_.updateUniformEveryFrame("last_grid_state", [&](GLint uloc) {
             GLuint texture_unit = GL_TEXTURE0 + 1;
             glActiveTexture(texture_unit);
-            glBindTexture(GL_TEXTURE_2D, last_grid_state_texture_.id);
+            glBindTexture(GL_TEXTURE_2D, lastGridStateTextureID);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
@@ -322,28 +341,6 @@ namespace viscom {
             outerInfluence_->MeshComponent->render(viewProj, 1, nullptr, glm::mat4(1), false, lightInfo, viewPos, (render_mode_ == RenderMode::DBG) ? 1 : 0);
         }
         outerInfluence_->MeshComponent->model_matrix_ = influPos;
-    }
-
-    void ApplicationNodeImplementation::uploadGridStateToGPU() {
-        // Grid state: type UINT has to be converted to UNORM to make use of bilinear interpolation when rendering
-        glBindTexture(GL_TEXTURE_2D, last_grid_state_texture_.id);
-        glTexImage2D(GL_TEXTURE_2D, 0,
-            // 32 bit UNORM means 1.0F is represented by (2^31 - 1)U
-            roomgame::FILTERABLE_GRID_STATE_TEXTURE.sized_format,
-            GRID_COLS_, GRID_ROWS_, 0,
-            // no "_INTEGER" postfix means data is treated as NORM and sampling delivers float
-            roomgame::FILTERABLE_GRID_STATE_TEXTURE.format,
-            // pixel data points to integers treated as UNORM
-            roomgame::FILTERABLE_GRID_STATE_TEXTURE.datatype,
-            grid_state_.data());
-        grid_state_ = synchronized_grid_state_.getVal(); // fetch new Grid state
-        glBindTexture(GL_TEXTURE_2D, current_grid_state_texture_.id);
-        glTexImage2D(GL_TEXTURE_2D, 0,
-            roomgame::FILTERABLE_GRID_STATE_TEXTURE.sized_format,
-            GRID_COLS_, GRID_ROWS_, 0,
-            roomgame::FILTERABLE_GRID_STATE_TEXTURE.format,
-            roomgame::FILTERABLE_GRID_STATE_TEXTURE.datatype,
-            grid_state_.data());
     }
 
     void ApplicationNodeImplementation::PostDraw() {

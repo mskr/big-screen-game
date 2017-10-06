@@ -1,3 +1,5 @@
+#include "AutomatonUpdater.h"
+#include "app/roomgame/GridCell.h"
 #include "GPUCellularAutomaton.h"
 #include "core/resources/GPUProgramManager.h"
 #include "InteractiveGrid.h"
@@ -144,7 +146,7 @@ namespace roomgame
         return oldVal;
     }
 
-    bool GPUCellularAutomaton::transition(double time) {
+    void GPUCellularAutomaton::transition() {
         // Test if it is time for the next generation
 
         int current_write_index = (current_read_index_ == 0) ? 1 : 0;
@@ -171,7 +173,6 @@ namespace roomgame
         copyFromTextureToGrid(current_write_index); // Performance bottleneck
                                                     // Swap buffers
         current_read_index_ = current_write_index;
-        return true;
     }
 
     void GPUCellularAutomaton::setTransitionTime(double t) {

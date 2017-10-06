@@ -1,13 +1,17 @@
 #pragma once
 
-#include "AutomatonUpdater.h"
 #include "GPUBuffer.h"
+#include <memory>
+#include "GridCell.h"
 
 namespace viscom {
     class GPUProgramManager;
+    class GPUProgram;
 }
 
 namespace roomgame {
+    class AutomatonUpdater;
+    class InteractiveGrid;
     /* Minimal version of grid state
      * Channel R: build state as UINT bitfield
      * Channel G: health as UINT
@@ -53,12 +57,13 @@ namespace roomgame {
         void copyFromGridToTexture(int tex_index);
         void copyFromTextureToGrid(int tex_index);
     public:
+
         AutomatonUpdater* automatonUpdater_;
         std::shared_ptr<InteractiveGrid> interactiveGrid_;
         void updateCell(GridCell* c, GLuint state, GLuint hp);
         bool checkForTransitionTexSwap(double time, bool oldVal);
         virtual void init(viscom::GPUProgramManager mgr);
-        virtual bool transition(double time); // return false if it is not time yet
+        virtual void transition();
         GPUCellularAutomaton(AutomatonUpdater* automatonGrid_grid,
                              std::shared_ptr<InteractiveGrid> interactiveGrid, double transition_time);
         void cleanup();

@@ -22,6 +22,18 @@
 #include "app/roomgame/GPUCellularAutomaton.h"
 #include "app/roomgame/RoomSegmentMeshPool.h"
 
+namespace roomgame
+{
+    class MeshInstanceBuilder;
+    class InteractiveGrid;
+    class RoomSegmentMeshPool;
+    class RoomInteractionManager;
+}
+using roomgame::MeshInstanceBuilder;
+using roomgame::InteractiveGrid;
+using roomgame::RoomSegmentMeshPool;
+using roomgame::RoomInteractionManager;
+
 namespace viscom {
 
     class MeshRenderable;
@@ -71,7 +83,14 @@ namespace viscom {
         /*  */
         LightInfo* lightInfo;
 
-		/* Update Manager */
+        /* Handles all automaton related grid updates */
+        roomgame::AutomatonUpdater automatonUpdater_;
+
+        std::shared_ptr<MeshInstanceBuilder> meshInstanceBuilder_;
+        std::shared_ptr<RoomInteractionManager> roomInteractionManager_;
+        std::shared_ptr<InteractiveGrid> interactiveGrid_;
+
+        /* Update Manager */
 		roomgame::UpdateManager updateManager_;
 
         /*  */
@@ -92,18 +111,6 @@ namespace viscom {
 		/* Grid translation (controlled by master node and synced with slaves) */
 		sgct::SharedObject<glm::vec3> synchronized_grid_translation_;
 		glm::vec3 grid_translation_;
-
-		/* Copy of part of grid state for use by each node's GPU (same as used by automaton) */
-		GPUBuffer::Tex current_grid_state_texture_, last_grid_state_texture_;
-		// use vector although grid state is not dynamic because sgct provides no shared array
-		sgct::SharedVector<roomgame::GRID_STATE_ELEMENT> synchronized_grid_state_;
-		std::vector<roomgame::GRID_STATE_ELEMENT> grid_state_;
-
-		/* Some automaton parameters are also needed on slave nodes */
-		sgct::SharedFloat synchronized_automaton_transition_time_delta_;
-		float automaton_transition_time_delta_;
-        sgct::SharedBool synchronized_automaton_has_transitioned_;
-        bool automaton_has_transitioned_;
 
 		/* Outer influence object containing AI logic and mesh */
 		std::shared_ptr<roomgame::OuterInfluence> outerInfluence_;
@@ -194,7 +201,6 @@ namespace viscom {
 			}
 		} screenfilling_quad_;
 
-        void uploadGridStateToGPU();
     private:
         std::shared_ptr<Texture> caustics;
 	};
