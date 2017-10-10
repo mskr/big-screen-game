@@ -62,6 +62,7 @@ protected:
 	std::vector<GLint> uniformLocations_;
 
 
+
 public:
     //Uniform Location names
     const int UL_SUB_MESH_LOCAL_MATRIX = 0;
@@ -85,11 +86,56 @@ public:
     const int UL_DIR_LIGHT_SPECULAR = 18;
 
 
+    std::vector<std::string> pointLightProps;
+    std::vector<std::vector<std::string>> infLightStrings;
+    std::vector<std::vector<std::string>> sourceLightStrings;
+    std::string outerInfString = "outerInfLights";
+    std::string sourceString = "sourceLights";
+    std::string outerInfLightPropsString = "outerInfLightProps";
+    std::string sourceLightPropsString = "sourceLightProps";
+
+
 	MeshBase(viscom::Mesh* mesh, viscom::GPUProgram* program) :
 		mesh_(mesh), program_(program), vbo_(VERTEX_LAYOUT::CreateVertexBuffer(mesh)), vao_(0)
 	{
 		resetShader();
-	}
+        pointLightProps.push_back(".position");
+        pointLightProps.push_back(".ambient");
+        pointLightProps.push_back(".diffuse");
+        pointLightProps.push_back(".specular");
+        pointLightProps.push_back(".constant");
+        pointLightProps.push_back(".linear");
+        pointLightProps.push_back(".quadratic");
+
+	    for (int i = 0; i < 10; i++)
+        {
+            std::string number = "" + std::to_string(i);
+            std::string loc = outerInfString + "[" + number + "]";
+            std::vector<std::string> tmp;
+            tmp.push_back(loc + pointLightProps[0]);
+            infLightStrings.push_back(tmp);
+        }
+
+	    std::string loc2 = outerInfLightPropsString;
+        for(int i = 1;i<pointLightProps.size();i++)
+        {
+            infLightStrings[0].push_back(loc2 + pointLightProps[i]);
+        }
+
+        for (int i = 0; i < 15; i++)
+        {
+            std::string number = "" + std::to_string(i);
+            std::string loc = sourceString + "[" + number + "]";
+            std::vector<std::string> tmp;
+            tmp.push_back(loc + pointLightProps[0]);
+            sourceLightStrings.push_back(tmp);
+        }
+        std::string loc3 = sourceLightPropsString;
+        for (int i = 1; i<pointLightProps.size(); i++)
+        {
+            sourceLightStrings[0].push_back(loc3 + pointLightProps[i]);
+        }
+    }
 
 	~MeshBase() {
 		if (vbo_ != 0) glDeleteBuffers(1, &vbo_);
@@ -218,18 +264,6 @@ private:
             //View Position
             glUniform3fv(uniformLocations_[UL_VIEW_POS], 1, glm::value_ptr(viewPos));
 
-            std::string pointLightProps[] = {
-                ".position",
-                ".ambient",
-                ".diffuse",
-                ".specular",
-                ".constant",
-                ".linear",
-                ".quadratic"
-            };
-            std::string outerInfString = "outerInfLights";
-            std::string sourceString = "sourceLights";
-
             if (lightInfo != nullptr && lightInfo->infLightPos.size()>0) {
                 //Directional Light
                 glUniform3fv(uniformLocations_[UL_DIR_LIGHT_DIRECTION], 1, glm::value_ptr(lightInfo->sun->direction));
@@ -239,29 +273,23 @@ private:
 
                 //outer influence Light
                 for (int i = 0; i < lightInfo->infLightPos.size(); i++) {
-                    std::string number = "" + std::to_string(i);
-                    std::string loc = outerInfString + "[" + number + "]";
-                    glUniform3fv(program_->getUniformLocation(loc + pointLightProps[0]), 1, glm::value_ptr(lightInfo->infLightPos[i]));
-                    glUniform3fv(program_->getUniformLocation(loc + pointLightProps[1]), 1, glm::value_ptr(lightInfo->outerInfLights->ambient));
-                    glUniform3fv(program_->getUniformLocation(loc + pointLightProps[2]), 1, glm::value_ptr(lightInfo->outerInfLights->diffuse));
-                    glUniform3fv(program_->getUniformLocation(loc + pointLightProps[3]), 1, glm::value_ptr(lightInfo->outerInfLights->specular));
-                    glUniform1f(program_->getUniformLocation(loc + pointLightProps[4]), lightInfo->outerInfLights->constant);
-                    glUniform1f(program_->getUniformLocation(loc + pointLightProps[5]), lightInfo->outerInfLights->linear);
-                    glUniform1f(program_->getUniformLocation(loc + pointLightProps[6]), lightInfo->outerInfLights->quadratic);
+                    glUniform3fv(program_->getUniformLocation(infLightStrings[i][0]), 1, glm::value_ptr(lightInfo->infLightPos[i]));
                 }
+                glUniform3fv(program_->getUniformLocation(infLightStrings[0][1]), 1, glm::value_ptr(lightInfo->outerInfLights->ambient));
+                glUniform3fv(program_->getUniformLocation(infLightStrings[0][2]), 1, glm::value_ptr(lightInfo->outerInfLights->diffuse));
+                glUniform3fv(program_->getUniformLocation(infLightStrings[0][3]), 1, glm::value_ptr(lightInfo->outerInfLights->specular));
+                glUniform1f(program_->getUniformLocation(infLightStrings[0][4]), lightInfo->outerInfLights->constant);
+                glUniform1f(program_->getUniformLocation(infLightStrings[0][5]), lightInfo->outerInfLights->linear);
+                glUniform1f(program_->getUniformLocation(infLightStrings[0][6]), lightInfo->outerInfLights->quadratic);
             }
 
             ////source lights
-            for (int i = 0; i < roomgame::SourceLightManager::MAX_VISIBLE_SOURCE_LIGHTS; i++) {
-                std::string number = "" + std::to_string(i);
-                std::string loc = sourceString + "[" + number + "]";
-                glUniform3fv(program_->getUniformLocation(loc + pointLightProps[1]), 1, glm::value_ptr(lightInfo->sourceLights->ambient));
-                glUniform3fv(program_->getUniformLocation(loc + pointLightProps[2]), 1, glm::value_ptr(lightInfo->sourceLights->diffuse));
-                glUniform3fv(program_->getUniformLocation(loc + pointLightProps[3]), 1, glm::value_ptr(lightInfo->sourceLights->specular));
-                glUniform1f(program_->getUniformLocation(loc + pointLightProps[4]), lightInfo->sourceLights->constant);
-                glUniform1f(program_->getUniformLocation(loc + pointLightProps[5]), lightInfo->sourceLights->linear);
-                glUniform1f(program_->getUniformLocation(loc + pointLightProps[6]), lightInfo->sourceLights->quadratic);
-            }
+            glUniform3fv(program_->getUniformLocation(sourceLightStrings[0][1]), 1, glm::value_ptr(lightInfo->sourceLights->ambient));
+            glUniform3fv(program_->getUniformLocation(sourceLightStrings[0][2]), 1, glm::value_ptr(lightInfo->sourceLights->diffuse));
+            glUniform3fv(program_->getUniformLocation(sourceLightStrings[0][3]), 1, glm::value_ptr(lightInfo->sourceLights->specular));
+            glUniform1f(program_->getUniformLocation(sourceLightStrings[0][4]), lightInfo->sourceLights->constant);
+            glUniform1f(program_->getUniformLocation(sourceLightStrings[0][5]), lightInfo->sourceLights->linear);
+            glUniform1f(program_->getUniformLocation(sourceLightStrings[0][6]), lightInfo->sourceLights->quadratic);
         }
 	}
 };
