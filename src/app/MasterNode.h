@@ -146,6 +146,7 @@ namespace viscom {
         
         void reset();
         void resetPlaygroundValues();
+        bool isGameLost();
         std::list<TransitionMsg> slaveTransitionNumbers_;
     };
 }

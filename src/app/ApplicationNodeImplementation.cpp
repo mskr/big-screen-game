@@ -230,6 +230,18 @@ namespace viscom {
 
     }
 
+    void ApplicationNodeImplementation::Draw2D(FrameBuffer &fbo) {
+#if VISCOM_CLIENTGUI 
+       fbo.DrawToFBO([&]() {
+            ImGui::SetNextWindowPos(ImVec2(1100,100), ImGuiSetCond_Always);
+            ImGui::SetNextWindowSize(ImVec2(150, 100), ImGuiSetCond_Always);
+            ImGui::Begin("Game Lost", false, ImVec2(150, 100), -1.0f, ImGuiWindowFlags_NoMove & ImGuiWindowFlags_NoResize);
+            ImGui::Text("Test");
+            ImGui::End();
+        });
+#endif
+    }
+
 
     void ApplicationNodeImplementation::UpdateFrame(double currentTime, double elapsedTime)
     {

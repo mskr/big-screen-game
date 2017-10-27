@@ -59,6 +59,7 @@ namespace viscom {
         virtual void UpdateFrame(double currentTime, double elapsedTime) override;
         virtual void ClearBuffer(FrameBuffer& fbo) override;
         virtual void DrawFrame(FrameBuffer& fbo) override;
+        virtual void Draw2D(FrameBuffer& fbo) override;
         virtual void PostDraw() override;
         virtual void CleanUp() override;
 
@@ -151,6 +152,9 @@ namespace viscom {
 
         /*  */
         viscom::ArcballCamera camera_;
+
+        bool gameLost_ = false;
+        sgct::SharedBool gameLostShared;
 
 		/* Quad for debug-visualizing offscreen textures */
 		struct Quad {

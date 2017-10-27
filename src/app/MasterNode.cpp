@@ -64,6 +64,7 @@ namespace viscom {
         meshpool_.preSync();
         synchronized_grid_translation_.setVal(grid_translation_);
         automatonUpdater_.preSync();
+        gameLostShared.setVal(gameLost_);
     }
 
     /* Sync step 2: Master sends shared objects to the central SharedData singleton
@@ -76,6 +77,8 @@ namespace viscom {
         meshpool_.encode();
         sgct::SharedData::instance()->writeObj<glm::vec3>(&synchronized_grid_translation_);
         automatonUpdater_.encode();
+        sgct::SharedData::instance()->writeBool(&gameLostShared);
+       
     }
 
     /* Sync step 3: Master updates its copies of cluster-wide variables with data it just synced
@@ -146,6 +149,8 @@ namespace viscom {
     }
 
     void MasterNode::Draw2D(FrameBuffer& fbo) {
+        gameLost_ = isGameLost();
+
         int maxPatrolTime = outerInfluence_->getMaxPatrolTime();
         int minPatrolTime = outerInfluence_->getMinPatrolTime();
         float outInfluenceSpeed = outerInfluence_->getBaseSpeed();
@@ -231,6 +236,9 @@ namespace viscom {
                     ImGui::Text("Slave %i: %i", msg->clientId, msg->transitionNr);
                 }
             }
+
+            ImGui::Spacing();
+            gameLost_ ? ImGui::Text("Game Lost: yes"):ImGui::Text("Game Lost: no");
 
             ImGui::End();
         });
@@ -449,6 +457,7 @@ namespace viscom {
             roomInteractionManager_->reset();
         });
         sourceLightManager_->sourcePositions_.clear();
+        gameLost_ = false;
     }
 
     void MasterNode::resetPlaygroundValues()
@@ -457,5 +466,19 @@ namespace viscom {
         cellular_automaton_->ResetTransitionTime();
         cellular_automaton_->Reset();
         roomInteractionManager_->ResetHealAmount();
+    }
+
+    bool MasterNode::isGameLost()
+    {
+        if (roomInteractionManager_->getFirstRoom()) return false;
+        bool lost = true;
+        interactiveGrid_->forEachCell([&](GridCell *cell) {
+            if (cell->getBuildState() & GridCell::INFECTED) {
+            }
+            else if ((cell->getBuildState() != GridCell::EMPTY) || !(cell->getBuildState() & (GridCell::TEMPORARY | GridCell::INVALID))) {
+                lost = false;
+            }
+        });
+        return lost;
     }
 }
