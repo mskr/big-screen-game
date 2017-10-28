@@ -72,7 +72,7 @@ struct Material {
 uniform Material material;
 
 
-uniform sampler2D shadowMap;
+uniform sampler2DShadow shadowMap;
 uniform float time;
 
 uniform int isDebugMode;
@@ -86,21 +86,32 @@ in vec4 vPosLightSpace;
 
 out vec4 color;
 
-const float DEPTH_BIAS = 0.0001;
+const float DEPTH_BIAS = 0.001;
+
+vec2 poissonDisk[4] = vec2[](
+  vec2( -0.94201624, -0.39906216 ),
+  vec2( 0.94558609, -0.76890725 ),
+  vec2( -0.094184101, -0.92938870 ),
+  vec2( 0.34495938, 0.29387760 )
+);
+
+float random(vec3 seed, int i){
+	vec4 seed4 = vec4(seed,i);
+	float dot_product = dot(seed4, vec4(12.9898,78.233,45.164,94.673));
+	return fract(sin(dot_product) * 43758.5453);
+}
 
 // Calc visibility of this fragment in lightspace using PCF with filter size 3
 float visibility(vec3 thisFragment) {
 	float v = 0.0;
-	vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
-	for(int x = -1; x <= 1; x++) {
-		for(int y = -1; y <= 1; y++) {
-            float closestZ = texture(shadowMap, thisFragment.xy + vec2(x,y) * texelSize).r;
-			if(thisFragment.z - DEPTH_BIAS < closestZ) {
-                v += 1.0;
-            }
-        }
-    }
-	return v/9.0;
+	for (int i=0;i<4;i++){
+		int index = int(16.0*random(floor(vPosition.xyz*1000.0), i))%16;
+		vec3 frPos = vec3(thisFragment.x,thisFragment.y,thisFragment.z);
+		frPos.xy += poissonDisk[index]/700.0;
+		frPos.z -= DEPTH_BIAS;
+		v += texture(shadowMap, frPos);
+	}
+	return v/4.0;
 }
 
 void main() {

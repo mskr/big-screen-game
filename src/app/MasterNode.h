@@ -144,8 +144,10 @@ namespace viscom {
         std::mutex mtx;
         std::vector<input> inputBuffer;
         
+        int counter = 0;
         void reset();
         void resetPlaygroundValues();
+        bool isGameLost();
         std::list<TransitionMsg> slaveTransitionNumbers_;
     };
 }

@@ -83,6 +83,11 @@ namespace roomgame
         }
     }
 
+    bool RoomInteractionManager::getFirstRoom()
+    {
+        return firstRoom;
+    }
+
     void RoomInteractionManager::StartNewRoomInteractionAtTouchedCell(int touchID, GridCell* touchedCell) {
         // is the touched cell still empty?
         // ...then start room creation

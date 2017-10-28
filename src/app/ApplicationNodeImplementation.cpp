@@ -230,6 +230,22 @@ namespace viscom {
 
     }
 
+    void ApplicationNodeImplementation::Draw2D(FrameBuffer &fbo) {
+#if VISCOM_CLIENTGUI 
+        if(gameLost_)
+        {
+            glm::vec2 screenRes = GetConfig().virtualScreenSize_;
+            ImVec2 popupSize = ImVec2(900, 100);
+            fbo.DrawToFBO([&]() {
+                ImGui::SetNextWindowPos(ImVec2(screenRes.x / 2 - popupSize.x / 2, screenRes.y / 2 - popupSize.y / 2), ImGuiSetCond_Always);
+                ImGui::Begin("Game Lost", false, popupSize, -1.0f, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoInputs);
+                ImGui::Text("You can restart by pressing the 'Reset Playground' button on the master");
+                ImGui::End();
+            });
+        }
+#endif
+    }
+
 
     void ApplicationNodeImplementation::UpdateFrame(double currentTime, double elapsedTime)
     {

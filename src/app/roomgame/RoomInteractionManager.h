@@ -31,6 +31,7 @@ namespace roomgame
         void startNewRoom(int touchID, GridCell* touchedCell);
         void TryRepair(GridCell* touchedCell);
         float healAmount_;
+        bool getFirstRoom();
     private:
         const float DEFAULT_HEAL_AMOUNT = 0.25f;
         bool firstRoom = true;

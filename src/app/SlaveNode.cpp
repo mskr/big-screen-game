@@ -44,6 +44,7 @@ namespace viscom {
         meshpool_.decode();
         sgct::SharedData::instance()->readObj<glm::vec3>(&synchronized_grid_translation_);
         automatonUpdater_.decode();
+        sgct::SharedData::instance()->readBool(&gameLostShared);
     }
 
     /* Sync step 2: Slaves set their copies of cluster-wide variables to values received from master 
@@ -57,6 +58,7 @@ namespace viscom {
         grid_translation_ = synchronized_grid_translation_.getVal();
         automatonUpdater_.updateSyncedSlave();
         ConfirmCurrentState();
+        gameLost_ = gameLostShared.getVal();
     }
 
     void SlaveNode::ConfirmCurrentState() const
