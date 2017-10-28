@@ -45,6 +45,8 @@ namespace viscom {
         sgct::SharedData::instance()->readObj<glm::vec3>(&synchronized_grid_translation_);
         automatonUpdater_.decode();
         sgct::SharedData::instance()->readBool(&gameLostShared);
+        sgct::SharedData::instance()->readInt32(&currentScoreShared);
+        sgct::SharedData::instance()->readInt32(&highestScoreThisSessionShared);
     }
 
     /* Sync step 2: Slaves set their copies of cluster-wide variables to values received from master 
@@ -59,6 +61,8 @@ namespace viscom {
         automatonUpdater_.updateSyncedSlave();
         ConfirmCurrentState();
         gameLost_ = gameLostShared.getVal();
+        currentScore = currentScoreShared.getVal();
+        highestScoreThisSession = highestScoreThisSessionShared.getVal();
     }
 
     void SlaveNode::ConfirmCurrentState() const

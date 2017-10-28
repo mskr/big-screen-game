@@ -65,6 +65,8 @@ namespace viscom {
         synchronized_grid_translation_.setVal(grid_translation_);
         automatonUpdater_.preSync();
         gameLostShared.setVal(gameLost_);
+        currentScoreShared.setVal(currentScore);
+        highestScoreThisSessionShared.setVal(highestScoreThisSession);
     }
 
     /* Sync step 2: Master sends shared objects to the central SharedData singleton
@@ -78,7 +80,9 @@ namespace viscom {
         sgct::SharedData::instance()->writeObj<glm::vec3>(&synchronized_grid_translation_);
         automatonUpdater_.encode();
         sgct::SharedData::instance()->writeBool(&gameLostShared);
-       
+        sgct::SharedData::instance()->writeInt32(&currentScoreShared);
+        sgct::SharedData::instance()->writeInt32(&highestScoreThisSessionShared);
+
     }
 
     /* Sync step 3: Master updates its copies of cluster-wide variables with data it just synced
@@ -153,6 +157,13 @@ namespace viscom {
         if(counter>30)
         {
             gameLost_ = isGameLost();
+            //currentScore = static_cast<int>(glm::round(
+            //    (uninfectedCells+0.5f) / (uninfectedCells + infectedCells+1.0f) * 100.0f - 50.0f + uninfectedCells * 10.0f - sourceCells * 100.0f));
+            currentScore = static_cast<int>(max(uninfectedCells*10.0f-infectedCells*5.0f-sourceCells*20.0f,0));
+            if(currentScore > highestScoreThisSession)
+            {
+                highestScoreThisSession = currentScore;
+            }
             counter = 0;
         }
 
@@ -166,6 +177,9 @@ namespace viscom {
         int currentPatrolTime = outerInfluence_->getCurrentPatrolTime();
         int patrolTime = outerInfluence_->getPatrolTime();
         int masterTransitionNr = automatonUpdater_.automatonTransitionNr_;
+        float sunX = lightInfo->sun->direction.x;
+        float sunY = lightInfo->sun->direction.y;
+        float sunZ = lightInfo->sun->direction.z;
 
         fbo.DrawToFBO([&]() {
             ImGui::SetNextWindowPos(ImVec2(700, 60), ImGuiSetCond_FirstUseEver);
@@ -196,6 +210,19 @@ namespace viscom {
                 ImGui::Spacing();
                 if (ImGui::SliderFloat("Speed", &outInfluenceSpeed, 0.2f, 1.0f)) {
                     outerInfluence_->setBaseSpeed(outInfluenceSpeed);
+                }                
+                
+                ImGui::Spacing();
+                if (ImGui::SliderFloat("sunX", &sunX, -10.0f, 10.0f)) {
+                    lightInfo->sun->direction.x = sunX;
+                }
+                ImGui::Spacing();
+                if (ImGui::SliderFloat("sunY", &sunY, -10.0f, 10.0f)) {
+                    lightInfo->sun->direction.y = sunY;
+                }
+                ImGui::Spacing();
+                if (ImGui::SliderFloat("sunZ", &sunZ, -10.0f, 0.0f)) {
+                    lightInfo->sun->direction.z = sunZ;
                 }
 
                 ImGui::Spacing();
@@ -491,6 +518,9 @@ namespace viscom {
 
     bool MasterNode::isGameLost()
     {
+        uninfectedCells = 0;
+        infectedCells = 0;
+        sourceCells = 0;
         if (roomInteractionManager_->getFirstRoom()) return false;
         bool lost = true;
         interactiveGrid_->forEachCell(static_cast<std::function<void(GridCell*)>>([&](GridCell *cell) {
@@ -499,7 +529,20 @@ namespace viscom {
             {
                 if((buildState & (GridCell::INFECTED | GridCell::TEMPORARY | GridCell::INVALID)) == 0)
                 {
+                    uninfectedCells++;
+                    if((buildState & GridCell::CORNER)!=0)
+                    {
+                        uninfectedCells += 4;
+                    }
                     lost = false;
+                }
+                if((buildState & GridCell::INFECTED)!=0)
+                {
+                    if((buildState & GridCell::SOURCE)!=0)
+                    {
+                        sourceCells++;
+                    }
+                    infectedCells++;
                 }
             }
         }));

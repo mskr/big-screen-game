@@ -156,6 +156,15 @@ namespace viscom {
         bool gameLost_ = false;
         sgct::SharedBool gameLostShared;
 
+        float uninfectedCells = 0;
+        float infectedCells = 0;
+        float sourceCells = 0;
+
+        int currentScore = 0;
+        sgct::SharedInt32 currentScoreShared;
+        int highestScoreThisSession = 0;
+        sgct::SharedInt32 highestScoreThisSessionShared;
+
 		/* Quad for debug-visualizing offscreen textures */
 		struct Quad {
 			std::shared_ptr<GPUProgram> shader;

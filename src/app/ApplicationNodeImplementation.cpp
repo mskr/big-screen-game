@@ -196,8 +196,8 @@ namespace viscom {
         lightInfo->sun = new DirLight(ambient,diffuse,specular,direction);
         /* Allocate offscreen framebuffer for shadow map */
         sm_ = new GPUBuffer::Tex{ 0, GL_DEPTH_ATTACHMENT, GL_DEPTH_COMPONENT32F, GL_DEPTH_COMPONENT, GL_FLOAT };
-        sm_fbo_ = new GPUBuffer(1024, 1024, { sm_ });
-        sm_lightmatrix_ = glm::ortho(/*left*/-10.0f, /*right*/10.0f, /*bot*/-10.0f, /*top*/10.0f, 0.1f, 60.0f) *
+        sm_fbo_ = new GPUBuffer(2048, 2048, { sm_ });
+        sm_lightmatrix_ = glm::ortho(/*left*/-10.0f, /*right*/10.0f, /*bot*/-10.0f, /*top*/10.0f, 0.1f, 100.0f) *
             glm::lookAt(-direction, glm::vec3(0, 0, -4), glm::vec3(0, 1, 0));
 
         ambient = glm::vec3(0.01f, 0.01f, 0.01f);
@@ -232,17 +232,25 @@ namespace viscom {
 
     void ApplicationNodeImplementation::Draw2D(FrameBuffer &fbo) {
 #if VISCOM_CLIENTGUI 
-        if(gameLost_)
-        {
-            glm::vec2 screenRes = GetConfig().virtualScreenSize_;
-            ImVec2 popupSize = ImVec2(900, 100);
-            fbo.DrawToFBO([&]() {
+        glm::vec2 screenRes = GetConfig().virtualScreenSize_;
+        ImVec2 popupSize = ImVec2(900, 100);
+        ImVec2 scoreWindowSize = ImVec2(400, 100);
+        fbo.DrawToFBO([&]() {
+            ImGui::SetNextWindowPos(ImVec2(10, scoreWindowSize.y - 100), ImGuiSetCond_Always);
+            ImGui::SetNextWindowSize(scoreWindowSize, ImGuiSetCond_Always);
+            ImGui::Begin("Score", false, scoreWindowSize, -1.0f, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoInputs);
+            ImGui::Text("Current Score: %i", currentScore);
+            ImGui::Text("Highest Score this Session: %i", highestScoreThisSession);
+            ImGui::End();
+
+            if (gameLost_)
+            {
                 ImGui::SetNextWindowPos(ImVec2(screenRes.x / 2 - popupSize.x / 2, screenRes.y / 2 - popupSize.y / 2), ImGuiSetCond_Always);
                 ImGui::Begin("Game Lost", false, popupSize, -1.0f, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoInputs);
                 ImGui::Text("You can restart by pressing the 'Reset Playground' button on the master");
                 ImGui::End();
-            });
-        }
+            }
+        });
 #endif
     }
 
@@ -275,14 +283,21 @@ namespace viscom {
 
         glm::vec3 viewPos = GetCamera()->GetPosition();
 
+        sm_lightmatrix_ = glm::ortho(/*left*/-10.0f, /*right*/10.0f, /*bot*/-10.0f, /*top*/10.0f, 0.1f, 20.0f) *
+            glm::lookAt(-lightInfo->sun->direction, glm::vec3(0, 0, -4), glm::vec3(0, 1, 0));
+
         // render to shadow map
         glBindFramebuffer(GL_FRAMEBUFFER, sm_fbo_->id());
         glClearDepth(1.0f);
         glClear(GL_DEPTH_BUFFER_BIT);
-        glViewport(0, 0, 1024, 1024);
+        glViewport(0, 0, 2048, 2048);
         glDepthMask(GL_TRUE);
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_LESS);
+        //glEnable(GL_POLYGON_OFFSET_FILL);
+        //glEnable(GL_POLYGON_OFFSET_LINE);
+        //glEnable(GL_POLYGON_OFFSET_POINT);
+        //glPolygonOffsetClampEXT(1.1, 10.0,20.0);
         DrawScene(viewPos, sm_lightmatrix_, sm_lightmatrix_, lightInfo);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -300,7 +315,6 @@ namespace viscom {
 
         fbo.DrawToFBO([&]() {
             //screenfilling_quad_.render(sm_->id); return;
-
             glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
                                       // clear all relevant buffers
             glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set clear color to white (not really necessery actually, since we won't be able to see behind the quad anyways)
