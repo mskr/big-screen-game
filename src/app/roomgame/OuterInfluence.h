@@ -43,6 +43,7 @@ namespace roomgame {
         int maxPatrolTime_;
         std::default_random_engine rndGenerator_;
         std::uniform_int_distribution<int> distributor100_;
+        std::uniform_int_distribution<int> distributor200_;
         GridCell* targetCell_;
 		int mode_;
 		double deltaTime_;

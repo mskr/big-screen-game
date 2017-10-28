@@ -9,8 +9,8 @@ namespace roomgame {
 	const int RETREAT = 2;
     const float DEFAULT_BASE_SPEED = 0.5f;
     const float ROT_SPEED_MULTIPLIER = 50.0f;
-    const int DEFAULT_MIN_PATROL_TIME = 4;
-    const int DEFAULT_MAX_PATROL_TIME = 10;
+    const int DEFAULT_MIN_PATROL_TIME = 2;
+    const int DEFAULT_MAX_PATROL_TIME = 11;
 
 	OuterInfluence::OuterInfluence(std::shared_ptr<SourceLightManager> sourceLightManager): MeshComponent(nullptr), distance_(0), targetCell_(nullptr), deltaTime_(0)
     {
@@ -29,6 +29,7 @@ namespace roomgame {
         minPatrolTime_ = DEFAULT_MIN_PATROL_TIME;
         maxPatrolTime_ = DEFAULT_MAX_PATROL_TIME;
         distributor100_ = std::uniform_int_distribution<int>(minPatrolTime_, maxPatrolTime_);
+        distributor200_ = std::uniform_int_distribution<int>(0, 200);
     }
 
 
@@ -176,12 +177,24 @@ namespace roomgame {
         GridCell* closestWallCell = nullptr;
         const auto leftLower = Grid->getCellAt(0,0);
         const auto rightUpper = Grid->getCellAt(Grid->getNumRows()-1,Grid->getNumColumns()-1);
+        std::vector<GridCell*> possibleTargets;
         Grid->forEachCellInRange(leftLower, rightUpper, static_cast<std::function<void(GridCell*)>>([&](GridCell* cell) {
-            if ((cell->getBuildState() & GridCell::WALL) != 0 && cell->getDistanceTo(tmp) < cellDistance && (cell->getBuildState() & (GridCell::TEMPORARY|GridCell::SOURCE)) == 0) {
-                cellDistance = cell->getDistanceTo(tmp);
-                closestWallCell = cell;
+            if ((cell->getBuildState() & GridCell::WALL) != 0  && (cell->getBuildState() & (GridCell::TEMPORARY | GridCell::SOURCE)) == 0) {
+                possibleTargets.push_back(cell);
             }
         }));
+        std::sort(possibleTargets.begin(),possibleTargets.end(),[&](GridCell* a, GridCell* b)
+        {
+            float distA = a->getDistanceTo(tmp);
+            float distB = b->getDistanceTo(tmp);
+            return distA < distB;
+        });
+        auto randNumber = distributor200_(rndGenerator_);
+        randNumber = glm::clamp(randNumber,0,max(static_cast<int>(possibleTargets.size()-1),0));
+        if(possibleTargets.size() > 0)
+        {
+            closestWallCell = possibleTargets[randNumber];
+        }
         if (closestWallCell != nullptr) {
             speed_ = 0;
             targetPosition_ = glm::vec3(closestWallCell->getXPosition(), closestWallCell->getYPosition(), 0);
