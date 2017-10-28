@@ -232,13 +232,16 @@ namespace viscom {
 
     void ApplicationNodeImplementation::Draw2D(FrameBuffer &fbo) {
 #if VISCOM_CLIENTGUI 
-       fbo.DrawToFBO([&]() {
-            ImGui::SetNextWindowPos(ImVec2(1100,100), ImGuiSetCond_Always);
-            ImGui::SetNextWindowSize(ImVec2(150, 100), ImGuiSetCond_Always);
-            ImGui::Begin("Game Lost", false, ImVec2(150, 100), -1.0f, ImGuiWindowFlags_NoMove & ImGuiWindowFlags_NoResize);
-            ImGui::Text("Test");
-            ImGui::End();
-        });
+        if(gameLost_)
+        {
+            fbo.DrawToFBO([&]() {
+                ImGui::SetNextWindowPos(ImVec2(400, 400), ImGuiSetCond_Always);
+                ImGui::SetNextWindowSize(ImVec2(900, 100), ImGuiSetCond_Always);
+                ImGui::Begin("Game Lost", false, ImVec2(150, 100), -1.0f, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoInputs);
+                ImGui::Text("You can restart by pressing the 'Reset Playground' button on the master");
+                ImGui::End();
+            });
+        }
 #endif
     }
 

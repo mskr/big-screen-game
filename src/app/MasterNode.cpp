@@ -149,7 +149,12 @@ namespace viscom {
     }
 
     void MasterNode::Draw2D(FrameBuffer& fbo) {
-        gameLost_ = isGameLost();
+        counter++;
+        if(counter>30)
+        {
+            gameLost_ = isGameLost();
+            counter = 0;
+        }
 
         int maxPatrolTime = outerInfluence_->getMaxPatrolTime();
         int minPatrolTime = outerInfluence_->getMinPatrolTime();
@@ -269,6 +274,13 @@ namespace viscom {
      * [D] key down: debug render mode
     */
     bool MasterNode::KeyboardCallback(int key, int scancode, int action, int mods) {
+#ifndef VISCOM_CLIENTGUI
+        ImGui_ImplGlfwGL3_KeyCallback(key, scancode, action, mods);
+        if (ImGui::GetIO().WantCaptureKeyboard) return true;
+#endif
+        if (ApplicationNodeImplementation::KeyboardCallback(key, scancode, action, mods))return true;
+
+
         // Keys switch input modes
         static InteractionMode mode_before_switch_to_camera = interaction_mode_;
         if (key == GLFW_KEY_C) {
@@ -315,16 +327,19 @@ namespace viscom {
             if (interaction_mode_ == AUTOMATON) interaction_mode_ = InteractionMode::GRID;
             else interaction_mode_ = InteractionMode::AUTOMATON;
         }
-#ifndef VISCOM_CLIENTGUI
-        ImGui_ImplGlfwGL3_KeyCallback(key, scancode, action, mods);
-#endif
-        return ApplicationNodeImplementation::KeyboardCallback(key, scancode, action, mods);
+        return true;
     }
 
     /* Mouse/touch control room placement
     * click to place rooms
     */
     bool MasterNode::MouseButtonCallback(int button, int action) {
+#ifndef VISCOM_CLIENTGUI
+        ImGui_ImplGlfwGL3_MouseButtonCallback(button, action, 0);
+        if (ImGui::GetIO().WantCaptureMouse) return true;
+#endif
+        if(ApplicationNodeImplementation::MouseButtonCallback(button, action))return true;
+
         if (button == GLFW_MOUSE_BUTTON_LEFT) {
             if (interaction_mode_ == InteractionMode::GRID) {
                 if (action == GLFW_PRESS) interactiveGrid_->onTouch(-1);
@@ -336,11 +351,9 @@ namespace viscom {
             else if (interaction_mode_ == InteractionMode::CAMERA) {
 //                camera_.HandleMouse(button, action, 0, this);
             }
+            return true;
         }
-#ifndef VISCOM_CLIENTGUI
-        ImGui_ImplGlfwGL3_MouseButtonCallback(button, action, 0);
-#endif
-        return ApplicationNodeImplementation::MouseButtonCallback(button, action);
+        return false;
     }
 
     /* MousePosCallback constantly updates interaction targets with cursor position
@@ -348,16 +361,26 @@ namespace viscom {
      * Interaction targets can use their last cursor position
     */
     bool MasterNode::MousePosCallback(double x, double y) {
-        viscom::math::Line3<float> ray = GetCamera()->GetPickRay({ x,y });
-        interactiveGrid_->onMouseMove(-1, ray[0], ray[1]);
 #ifndef VISCOM_CLIENTGUI
         ImGui_ImplGlfwGL3_MousePositionCallback(x, y);
+        if (ImGui::GetIO().WantCaptureMouse) return true;
 #endif
-        return ApplicationNodeImplementation::MousePosCallback(x, y);
+        if (ApplicationNodeImplementation::MousePosCallback(x, y))return true;
+
+        viscom::math::Line3<float> ray = GetCamera()->GetPickRay({ x,y });
+        interactiveGrid_->onMouseMove(-1, ray[0], ray[1]);
+        return true;
     }
 
     /* Mouse scroll events are used to zoom, when in camera mode */
     bool MasterNode::MouseScrollCallback(double xoffset, double yoffset) {
+
+#ifndef VISCOM_CLIENTGUI
+        ImGui_ImplGlfwGL3_ScrollCallback(xoffset, yoffset);
+        if (ImGui::GetIO().WantCaptureMouse) return true;
+#endif
+        if (ApplicationNodeImplementation::MouseScrollCallback(xoffset, yoffset)) return true;
+
         if (interaction_mode_ == InteractionMode::CAMERA) {
             float change = (float)yoffset*0.1f;
             glm::vec3 camToGrid = GetCamera()->GetPosition() - interactiveGrid_->grid_center_;
@@ -366,11 +389,9 @@ namespace viscom {
                 range = glm::distance(GetCamera()->GetPosition(), interactiveGrid_->grid_center_);
             }
 //            camera_.HandleMouse(0, 0, (float)yoffset, this);
+            return true;
         }
-#ifndef VISCOM_CLIENTGUI
-        ImGui_ImplGlfwGL3_ScrollCallback(xoffset, yoffset);
-#endif
-        return ApplicationNodeImplementation::MouseScrollCallback(xoffset, yoffset);
+        return false;
     }
 
     bool MasterNode::CharCallback(unsigned int character, int mods) {
@@ -472,13 +493,16 @@ namespace viscom {
     {
         if (roomInteractionManager_->getFirstRoom()) return false;
         bool lost = true;
-        interactiveGrid_->forEachCell([&](GridCell *cell) {
-            if (cell->getBuildState() & GridCell::INFECTED) {
+        interactiveGrid_->forEachCell(static_cast<std::function<void(GridCell*)>>([&](GridCell *cell) {
+            GLuint buildState = cell->getBuildState();
+            if(buildState != GridCell::EMPTY)
+            {
+                if((buildState & (GridCell::INFECTED | GridCell::TEMPORARY | GridCell::INVALID)) == 0)
+                {
+                    lost = false;
+                }
             }
-            else if ((cell->getBuildState() != GridCell::EMPTY) || !(cell->getBuildState() & (GridCell::TEMPORARY | GridCell::INVALID))) {
-                lost = false;
-            }
-        });
+        }));
         return lost;
     }
 }
