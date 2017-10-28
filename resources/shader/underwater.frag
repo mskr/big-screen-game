@@ -86,7 +86,9 @@ in vec4 vPosLightSpace;
 
 out vec4 color;
 
-const float DEPTH_BIAS = 0.001;
+const float DEPTH_BIAS = 0.01;
+
+// Calc visibility of this fragment in lightspace using PCF, bias and Stratified Poisson Sampling
 
 vec2 poissonDisk[4] = vec2[](
   vec2( -0.94201624, -0.39906216 ),
@@ -101,14 +103,14 @@ float random(vec3 seed, int i){
 	return fract(sin(dot_product) * 43758.5453);
 }
 
-// Calc visibility of this fragment in lightspace using PCF with filter size 3
 float visibility(vec3 thisFragment) {
 	float v = 0.0;
+	float dynBias = max(0.002 * (1.0 - dot(vNormal, -normalize(dirLight.direction))), 0.00090);
 	for (int i=0;i<4;i++){
 		int index = int(16.0*random(floor(vPosition.xyz*1000.0), i))%16;
 		vec3 frPos = vec3(thisFragment.x,thisFragment.y,thisFragment.z);
 		frPos.xy += poissonDisk[index]/700.0;
-		frPos.z -= DEPTH_BIAS;
+		frPos.z -= dynBias;
 		v += texture(shadowMap, frPos);
 	}
 	return v/4.0;
