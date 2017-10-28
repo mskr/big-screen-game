@@ -3,10 +3,10 @@ namespace roomgame
 {
     RoomSegmentMeshPool::RoomSegmentMeshPool(const size_t MAX_INSTANCES) :
         // Estimate number of instances for room segments to minimize allocation cost (rather questionable heuristic)
-        POOL_ALLOC_BYTES_CORNERS((MAX_INSTANCES / 128 + 1) * sizeof(RoomSegmentMesh::Instance)),
-        POOL_ALLOC_BYTES_WALLS((MAX_INSTANCES / 32 + 1) * sizeof(RoomSegmentMesh::Instance)),
-        POOL_ALLOC_BYTES_FLOORS((MAX_INSTANCES / 16 + 1) * sizeof(RoomSegmentMesh::Instance)),
-        POOL_ALLOC_BYTES_OUTER_INFLUENCE((MAX_INSTANCES / 16 + 1) * sizeof(RoomSegmentMesh::Instance)),
+        POOL_ALLOC_BYTES_CORNERS((MAX_INSTANCES) * sizeof(RoomSegmentMesh::Instance)),
+        POOL_ALLOC_BYTES_WALLS((MAX_INSTANCES) * sizeof(RoomSegmentMesh::Instance)),
+        POOL_ALLOC_BYTES_FLOORS((MAX_INSTANCES) * sizeof(RoomSegmentMesh::Instance)),
+        POOL_ALLOC_BYTES_OUTER_INFLUENCE((MAX_INSTANCES) * sizeof(RoomSegmentMesh::Instance)),
         POOL_ALLOC_BYTES_DEFAULT(MAX_INSTANCES * sizeof(RoomSegmentMesh::Instance))
     {
         shader_ = 0;
