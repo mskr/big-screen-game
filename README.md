@@ -8,4 +8,4 @@ The game is played in bird's perspective and is about building rooms by dragging
 Preview GIF of outer influence destroying a room prototype:
 ![](https://github.com/mskr/big-screen-game/raw/feature/interactive-grid/preview.gif)
 
-Work in progress...
+Finished version is in [develop branch](https://github.com/mskr/big-screen-game/tree/develop)
